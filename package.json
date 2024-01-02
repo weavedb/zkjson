@@ -1,0 +1,13 @@
+{
+  "name": "zkjson",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "chai": "^4",
+    "mocha": "^10.2.0"
+  }
+}
