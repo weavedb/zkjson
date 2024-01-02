@@ -4,7 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "compile": "cd circom && sh compile.sh"
   },
   "dependencies": {
     "chai": "^4",

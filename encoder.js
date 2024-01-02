@@ -51,9 +51,9 @@ function recover(arr) {
     }
     return result
   }
-
   return _recover(meta)
 }
+
 function _encode(v) {
   let type = null
   let val = null
@@ -88,6 +88,7 @@ function _encode(v) {
 function encode(json) {
   return flatten(_encode(json))
 }
+
 function _decode(arr) {
   const type = arr[0]
   const _val = arr[1]
@@ -116,4 +117,5 @@ function _decode(arr) {
 function decode(arr) {
   return _decode(recover(arr))
 }
+
 module.exports = { encode, decode }
