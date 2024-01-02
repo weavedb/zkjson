@@ -89,13 +89,13 @@ function flattenPath(path) {
 function _encode(v, path = []) {
   let vals = []
   if (typeof v === "number") {
-    vals.push([path, [2, v]])
+    vals.push([path, encodeVal(v)])
   } else if (typeof v === "boolean") {
-    vals.push([path, [1, v ? 1 : 0]])
+    vals.push([path, encodeVal(v)])
   } else if (v === null) {
-    vals.push([path, [0]])
+    vals.push([path, encodeVal(v)])
   } else if (typeof v === "string") {
-    vals.push([path, [3, v.length, ...v.split("").map(c => c.charCodeAt(0))]])
+    vals.push([path, encodeVal(v)])
   } else if (Array.isArray(v)) {
     let i = 0
     for (const v2 of v) {
@@ -211,7 +211,20 @@ function _decode(arr, obj) {
   return vals
 }
 
-function getVal(arr) {
+function encodeVal(v) {
+  let vals = []
+  if (typeof v === "number") {
+    vals = [2, v]
+  } else if (typeof v === "boolean") {
+    vals = [1, v ? 1 : 0]
+  } else if (v === null) {
+    vals = [0]
+  } else if (typeof v === "string") {
+    vals = [3, v.length, ...v.split("").map(c => c.charCodeAt(0))]
+  }
+  return vals
+}
+function decodeVal(arr) {
   const type = arr[0]
   const _val = arr[1]
   let val = null
@@ -251,7 +264,7 @@ function decode(arr) {
     for (const k of keys) {
       if (typeof k === "number") {
         if (typeof keys[i + 1] === "undefined") {
-          obj[k] = getVal(v[1])
+          obj[k] = decodeVal(v[1])
         } else {
           if (typeof keys[i + 1] === "string") {
             obj[k] = {}
@@ -262,7 +275,7 @@ function decode(arr) {
       } else {
         if (typeof obj[k] === "undefined") {
           if (typeof keys[i + 1] === "undefined") {
-            obj[k] = getVal(v[1])
+            obj[k] = decodeVal(v[1])
           } else if (typeof keys[i + 1] === "string") {
             obj[k] = {}
           } else {
@@ -277,4 +290,11 @@ function decode(arr) {
   return json
 }
 
-module.exports = { encode, decode, encodePath, decodePath }
+module.exports = {
+  encode,
+  decode,
+  encodePath,
+  decodePath,
+  encodeVal,
+  decodeVal,
+}

@@ -1,10 +1,21 @@
-const { encode, decode, encodePath, decodePath } = require("../encoder")
+const {
+  encode,
+  decode,
+  encodePath,
+  decodePath,
+  encodeVal,
+  decodeVal,
+} = require("../encoder")
 const { expect } = require("chai")
 
 describe("zkJSON", () => {
-  it.only("should encode/decode path", () => {
+  it("should encode/decode path", () => {
     const path = "b.a[13].3.cde[3]"
     expect(decodePath(encodePath(path))).to.eql(path)
+  })
+  it("should encode/decode value", () => {
+    const val = "null"
+    expect(decodeVal(encodeVal(val))).to.eql(val)
   })
 
   it("should encode/decode JSON", () => {
