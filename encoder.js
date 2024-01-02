@@ -1,3 +1,83 @@
+function encodePath(path) {
+  const parts = []
+  let str = ""
+  let num = 0
+  for (const s of path) {
+    if (num === 2 && !(s === "." || s === "[]")) {
+      throw Error()
+    }
+    if (s === ".") {
+      if (num === 2) {
+        num = 0
+      } else {
+        parts.push(str)
+        str = ""
+      }
+    } else if (s === "[") {
+      if (num === 2) {
+        num = 0
+      } else {
+        parts.push(str)
+        str = ""
+        num = 1
+      }
+    } else if (s === "]") {
+      if (num !== 1) throw Error()
+      num = 2
+      if (str === "" || Number.isNaN(+str)) throw Error()
+      parts.push(+str)
+      str = ""
+    } else {
+      str += s
+    }
+  }
+  if (str !== "") parts.push(str)
+  if (parts.length === 0) parts.push("")
+  let encoded = []
+  for (const p of parts) {
+    if (typeof p === "number") {
+      encoded = encoded.concat([-1, p])
+    } else {
+      encoded = encoded.concat([
+        p.length,
+        ...p.split("").map(c => c.charCodeAt(0)),
+      ])
+    }
+  }
+  return encoded
+}
+
+function decodePath(path) {
+  let str = ""
+  let p = []
+  while (path.length > 0) {
+    const type = path.shift()
+    let val = null
+    if (type === -1) {
+      val = [path.shift()]
+    } else {
+      val = []
+      for (let i = 0; i < type; i++) {
+        val.push(path.shift())
+      }
+    }
+    p.push([type, ...val])
+  }
+  let i = 0
+  for (let s of p) {
+    if (s[0] === -1) {
+      str += `[${s[1]}]`
+    } else {
+      str += `${i === 0 ? "" : "."}${s
+        .slice(1)
+        .map(c => String.fromCharCode(c))
+        .join("")}`
+    }
+    i++
+  }
+  return str
+}
+
 function flattenPath(path) {
   let p = [path.length]
   for (const v of path) {
@@ -197,4 +277,4 @@ function decode(arr) {
   return json
 }
 
-module.exports = { encode, decode }
+module.exports = { encode, decode, encodePath, decodePath }
