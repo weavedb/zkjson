@@ -1,21 +1,36 @@
-function flatten(array) {
-  const meta = []
-  const body = []
-  let arr = 0
-  let sum = 0
-  function _flatten(sub) {
-    if (Array.isArray(sub)) {
-      arr += 1
-      meta.push(sub.length)
-      sum += sub.length
-      for (const v of sub) _flatten(v)
-    } else {
-      meta.push(0)
-      body.push(sub)
+function flattenPath(path) {
+  let p = [path.length]
+  for (const v of path) {
+    p = p.concat(v)
+  }
+  return p
+}
+
+function _encode(v, path = []) {
+  let vals = []
+  if (typeof v === "number") {
+    vals.push([path, [2, v]])
+  } else if (typeof v === "boolean") {
+    vals.push([path, [1, v ? 1 : 0]])
+  } else if (v === null) {
+    vals.push([path, [0]])
+  } else if (typeof v === "string") {
+    vals.push([path, [3, v.length, ...v.split("").map(c => c.charCodeAt(0))]])
+  } else if (Array.isArray(v)) {
+    let i = 0
+    for (const v2 of v) {
+      for (const v3 of _encode(v2, [...path, [-1, i]])) vals.push(v3)
+      i++
+    }
+  } else if (typeof v === "object") {
+    for (const k in v) {
+      const key = k.split("").map(c => c.charCodeAt(0))
+      for (let v4 of _encode(v[k], [...path, [key.length, ...key]])) {
+        vals.push(v4)
+      }
     }
   }
-  _flatten(array)
-  return [meta.length, body.length, ...meta, ...body]
+  return vals
 }
 
 function recover(arr) {
@@ -54,42 +69,69 @@ function recover(arr) {
   return _recover(meta)
 }
 
-function _encode(v) {
-  let type = null
-  let val = null
-  if (typeof v === "number") {
-    type = 2
-    val = v
-  } else if (typeof v === "boolean") {
-    type = 1
-    val = v ? 1 : 0
-  } else if (v === null) {
-    type = 0
-  } else if (typeof v === "string") {
-    type = 3
-    val = v.split("").map(c => c.charCodeAt(0))
-  } else if (Array.isArray(v)) {
-    type = 4
-    val = v.map(encode)
-  } else if (typeof v === "object") {
-    type = 5
-    val = []
-    for (const k in v) {
-      const key = k.split("").map(c => c.charCodeAt(0))
-      const _val = encode(v[k])
-      val.push([key, _val])
-    }
-  }
-  let arr = [type]
-  if (val !== null) arr.push(val)
-  return arr
-}
-
 function encode(json) {
-  return flatten(_encode(json))
+  let flattened = _encode(json)
+  flattened.sort((a, b) => {
+    const isUndefined = v => typeof v === "undefined"
+    const max = Math.max(a[0].length, b[0].length)
+    if (max > 0) {
+      for (let i = 0; i < max; i++) {
+        const exA = !isUndefined(a[0][i])
+        const exB = !isUndefined(b[0][i])
+        if (exA && !exB) return 1
+        if (!exA && exB) return -1
+        const max2 = Math.max(a[0][i].length, b[0][i].length)
+        if (max2 > 0) {
+          for (let i2 = 0; i2 < max2; i2++) {
+            const vA = a[0][i][i2]
+            const vB = b[0][i][i2]
+            const exA = !isUndefined(vA)
+            const exB = !isUndefined(vB)
+            if (exA && !exB) return 1
+            if (!exA && exB) return -1
+            if (vA > vB) return 1
+            if (vA < vB) return -1
+          }
+        }
+      }
+    }
+    return 0
+  })
+  return flattened.reduce(
+    (arr, v) => arr.concat([...flattenPath(v[0]), ...v[1]]),
+    []
+  )
 }
 
-function _decode(arr) {
+function _decode(arr, obj) {
+  let vals = []
+  while (arr.length > 0) {
+    let plen = arr.shift()
+    let keys = []
+    let val = null
+    while (plen > 0) {
+      const plen2 = arr.shift()
+      const plen3 = plen2 === -1 ? 1 : plen2
+      const key = []
+      for (let i2 = 0; i2 < plen3; i2++) key.push(arr.shift())
+      keys.push([plen2, ...key])
+      plen--
+    }
+    const type = arr.shift()
+    val = [type]
+    if (type === 2 || type === 1) {
+      val.push(arr.shift())
+    } else if (type === 3) {
+      const strlen = arr.shift()
+      val.push(strlen)
+      for (let i2 = 0; i2 < strlen; i2++) val.push(arr.shift())
+    }
+    vals.push([keys, val])
+  }
+  return vals
+}
+
+function getVal(arr) {
   const type = arr[0]
   const _val = arr[1]
   let val = null
@@ -100,22 +142,59 @@ function _decode(arr) {
   } else if (type === 2) {
     val = arr[1]
   } else if (type === 3) {
-    val = arr[1].map(c => String.fromCharCode(c)).join("")
-  } else if (type === 4) {
-    val = []
-    for (let v of _val) val.push(_decode(v))
-  } else if (type === 5) {
-    val = {}
-    for (let v of _val) {
-      const key = v[0].map(c => String.fromCharCode(c)).join("")
-      val[key] = _decode(v[1])
-    }
+    val = arr
+      .slice(2)
+      .map(c => String.fromCharCode(c))
+      .join("")
   }
   return val
 }
 
 function decode(arr) {
-  return _decode(recover(arr))
+  const decoded = _decode(arr)
+  let json = {}
+  for (const v of decoded) {
+    const keys = v[0].map(v2 => {
+      if (v2[0] === -1) {
+        return v2[1]
+      } else if (v2[0] === 0) {
+        return ""
+      } else {
+        return v2
+          .slice(1)
+          .map(c => String.fromCharCode(c))
+          .join("")
+      }
+    })
+    let obj = json
+    let i = 0
+    for (const k of keys) {
+      if (typeof k === "number") {
+        if (typeof keys[i + 1] === "undefined") {
+          obj[k] = getVal(v[1])
+        } else {
+          if (typeof keys[i + 1] === "string") {
+            obj[k] = {}
+          } else {
+            obj[k] = []
+          }
+        }
+      } else {
+        if (typeof obj[k] === "undefined") {
+          if (typeof keys[i + 1] === "undefined") {
+            obj[k] = getVal(v[1])
+          } else if (typeof keys[i + 1] === "string") {
+            obj[k] = {}
+          } else {
+            obj[k] = []
+          }
+        }
+      }
+      obj = obj[k]
+      i++
+    }
+  }
+  return json
 }
 
 module.exports = { encode, decode }
