@@ -1,11 +1,17 @@
+function pad(arr, max = 0) {
+  arr = arr.map(n => n.toString())
+  for (let i = arr.length; i < max; i++) {
+    arr.push("0")
+  }
+  return arr
+}
+
 function encodePath(path) {
   const parts = []
   let str = ""
   let num = 0
   for (const s of path) {
-    if (num === 2 && !(s === "." || s === "[]")) {
-      throw Error()
-    }
+    if (num === 2 && !(s === "." || s === "[")) throw Error()
     if (s === ".") {
       if (num === 2) {
         num = 0
@@ -14,13 +20,11 @@ function encodePath(path) {
         str = ""
       }
     } else if (s === "[") {
-      if (num === 2) {
-        num = 0
-      } else {
-        parts.push(str)
+      if (num !== 2) {
+        if (str !== "" || parts.length > 0) parts.push(str)
         str = ""
-        num = 1
       }
+      num = 1
     } else if (s === "]") {
       if (num !== 1) throw Error()
       num = 2
@@ -36,10 +40,12 @@ function encodePath(path) {
   let encoded = [parts.length]
   for (const p of parts) {
     if (typeof p === "number") {
-      encoded = encoded.concat([-1, p])
+      encoded = encoded.concat([0, 0, p])
     } else {
+      let plen = [p.length]
+      if (p.length === 0) plen.push(1)
       encoded = encoded.concat([
-        p.length,
+        ...plen,
         ...p.split("").map(c => c.charCodeAt(0)),
       ])
     }
@@ -50,11 +56,17 @@ function encodePath(path) {
 function decodePath(path) {
   let str = ""
   let p = []
+  let len = path.shift()
   while (path.length > 0) {
     const type = path.shift()
     let val = null
-    if (type === -1) {
-      val = [path.shift()]
+    if (type === 0) {
+      const type2 = path.shift()
+      if (type2 === 0) {
+        val = [type2, path.shift()]
+      } else {
+        val = [type2]
+      }
     } else {
       val = []
       for (let i = 0; i < type; i++) {
@@ -65,8 +77,10 @@ function decodePath(path) {
   }
   let i = 0
   for (let s of p) {
-    if (s[0] === -1) {
-      str += `[${s[1]}]`
+    if (s[0] === 0 && s[1] === 0) {
+      str += `[${s[2]}]`
+    } else if (s[0] === 0 && s[1] === 1) {
+      if (str !== "") str += "."
     } else {
       str += `${i === 0 ? "" : "."}${s
         .slice(1)
@@ -99,54 +113,21 @@ function _encode(v, path = []) {
   } else if (Array.isArray(v)) {
     let i = 0
     for (const v2 of v) {
-      for (const v3 of _encode(v2, [...path, [-1, i]])) vals.push(v3)
+      for (const v3 of _encode(v2, [...path, [0, 0, i]])) vals.push(v3)
       i++
     }
   } else if (typeof v === "object") {
     for (const k in v) {
       const key = k.split("").map(c => c.charCodeAt(0))
-      for (let v4 of _encode(v[k], [...path, [key.length, ...key]])) {
+      for (let v4 of _encode(v[k], [
+        ...path,
+        [key.length, ...(key.length === 0 ? [1] : key)],
+      ])) {
         vals.push(v4)
       }
     }
   }
   return vals
-}
-
-function recover(arr) {
-  const len = arr[0]
-  const blen = arr[1]
-  const meta = arr.slice(2, len + 2)
-  const body = arr.slice(len + 2)
-  const b_queue = [...body]
-  function _recover(m_queue) {
-    if (m_queue.length === 0) return
-    const size = m_queue.shift()
-    if (size === 0) return b_queue.shift()
-    const result = []
-    for (let i = 0; i < size; i++) {
-      let res = _recover(m_queue)
-      if (Array.isArray(res)) {
-        let i2 = 0
-        for (let v of res) {
-          if (Array.isArray(v)) {
-            const len = v[0]
-            if (typeof len === "number" && v.length >= len) {
-              const meta = v.slice(2, len + 2)
-              const body = v.slice(len + 2)
-              if (v[0] == meta.length && v[1] == body.length) {
-                res[i2] = recover(v)
-              }
-            }
-          }
-          i2++
-        }
-      }
-      result.push(res)
-    }
-    return result
-  }
-  return _recover(meta)
 }
 
 function encode(json) {
@@ -191,15 +172,27 @@ function _decode(arr, obj) {
     let val = null
     while (plen > 0) {
       const plen2 = arr.shift()
-      const plen3 = plen2 === -1 ? 1 : plen2
-      const key = []
-      for (let i2 = 0; i2 < plen3; i2++) key.push(arr.shift())
-      keys.push([plen2, ...key])
+      if (plen2 === 0) {
+        const plen3 = arr.shift()
+        if (plen3 === 1) {
+          keys.push([plen2, plen3])
+        } else {
+          keys.push([plen2, plen3, arr.shift()])
+        }
+      } else if (plen2 !== 0) {
+        const plen3 = plen2
+        const key = []
+        for (let i2 = 0; i2 < plen3; i2++) key.push(arr.shift())
+        keys.push([plen2, ...key])
+      }
       plen--
     }
     const type = arr.shift()
     val = [type]
-    if (type === 2 || type === 1) {
+    if (type === 2) {
+      val.push(arr.shift())
+      val.push(arr.shift())
+    } else if (type === 1) {
       val.push(arr.shift())
     } else if (type === 3) {
       const strlen = arr.shift()
@@ -214,7 +207,7 @@ function _decode(arr, obj) {
 function encodeVal(v) {
   let vals = []
   if (typeof v === "number") {
-    vals = [2, v]
+    vals = v < 0 ? [2, 0, -v] : [2, 1, v]
   } else if (typeof v === "boolean") {
     vals = [1, v ? 1 : 0]
   } else if (v === null) {
@@ -224,6 +217,7 @@ function encodeVal(v) {
   }
   return vals
 }
+
 function decodeVal(arr) {
   const type = arr[0]
   const _val = arr[1]
@@ -233,7 +227,7 @@ function decodeVal(arr) {
   } else if (type === 1) {
     val = arr[1] ? true : false
   } else if (type === 2) {
-    val = arr[1]
+    val = (arr[1] === 0 ? -1 : 1) * arr[2]
   } else if (type === 3) {
     val = arr
       .slice(2)
@@ -245,13 +239,13 @@ function decodeVal(arr) {
 
 function decode(arr) {
   const decoded = _decode(arr)
-  let json = {}
+  let json =
+    decoded[0]?.[0]?.[0]?.[0] === 0 && decoded[0]?.[0]?.[0]?.[1] === 0 ? [] : {}
   for (const v of decoded) {
     const keys = v[0].map(v2 => {
-      if (v2[0] === -1) {
-        return v2[1]
-      } else if (v2[0] === 0) {
-        return ""
+      if (v2[0] === 0) {
+        if (v2[1] === 1) return ""
+        return v2[2]
       } else {
         return v2
           .slice(1)
@@ -259,32 +253,38 @@ function decode(arr) {
           .join("")
       }
     })
-    let obj = json
-    let i = 0
-    for (const k of keys) {
-      if (typeof k === "number") {
-        if (typeof keys[i + 1] === "undefined") {
-          obj[k] = decodeVal(v[1])
-        } else {
-          if (typeof keys[i + 1] === "string") {
-            obj[k] = {}
-          } else {
-            obj[k] = []
-          }
-        }
-      } else {
-        if (typeof obj[k] === "undefined") {
+    if (keys.length === 0) {
+      json = decodeVal(v[1])
+    } else {
+      let obj = json
+      let i = 0
+      for (const k of keys) {
+        if (typeof k === "number") {
           if (typeof keys[i + 1] === "undefined") {
             obj[k] = decodeVal(v[1])
-          } else if (typeof keys[i + 1] === "string") {
-            obj[k] = {}
           } else {
-            obj[k] = []
+            if (typeof obj[k] === "undefined") {
+              if (typeof keys[i + 1] === "string") {
+                obj[k] = {}
+              } else {
+                obj[k] = []
+              }
+            }
+          }
+        } else {
+          if (typeof obj[k] === "undefined") {
+            if (typeof keys[i + 1] === "undefined") {
+              obj[k] = decodeVal(v[1])
+            } else if (typeof keys[i + 1] === "string") {
+              obj[k] = {}
+            } else {
+              obj[k] = []
+            }
           }
         }
+        obj = obj[k]
+        i++
       }
-      obj = obj[k]
-      i++
     }
   }
   return json
@@ -297,4 +297,5 @@ module.exports = {
   decodePath,
   encodeVal,
   decodeVal,
+  pad,
 }
