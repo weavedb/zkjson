@@ -33,7 +33,7 @@ function encodePath(path) {
   }
   if (str !== "") parts.push(str)
   if (parts.length === 0) parts.push("")
-  let encoded = []
+  let encoded = [parts.length]
   for (const p of parts) {
     if (typeof p === "number") {
       encoded = encoded.concat([-1, p])

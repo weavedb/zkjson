@@ -27,4 +27,9 @@ describe("zkJSON", () => {
     const encoded = encode(json)
     expect(decode(encoded)).to.eql(json)
   })
+  it.only("should encode/decode JSON", () => {
+    console.log(encode({ a: 1 }))
+    console.log(encodePath("a"))
+    console.log(encodeVal(1))
+  })
 })
