@@ -1,15 +1,15 @@
 pragma circom 2.1.5;
 
-template JSON () {  
-    signal input json[5];  
-    signal input path[3];
-    signal input val[2];
+template JSON (size_json,size) {  
+    signal input json[size_json];  
+    signal input path[size];
+    signal input val[size];
     signal output exist;
     signal ex;
     var _exists = 0;
     var i = 0;
-    var _path[3];
-    while(i < 5){
+    while(i < size_json){
+        var _path[size];
         var len = json[i];
         i++;
         _path[0] = len;
@@ -27,7 +27,7 @@ template JSON () {
         }
         var type = json[i];
         i++;
-        var _val[2];
+        var _val[size];
         _val[0] = type;
         if(type == 1 || type == 2){
             _val[1] = json[i];
@@ -42,15 +42,17 @@ template JSON () {
         }
         var path_match = 1;
         var val_match = 0;
-        for(var i4 = 0; i4  < 3; i4++){
+        for(var i4 = 0; i4  < size; i4++){
             if(_path[i4] != path[i4]){
                 path_match = 0;
             }
         }
         if(path_match == 1){
             var _val_match = 1;
-            for(var i5 = 0; i5  < 2; i5++){
-                if(_val[i5] != val[i5]) _val_match = 0;
+            for(var i5 = 0; i5  < size; i5++){
+                if(_val[i5] != val[i5]){
+                    _val_match = 0;
+                } 
             }
             if(_val_match == 1) val_match = 1;
         }
@@ -60,4 +62,4 @@ template JSON () {
     exist <== ex * ex;
 }
 
-component main {public [path, val]} = JSON();
+component main {public [path, val]} = JSON(1000,100);
