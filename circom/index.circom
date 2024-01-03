@@ -19,7 +19,11 @@ template JSON (size_json,size) {
             _path[pi] = plen;
             pi++;
             i++;
-            for(var i3 = 0; i3 < plen; i3++){
+            var plen2 = plen;
+            if(plen == 0){
+                plen2 = json[i] == 0 ? 2 : 1;
+            }
+            for(var i3 = 0; i3 < plen2; i3++){
                 _path[pi] = json[i];
                 pi++;
                 i++;
@@ -29,8 +33,13 @@ template JSON (size_json,size) {
         i++;
         var _val[size];
         _val[0] = type;
-        if(type == 1 || type == 2){
+        if(type == 1){
             _val[1] = json[i];
+            i++;
+        }else if(type == 2){
+            _val[1] = json[i];
+            i++;
+            _val[2] = json[i];
             i++;
         } else if (type == 3){
             var slen =  json[i];
