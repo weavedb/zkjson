@@ -1509,9 +1509,15 @@ PFrElement aux_dest = &lvar[207];
 Fr_copy(aux_dest,&signalValues[mySignalStart + ((1 * Fr_toInt(&lvar[3])) + 201)]);
 }
 {
+PFrElement aux_dest = &lvar[108];
+// load src
+// end load src
+Fr_copy(aux_dest,&lvar[207]);
+}
+{
 PFrElement aux_dest = &lvar[3];
 // load src
-Fr_add(&expaux[0],&lvar[3],&circuitConstants[3]); // line circom 46
+Fr_add(&expaux[0],&lvar[3],&circuitConstants[3]); // line circom 47
 // end load src
 Fr_copy(aux_dest,&expaux[0]);
 }
@@ -1521,10 +1527,10 @@ PFrElement aux_dest = &lvar[208];
 // end load src
 Fr_copy(aux_dest,&circuitConstants[2]);
 }
-Fr_lt(&expaux[0],&lvar[208],&lvar[207]); // line circom 47
+Fr_lt(&expaux[0],&lvar[208],&lvar[207]); // line circom 48
 while(Fr_isTrue(&expaux[0])){
 {
-PFrElement aux_dest = &lvar[((1 * (Fr_toInt(&lvar[208]) + 1)) + 107)];
+PFrElement aux_dest = &lvar[((1 * (Fr_toInt(&lvar[208]) + 2)) + 107)];
 // load src
 // end load src
 Fr_copy(aux_dest,&signalValues[mySignalStart + ((1 * Fr_toInt(&lvar[3])) + 201)]);
@@ -1532,18 +1538,18 @@ Fr_copy(aux_dest,&signalValues[mySignalStart + ((1 * Fr_toInt(&lvar[3])) + 201)]
 {
 PFrElement aux_dest = &lvar[3];
 // load src
-Fr_add(&expaux[0],&lvar[3],&circuitConstants[3]); // line circom 49
+Fr_add(&expaux[0],&lvar[3],&circuitConstants[3]); // line circom 50
 // end load src
 Fr_copy(aux_dest,&expaux[0]);
 }
 {
 PFrElement aux_dest = &lvar[208];
 // load src
-Fr_add(&expaux[0],&lvar[208],&circuitConstants[3]); // line circom 47
+Fr_add(&expaux[0],&lvar[208],&circuitConstants[3]); // line circom 48
 // end load src
 Fr_copy(aux_dest,&expaux[0]);
 }
-Fr_lt(&expaux[0],&lvar[208],&lvar[207]); // line circom 47
+Fr_lt(&expaux[0],&lvar[208],&lvar[207]); // line circom 48
 }
 }
 }
@@ -1566,9 +1572,9 @@ PFrElement aux_dest = &lvar[209];
 // end load src
 Fr_copy(aux_dest,&circuitConstants[2]);
 }
-Fr_lt(&expaux[0],&lvar[209],&circuitConstants[0]); // line circom 54
+Fr_lt(&expaux[0],&lvar[209],&circuitConstants[0]); // line circom 55
 while(Fr_isTrue(&expaux[0])){
-Fr_neq(&expaux[0],&lvar[((1 * Fr_toInt(&lvar[209])) + 4)],&signalValues[mySignalStart + ((1 * Fr_toInt(&lvar[209])) + 1)]); // line circom 55
+Fr_neq(&expaux[0],&lvar[((1 * Fr_toInt(&lvar[209])) + 4)],&signalValues[mySignalStart + ((1 * Fr_toInt(&lvar[209])) + 1)]); // line circom 56
 if(Fr_isTrue(&expaux[0])){
 {
 PFrElement aux_dest = &lvar[207];
@@ -1580,13 +1586,13 @@ Fr_copy(aux_dest,&circuitConstants[2]);
 {
 PFrElement aux_dest = &lvar[209];
 // load src
-Fr_add(&expaux[0],&lvar[209],&circuitConstants[3]); // line circom 54
+Fr_add(&expaux[0],&lvar[209],&circuitConstants[3]); // line circom 55
 // end load src
 Fr_copy(aux_dest,&expaux[0]);
 }
-Fr_lt(&expaux[0],&lvar[209],&circuitConstants[0]); // line circom 54
+Fr_lt(&expaux[0],&lvar[209],&circuitConstants[0]); // line circom 55
 }
-Fr_eq(&expaux[0],&lvar[207],&circuitConstants[3]); // line circom 59
+Fr_eq(&expaux[0],&lvar[207],&circuitConstants[3]); // line circom 60
 if(Fr_isTrue(&expaux[0])){
 {
 PFrElement aux_dest = &lvar[209];
@@ -1600,9 +1606,9 @@ PFrElement aux_dest = &lvar[210];
 // end load src
 Fr_copy(aux_dest,&circuitConstants[2]);
 }
-Fr_lt(&expaux[0],&lvar[210],&circuitConstants[0]); // line circom 61
+Fr_lt(&expaux[0],&lvar[210],&circuitConstants[0]); // line circom 62
 while(Fr_isTrue(&expaux[0])){
-Fr_neq(&expaux[0],&lvar[((1 * Fr_toInt(&lvar[210])) + 107)],&signalValues[mySignalStart + ((1 * Fr_toInt(&lvar[210])) + 101)]); // line circom 62
+Fr_neq(&expaux[0],&lvar[((1 * Fr_toInt(&lvar[210])) + 107)],&signalValues[mySignalStart + ((1 * Fr_toInt(&lvar[210])) + 101)]); // line circom 63
 if(Fr_isTrue(&expaux[0])){
 {
 PFrElement aux_dest = &lvar[209];
@@ -1614,13 +1620,13 @@ Fr_copy(aux_dest,&circuitConstants[2]);
 {
 PFrElement aux_dest = &lvar[210];
 // load src
-Fr_add(&expaux[0],&lvar[210],&circuitConstants[3]); // line circom 61
+Fr_add(&expaux[0],&lvar[210],&circuitConstants[3]); // line circom 62
 // end load src
 Fr_copy(aux_dest,&expaux[0]);
 }
-Fr_lt(&expaux[0],&lvar[210],&circuitConstants[0]); // line circom 61
+Fr_lt(&expaux[0],&lvar[210],&circuitConstants[0]); // line circom 62
 }
-Fr_eq(&expaux[0],&lvar[209],&circuitConstants[3]); // line circom 66
+Fr_eq(&expaux[0],&lvar[209],&circuitConstants[3]); // line circom 67
 if(Fr_isTrue(&expaux[0])){
 {
 PFrElement aux_dest = &lvar[208];
@@ -1630,9 +1636,9 @@ Fr_copy(aux_dest,&circuitConstants[3]);
 }
 }
 }
-Fr_eq(&expaux[1],&lvar[207],&circuitConstants[3]); // line circom 68
-Fr_eq(&expaux[2],&lvar[208],&circuitConstants[3]); // line circom 68
-Fr_land(&expaux[0],&expaux[1],&expaux[2]); // line circom 68
+Fr_eq(&expaux[1],&lvar[207],&circuitConstants[3]); // line circom 69
+Fr_eq(&expaux[2],&lvar[208],&circuitConstants[3]); // line circom 69
+Fr_land(&expaux[0],&expaux[1],&expaux[2]); // line circom 69
 if(Fr_isTrue(&expaux[0])){
 {
 PFrElement aux_dest = &lvar[2];
@@ -1652,7 +1658,7 @@ Fr_copy(aux_dest,&lvar[2]);
 {
 PFrElement aux_dest = &signalValues[mySignalStart + 0];
 // load src
-Fr_mul(&expaux[0],&signalValues[mySignalStart + 1201],&signalValues[mySignalStart + 1201]); // line circom 71
+Fr_mul(&expaux[0],&signalValues[mySignalStart + 1201],&signalValues[mySignalStart + 1201]); // line circom 72
 // end load src
 Fr_copy(aux_dest,&expaux[0]);
 }

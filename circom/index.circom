@@ -43,9 +43,10 @@ template JSON (size_json,size) {
             i++;
         } else if (type == 3){
             var slen =  json[i];
+            _val[1] = slen;
             i++;
             for(var i3 = 0;i3 < slen; i3++){
-                _val[i3 + 1] = json[i];
+                _val[i3 + 2] = json[i];
                 i++;
             }
         }
