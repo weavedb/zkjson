@@ -28,28 +28,31 @@ class DB {
     const id = str2id(_key)
     const doc = encode(_val)
     const val = val2str(doc)
-    await _col.tree.insert(id, val)
-    await this.updateDB(_col, col)
+    const res_doc = await _col.tree.insert(id, val)
+    const res_col = await this.updateDB(_col, col)
+    return { doc: res_doc, col: res_col, tree: _col.tree }
   }
   async updateDB(_col, col) {
     const root = _col.tree.F.toObject(_col.tree.root).toString()
     const colD = str2id(col)
-    await this.tree.update(colD, root)
+    return await this.tree.update(colD, root)
   }
   async update(col, _key, _val) {
     const _col = this.getColTree(col)
     const doc = encode(_val)
     const id = str2id(_key)
     const val = val2str(doc)
-    await _col.tree.update(id, val)
-    await this.updateDB(_col, col)
+    const res_doc = await _col.tree.update(id, val)
+    const res_col = await this.updateDB(_col, col)
+    return { doc: res_doc, col: res_col, tree: _col.tree }
   }
 
   async delete(col, _key) {
     const _col = this.getColTree(col)
     const id = str2id(_key)
-    await _col.tree.delete(id)
-    await this.updateDB(_col, col)
+    const res_doc = await _col.tree.delete(id)
+    const res_col = await this.updateDB(_col, col)
+    return { doc: res_doc, col: res_col, tree: _col.tree }
   }
 
   async get(col, _key) {

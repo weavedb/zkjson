@@ -39,7 +39,7 @@ const main = async () => {
   let col_siblings = col_res.siblings
   for (let i = 0; i < col_siblings.length; i++)
     col_siblings[i] = db.tree.F.toObject(col_siblings[i])
-  while (col_siblings.length < 25) col_siblings.push(0)
+  while (col_siblings.length < 50) col_siblings.push(0)
   col_siblings = col_siblings.map(s => s.toString())
   const col_key = str2id("colA")
 
@@ -49,7 +49,7 @@ const main = async () => {
   let siblings = res.siblings
   for (let i = 0; i < siblings.length; i++)
     siblings[i] = col.tree.F.toObject(siblings[i])
-  while (siblings.length < 25) siblings.push(0)
+  while (siblings.length < 50) siblings.push(0)
   siblings = siblings.map(s => s.toString())
   const key = str2id("docA")
   const value = val2str(encode(_json))

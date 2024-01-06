@@ -3,17 +3,17 @@ include "../../node_modules/circomlib/circuits/smt/smtverifier.circom";
 include "../json/json.circom";
 include "../../node_modules/circomlib/circuits/poseidon.circom";
 
-template Collection (size_json,size) {  
+template Collection (level, size_json, size) {  
     signal input path[size];
     signal input val[size];
-    signal input siblings[25];
+    signal input siblings[level];
     signal input value;
     signal input root;
     signal input key;
     signal output exist;
     signal json[size_json];
     signal ex;
-    component smtVerifier = SMTVerifier(25);
+    component smtVerifier = SMTVerifier(level);
     component hash = Poseidon(1);
 
     hash.inputs[0] <== value;
@@ -25,7 +25,7 @@ template Collection (size_json,size) {
     smtVerifier.root <== root;
     smtVerifier.siblings <== siblings;
     smtVerifier.key <== key;
-    smtVerifier.value <== hash.out;    
+    smtVerifier.value <== hash.out; 
     var _exists = 0;
     var x = value;
     var i = 0;
