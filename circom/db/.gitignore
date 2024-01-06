@@ -1,0 +1,6 @@
+input.json
+public.json
+*.r1cs
+*.zkey
+verification_key.json
+*.sym
