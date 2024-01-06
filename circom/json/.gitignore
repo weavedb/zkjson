@@ -1,6 +1,9 @@
 input.json
 public.json
+proof.json
 *.r1cs
 *.zkey
 verification_key.json
 *.sym
+index_cpp/
+index_js/

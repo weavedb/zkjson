@@ -1,4 +1,4 @@
-const newMemEmptyTrie = require("circomlibjs").newMemEmptyTrie
+const newMemEmptyTrie = require("./circomlibjs").newMemEmptyTrie
 const { str2val, val2str, id2str, encode, str2id } = require("./encoder")
 
 class Collection {

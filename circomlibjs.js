@@ -40203,8 +40203,7 @@ class SMT {
     const poseidon = await buildPoseidon()
     const F = this.F
     const key = F.e(_key)
-    const newValue = poseidon([_newValue]) //new TextEncoder().encode(_newValue) //F.e(_newValue)
-
+    const newValue = poseidon([_newValue])
     const resFind = await this.find(key)
     const res = {}
     res.oldRoot = this.root
@@ -40341,7 +40340,7 @@ class SMT {
     const poseidon = await buildPoseidon()
     const F = this.F
     const key = F.e(_key)
-    const value = poseidon([_value]) //new TextEncoder().encode(_value) //F.e(_value)
+    const value = poseidon([_value])
     let addedOne = false
     const res = {}
     res.oldRoot = this.root
