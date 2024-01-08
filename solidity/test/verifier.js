@@ -45,7 +45,6 @@ describe("zkDB", function () {
     const verifier = await Verifier.deploy()
     return { verifier, owner, otherAccount }
   }
-
   describe("Deployment", function () {
     it("Should set the right unlockTime", async function () {
       const db = new DB()
@@ -99,6 +98,7 @@ describe("zkDB", function () {
         [proof.pi_c[0], proof.pi_c[1]],
         publicSignals
       )
+
       expect(valid).to.eql(true)
     })
   })

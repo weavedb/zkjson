@@ -1,7 +1,5 @@
 pragma circom 2.1.5;
-include "../../node_modules/circomlib/circuits/smt/smtverifier.circom";
 include "../../node_modules/circomlib/circuits/smt/smtprocessor.circom";
-include "../collection/collection.circom";
 include "../../node_modules/circomlib/circuits/poseidon.circom";
 
 template Query (level, size_json,size) {
@@ -24,7 +22,6 @@ template Query (level, size_json,size) {
     component colVerifier = SMTProcessor(level);
     component hash = Poseidon(1);
     hash.inputs[0] <== value;
-    
     colVerifier.fnc[0] <== 1;
     colVerifier.fnc[1] <== 0;
     colVerifier.oldRoot <== oldRoot;
@@ -47,7 +44,5 @@ template Query (level, size_json,size) {
     dbVerifier.siblings <== siblings_db;
     dbVerifier.newKey <== newKey_db;
     dbVerifier.newValue <== hash2.out;
-
     new_root <== dbVerifier.newRoot;
-
 }
