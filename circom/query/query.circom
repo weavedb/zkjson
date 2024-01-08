@@ -31,7 +31,6 @@ template Query (level, size_json,size) {
     colVerifier.siblings <== siblings;
     colVerifier.newKey <== newKey;
     colVerifier.newValue <== hash.out;
-
     component hash2 = Poseidon(1);
     hash2.inputs[0] <== colVerifier.newRoot;
     component dbVerifier = SMTProcessor(level);
