@@ -25,8 +25,9 @@ const path = pad(encodePath(_path), size)
 const __val = pad(encodeVal(_val), size)
 
 const main = async () => {
-  const doc = val2str(encode(_val))
   const db = new DB()
+
+  const doc = val2str(encode(_val))
   await db.init()
   await db.addCollection("colA")
   await db.insert("colA", "docA", _json)
