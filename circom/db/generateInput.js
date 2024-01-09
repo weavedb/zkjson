@@ -14,10 +14,11 @@ const DB = require("../../db")
 
 const { writeFileSync } = require("fs")
 const { resolve } = require("path")
-const _json = JSON.parse(process.argv[2])
-const _path = eval(process.argv[3])
-const _val = eval(process.argv[4])
+const _json = { a: 5 }
+const _path = "a"
+const _val = 5
 
+const level = 30
 const size = 100
 const size_json = 1000
 const json = pad(encode(_json), size_json)
@@ -34,13 +35,14 @@ const main = async () => {
   await db.insert("colA", "docB", { b: 2 })
   await db.insert("colA", "docC", { c: 3 })
   await db.insert("colA", "docD", { c: 4 })
+
   const col_root = db.tree.F.toObject(db.tree.root).toString()
   const col_res = await db.getCol("docA")
 
   let col_siblings = col_res.siblings
   for (let i = 0; i < col_siblings.length; i++)
     col_siblings[i] = db.tree.F.toObject(col_siblings[i])
-  while (col_siblings.length < 50) col_siblings.push(0)
+  while (col_siblings.length < 30) col_siblings.push(0)
   col_siblings = col_siblings.map(s => s.toString())
   const col_key = str2id("colA")
 
@@ -50,24 +52,23 @@ const main = async () => {
   let siblings = res.siblings
   for (let i = 0; i < siblings.length; i++)
     siblings[i] = col.tree.F.toObject(siblings[i])
-  while (siblings.length < 50) siblings.push(0)
+  while (siblings.length < 30) siblings.push(0)
   siblings = siblings.map(s => s.toString())
   const key = str2id("docA")
   const value = val2str(encode(_json))
-  writeFileSync(
-    resolve(__dirname, "input.json"),
-    JSON.stringify({
-      value,
-      path,
-      val: __val,
-      root,
-      siblings,
-      key,
-      col_key,
-      col_siblings,
-      col_root,
-    })
-  )
+  const write = {
+    value,
+    path,
+    val: __val,
+    root,
+    siblings,
+    key,
+    col_key,
+    col_siblings,
+    col_root,
+  }
+  console.log(write)
+  writeFileSync(resolve(__dirname, "input.json"), JSON.stringify(write))
 }
 
 main()

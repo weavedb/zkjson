@@ -37,6 +37,6 @@ template Rollup (tx_size, level, size_json,size) {
         query[i].siblings_db <== siblings_db[i];
         query[i].newKey_db <== newKey_db[i];
         if(i == tx_size - 1) new_root <== query[i].new_root; 
-        if(i > 0) query[i - 1].new_root === query[i].oldRoot;
+        if(i > 0) query[i - 1].new_root === query[i].oldRoot_db;
     } 
 }

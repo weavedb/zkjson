@@ -21,6 +21,7 @@ const siblen = 30
 const getInputs = (res, tree) => {
   const isOld0 = res.isOld0 ? "1" : "0"
   const oldRoot = tree.F.toObject(res.oldRoot).toString()
+  const newRoot = tree.F.toObject(res.newRoot).toString()
   const oldKey = res.isOld0 ? "0" : tree.F.toObject(res.oldKey).toString()
   const oldValue = res.isOld0 ? "0" : tree.F.toObject(res.oldValue).toString()
   let siblings = res.siblings
@@ -28,7 +29,7 @@ const getInputs = (res, tree) => {
     siblings[i] = tree.F.toObject(siblings[i])
   while (siblings.length < siblen) siblings.push(0)
   siblings = siblings.map(s => s.toString())
-  return { isOld0, oldRoot, oldKey, oldValue, siblings }
+  return { isOld0, oldRoot, oldKey, oldValue, siblings, newRoot }
 }
 
 const main = async () => {
@@ -57,7 +58,7 @@ const main = async () => {
   let value = []
 
   for (let v of txs) {
-    _json = v
+    _json = v[2]
     const { tree, col: res2, doc: res } = await db.insert(...v)
     const icol = getInputs(res, tree)
     const idb = getInputs(res2, db.tree)
@@ -65,7 +66,7 @@ const main = async () => {
     const _value = val2str(encode(_json))
     const _newKey_db = str2id(v[0])
     oldRoot.push(icol.oldRoot)
-    newRoot.push(icol.newRoot)
+    newRoot.push(idb.newRoot)
     oldKey.push(icol.oldKey)
     oldValue.push(icol.oldValue)
     siblings.push(icol.siblings)
@@ -82,6 +83,7 @@ const main = async () => {
 
   write = {
     oldRoot,
+    newRoot,
     oldKey,
     oldValue,
     siblings,
@@ -95,6 +97,7 @@ const main = async () => {
     newKey,
     value,
   }
+  console.log(write)
   writeFileSync(resolve(__dirname, "input.json"), JSON.stringify(write))
 }
 

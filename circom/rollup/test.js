@@ -36,8 +36,6 @@ const getInputs = (res, tree) => {
 
 describe("SMT Verifier test", function () {
   let circuit
-  let tree
-  let Fr
   let db
   this.timeout(1000000000)
 
@@ -53,8 +51,10 @@ describe("SMT Verifier test", function () {
     await db.addCollection("colA")
     await db.insert("colA", "docB", { b: 2 })
     await db.insert("colA", "docC", { c: 3 })
-    await db.insert("colA", "docD", { c: 4 })
-    let txs = [["colA", "docA", { a: 5 }]]
+    let txs = [
+      ["colA", "docD", { c: 4 }],
+      ["colA", "docA", { a: 5 }],
+    ]
 
     let write, _json
     let oldRoot = []
@@ -114,7 +114,6 @@ describe("SMT Verifier test", function () {
       newKey,
       value,
     }
-
     const w = await circuit.calculateWitness(write, true)
     await circuit.checkConstraints(w)
     await circuit.assertOut(w, { new_root: _res.newRoot })
