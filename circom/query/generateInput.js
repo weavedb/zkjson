@@ -14,7 +14,7 @@ const DB = require("../../db")
 
 const { writeFileSync } = require("fs")
 const { resolve } = require("path")
-const _json = JSON.parse(process.argv[2])
+const _json = { a: 5 }
 
 const size = 100
 const size_json = 1000
@@ -23,6 +23,7 @@ const json = pad(encode(_json), size_json)
 const getInputs = (res, tree) => {
   const isOld0 = res.isOld0 ? "1" : "0"
   const oldRoot = tree.F.toObject(res.oldRoot).toString()
+  const newRoot = tree.F.toObject(res.newRoot).toString()
   const oldKey = res.isOld0 ? "0" : tree.F.toObject(res.oldKey).toString()
   const oldValue = res.isOld0 ? "0" : tree.F.toObject(res.oldValue).toString()
   let siblings = res.siblings
@@ -30,7 +31,7 @@ const getInputs = (res, tree) => {
     siblings[i] = tree.F.toObject(siblings[i])
   while (siblings.length < 30) siblings.push(0)
   siblings = siblings.map(s => s.toString())
-  return { isOld0, oldRoot, oldKey, oldValue, siblings }
+  return { isOld0, oldRoot, oldKey, oldValue, siblings, newRoot }
 }
 
 const main = async () => {
