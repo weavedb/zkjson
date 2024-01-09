@@ -40,18 +40,16 @@ const { expect } = require("chai")
 
 describe("zkDB", function () {
   this.timeout(1000000000)
-  async function deployOneYearLockFixture() {
+
+  async function deploy() {
     const [owner, otherAccount] = await ethers.getSigners()
+    const VerifierDB = await ethers.getContractFactory("Groth16VerifierDB")
+    const verifierDB = await VerifierDB.deploy()
     const Verifier = await ethers.getContractFactory("Groth16Verifier")
     const verifier = await Verifier.deploy()
-    return { verifier, owner, otherAccount }
-  }
-
-  async function deployOneYearLockFixtureDB() {
-    const [owner, otherAccount] = await ethers.getSigners()
-    const Verifier = await ethers.getContractFactory("Groth16VerifierDB")
-    const verifier = await Verifier.deploy()
-    return { verifier, owner, otherAccount }
+    const ZKDB = await ethers.getContractFactory("ZKDB")
+    const zkdb = await ZKDB.deploy(verifier.address, verifierDB.address)
+    return { verifierDB, verifier, owner, otherAccount, zkdb }
   }
 
   it("Should verify rollup transactions", async function () {
@@ -62,7 +60,7 @@ describe("zkDB", function () {
     await db.insert("colA", "docC", { c: 3 })
     let txs = [
       ["colA", "docD", { c: 4 }],
-      ["colA", "docA", { a: 5 }],
+      ["colA", "docA", { a: -5 }],
     ]
 
     let write, _json
@@ -129,7 +127,7 @@ describe("zkDB", function () {
       resolve(__dirname, "../../circom/rollup/index_js/index.wasm"),
       resolve(__dirname, "../../circom/rollup/index_0001.zkey")
     )
-    const { verifier } = await loadFixture(deployOneYearLockFixture)
+    const { zkdb, verifier, verifierDB } = await loadFixture(deploy)
 
     const valid = await verifier.verifyProof(
       [proof.pi_a[0], proof.pi_a[1]],
@@ -164,7 +162,7 @@ describe("zkDB", function () {
     const key = str2id("docA")
     const _value = val2str(encode(_json))
     const _path = "a"
-    const _val = 5
+    const _val = -5
     const path = pad(encodePath(_path), size)
     const __val = pad(encodeVal(_val), size)
     const _write = {
@@ -178,25 +176,33 @@ describe("zkDB", function () {
       col_siblings,
       col_root,
     }
-    console.log(_write)
-    const { proof: proof2, publicSignals: publicSignals2 } =
+    const { proof: proof2, publicSignals: sigs } =
       await snarkjs.groth16.fullProve(
         _write,
         resolve(__dirname, "../../circom/db/index_js/index.wasm"),
         resolve(__dirname, "../../circom/db/index_0001.zkey")
       )
-    const { verifier: verifier2 } = await loadFixture(
-      deployOneYearLockFixtureDB
-    )
-    const valid2 = await verifier2.verifyProof(
+    const valid2 = await verifierDB.verifyProof(
       [proof2.pi_a[0], proof2.pi_a[1]],
       [
         [proof2.pi_b[0][1], proof2.pi_b[0][0]],
         [proof2.pi_b[1][1], proof2.pi_b[1][0]],
       ],
       [proof2.pi_c[0], proof2.pi_c[1]],
-      publicSignals2
+      sigs
     )
     expect(valid2).to.eql(true)
+    const inputs = [
+      ...proof2.pi_a.slice(0, 2),
+      ...proof2.pi_b[0].slice(0, 2).reverse(),
+      ...proof2.pi_b[1].slice(0, 2).reverse(),
+      ...proof2.pi_c.slice(0, 2),
+      ...sigs,
+    ]
+    const num =
+      (
+        await zkdb.query(sigs[201], sigs[202], sigs.slice(1, 101), inputs)
+      ).toString() * 1
+    expect(num).to.eql(-5)
   })
 })
