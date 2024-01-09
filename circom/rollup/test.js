@@ -16,10 +16,8 @@ const {
   val2str,
 } = require("../../encoder")
 
-const _json = { a: 5 }
 const size = 100
 const size_json = 1000
-const json = pad(encode(_json), size_json)
 const level = 30
 
 const getInputs = (res, tree) => {
@@ -56,33 +54,69 @@ describe("SMT Verifier test", function () {
     await db.insert("colA", "docB", { b: 2 })
     await db.insert("colA", "docC", { c: 3 })
     await db.insert("colA", "docD", { c: 4 })
+    let txs = [["colA", "docA", { a: 5 }]]
 
-    const { tree, col: res2, doc: res } = await db.insert("colA", "docA", _json)
+    let write, _json
+    let oldRoot = []
+    let newRoot = []
+    let oldKey = []
+    let oldValue = []
+    let siblings = []
+    let isOld0 = []
+    let oldRoot_db = []
+    let oldKey_db = []
+    let oldValue_db = []
+    let siblings_db = []
+    let isOld0_db = []
+    let newKey_db = []
+    let newKey = []
+    let value = []
+    let _res
 
-    const icol = getInputs(res, tree)
-    const idb = getInputs(res2, db.tree)
+    for (let v of txs) {
+      _json = v[2]
+      const { tree, col: res2, doc: res } = await db.insert(...v)
+      const icol = getInputs(res, tree)
+      const idb = getInputs(res2, db.tree)
+      _res = idb
+      const _newKey = str2id(v[1])
+      const _value = val2str(encode(_json))
+      const _newKey_db = str2id(v[0])
+      newRoot.push(idb.newRoot)
+      oldRoot.push(icol.oldRoot)
+      oldKey.push(icol.oldKey)
+      oldValue.push(icol.oldValue)
+      siblings.push(icol.siblings)
+      isOld0.push(icol.isOld0)
+      oldRoot_db.push(idb.oldRoot)
+      oldKey_db.push(idb.oldKey)
+      oldValue_db.push(idb.oldValue)
+      siblings_db.push(idb.siblings)
+      isOld0_db.push(idb.isOld0)
+      newKey_db.push(_newKey_db)
+      newKey.push(_newKey)
+      value.push(_value)
+    }
 
-    const newKey = str2id("docA")
-    const value = val2str(encode(_json))
-    const newKey_db = str2id("colA")
-    const write = {
-      oldRoot: icol.oldRoot,
-      oldKey: icol.oldKey,
-      oldValue: icol.oldValue,
-      siblings: icol.siblings,
-      isOld0: icol.isOld0,
-      oldRoot_db: idb.oldRoot,
-      oldKey_db: idb.oldKey,
-      oldValue_db: idb.oldValue,
-      siblings_db: idb.siblings,
-      isOld0_db: idb.isOld0,
-      newRoot: idb.newRoot,
+    write = {
+      oldRoot,
+      newRoot,
+      oldKey,
+      oldValue,
+      siblings,
+      isOld0,
+      oldRoot_db,
+      oldKey_db,
+      oldValue_db,
+      siblings_db,
+      isOld0_db,
       newKey_db,
       newKey,
       value,
     }
+
     const w = await circuit.calculateWitness(write, true)
     await circuit.checkConstraints(w)
-    await circuit.assertOut(w, { new_root: idb.newRoot })
+    await circuit.assertOut(w, { new_root: _res.newRoot })
   })
 })

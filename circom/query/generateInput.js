@@ -48,7 +48,6 @@ const main = async () => {
 
   const newKey = str2id("docA")
   const value = val2str(encode(_json))
-
   const newKey_db = str2id("colA")
   const write = {
     oldRoot: icol.oldRoot,
@@ -56,13 +55,12 @@ const main = async () => {
     oldValue: icol.oldValue,
     siblings: icol.siblings,
     isOld0: icol.isOld0,
-
     oldRoot_db: idb.oldRoot,
     oldKey_db: idb.oldKey,
     oldValue_db: idb.oldValue,
     siblings_db: idb.siblings,
     isOld0_db: idb.isOld0,
-
+    newRoot: idb.newRoot,
     newKey_db,
     newKey,
     value,
