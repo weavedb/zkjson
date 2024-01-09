@@ -5,6 +5,7 @@ include "../../node_modules/circomlib/circuits/poseidon.circom";
 template Query (level, size_json,size) {
     signal input siblings[level];
     signal input value;
+    signal input newRoot;
     signal input newKey;
     signal input oldRoot;
     signal input isOld0;
@@ -16,9 +17,9 @@ template Query (level, size_json,size) {
     signal input isOld0_db;
     signal input siblings_db[level];
     signal input newKey_db;
-    
+        
     signal output new_root;
-
+    
     component colVerifier = SMTProcessor(level);
     component hash = Poseidon(1);
     hash.inputs[0] <== value;
@@ -44,4 +45,5 @@ template Query (level, size_json,size) {
     dbVerifier.newKey <== newKey_db;
     dbVerifier.newValue <== hash2.out;
     new_root <== dbVerifier.newRoot;
+    new_root === newRoot;   
 }

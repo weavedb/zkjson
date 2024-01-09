@@ -42,6 +42,7 @@ const main = async () => {
 
   let write, _json
   let oldRoot = []
+  let newRoot = []
   let oldKey = []
   let oldValue = []
   let siblings = []
@@ -64,6 +65,7 @@ const main = async () => {
     const _value = val2str(encode(_json))
     const _newKey_db = str2id(v[0])
     oldRoot.push(icol.oldRoot)
+    newRoot.push(icol.newRoot)
     oldKey.push(icol.oldKey)
     oldValue.push(icol.oldValue)
     siblings.push(icol.siblings)
