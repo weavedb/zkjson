@@ -19,7 +19,6 @@ template Rollup (tx_size, level, size_json,size) {
     
     signal output new_root;
     component query[tx_size];
-    
     for(var i = 0;i < tx_size;i++){
         query[i] = Query(level, size_json, size);
         query[i].siblings <== siblings[i];

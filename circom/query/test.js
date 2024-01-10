@@ -16,7 +16,7 @@ const {
   val2str,
 } = require("../../encoder")
 
-const _json = { a: 5 }
+const _json = { a: 5, b: true }
 const size = 100
 const size_json = 1000
 const json = pad(encode(_json), size_json)

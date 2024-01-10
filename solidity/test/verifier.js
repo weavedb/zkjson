@@ -55,7 +55,7 @@ describe("zkDB", function () {
     )
     return { verifierDB, verifier, owner, otherAccount, zkdb }
   }
-
+  const tar = { a: "Hello" }
   it("Should verify rollup transactions", async function () {
     const db = new DB()
     await db.init()
@@ -63,8 +63,8 @@ describe("zkDB", function () {
     await db.insert("colA", "docB", { b: 2 })
     await db.insert("colA", "docC", { c: 3 })
     let txs = [
-      ["colA", "docD", { c: 4 }],
-      ["colA", "docA", { a: -5 }],
+      ["colA", "docD", { d: 4 }],
+      ["colA", "docA", tar],
     ]
 
     let write, _json
@@ -176,7 +176,7 @@ describe("zkDB", function () {
     const key = str2id("docA")
     const _value = val2str(encode(_json))
     const _path = "a"
-    const _val = -5
+    const _val = tar.a
     const path = pad(encodePath(_path), size)
     const __val = pad(encodeVal(_val), size)
     const _write = {
@@ -213,10 +213,43 @@ describe("zkDB", function () {
       ...proof2.pi_c.slice(0, 2),
       ...sigs,
     ]
+    /*
     const num =
       (
-        await zkdb.query(sigs[202], sigs[203], sigs.slice(1, 101), inputs)
-      ).toString() * 1
-    expect(num).to.eql(-5)
+        await zkdb.queryBool(sigs[202], sigs[203], sigs.slice(1, 101), inputs)
+        ).toString() * 1
+    */
+    /*
+    const bool = await zkdb.queryBool(
+      sigs[202],
+      sigs[203],
+      sigs.slice(1, 101),
+      inputs
+    )
+    expect(bool).to.eql(true)
+    */
+    /*
+    const bool = await zkdb.queryNull(
+      sigs[202],
+      sigs[203],
+      sigs.slice(1, 101),
+      inputs
+    )
+    expect(bool).to.eql(true)
+    */
+    /*
+      const float = (
+      await zkdb.queryFloat(sigs[202], sigs[203], sigs.slice(1, 101), inputs)
+    ).map(n => n.toString() * 1)
+    expect(float.slice(0, 4)).to.eql([2, 1, 1, 11])
+    */
+    const str = await zkdb.queryString(
+      sigs[202],
+      sigs[203],
+      sigs.slice(1, 101),
+      inputs
+    )
+
+    expect(str).to.eql("Hello")
   })
 })

@@ -60,8 +60,8 @@ contract ZKDB {
     require(VerifierDB(verifierDB).verifyProof(_pA, _pB, _pC, sigs), "invalid proof");
     return true;
   }
-  
-  function query (uint collection, uint doc, uint[100] memory path, uint[212] calldata zkp) public view returns (int) {
+
+  function validateQuery(uint collection, uint doc, uint[100] memory path, uint[212] calldata zkp) public view returns(uint[100] memory){
     require(zkp[209] == root, "root mismatch");
     require(zkp[8] == 1, "value doesn't exist");
     require(zkp[210] == collection, "wrong collection");
@@ -70,10 +70,50 @@ contract ZKDB {
     
     uint[100] memory value;
     for(uint i = 109; i < 209; i++) value[i - 109] = zkp[i];
+    return value;
+  }
+  
+  function queryInt (uint collection, uint doc, uint[100] memory path, uint[212] calldata zkp) public view returns (int) {
+    uint[100] memory value = validateQuery(collection, doc, path, zkp);
     require(value[0] == 2 && value[2] == 0, "not int");
-
     verifyDB(zkp);
-    
     return int(value[3]) * (value[1] == 1 ? int(1) : int(-1));
+  }
+
+  function toString(uint8[] memory charCodes) public pure returns (string memory) {
+    bytes memory stringBytes = new bytes(charCodes.length);
+    for (uint i = 0; i < charCodes.length; i++) stringBytes[i] = bytes1(charCodes[i]);
+    return string(stringBytes);
+  }
+  
+  function queryFloat (uint collection, uint doc, uint[100] memory path, uint[212] calldata zkp) public view returns (uint[100] memory) {
+    uint[100] memory value = validateQuery(collection, doc, path, zkp);
+    require(value[0] == 2 && value[2] == 1, "not float");
+    verifyDB(zkp);
+    return value;
+  }
+
+  function queryString (uint collection, uint doc, uint[100] memory path, uint[212] calldata zkp) public view returns (string memory) {
+    uint[100] memory value = validateQuery(collection, doc, path, zkp);
+    require(value[0] == 3, "not string");
+    verifyDB(zkp);
+    uint8[] memory charCodes = new uint8[](value[1]);
+    for(uint i = 0; i < value[1];i++) charCodes[i] = uint8(value[i+2]);
+    string memory str = toString(charCodes);
+    return str;
+  }
+  
+  function queryBool (uint collection, uint doc, uint[100] memory path, uint[212] calldata zkp) public view returns (bool) {
+    uint[100] memory value = validateQuery(collection, doc, path, zkp);
+    require(value[0] == 1, "not bool");
+    verifyDB(zkp);
+    return value[1] == 1 ? true : false;
+  }
+  
+  function queryNull (uint collection, uint doc, uint[100] memory path, uint[212] calldata zkp) public view returns (bool) {
+    uint[100] memory value = validateQuery(collection, doc, path, zkp);
+    require(value[0] == 0, "not null");
+    verifyDB(zkp);
+    return true;
   }
 }
