@@ -53,7 +53,7 @@ describe("SMT Verifier test", function () {
     await db.insert("colA", "docC", { c: 3 })
     let txs = [
       ["colA", "docD", { c: 4 }],
-      ["colA", "docA", { a: 5 }],
+      ["colA", "docA", { a: 5, e: 3 }],
     ]
 
     let write, _json
@@ -76,6 +76,7 @@ describe("SMT Verifier test", function () {
     for (let v of txs) {
       _json = v[2]
       const { tree, col: res2, doc: res } = await db.insert(...v)
+
       const icol = getInputs(res, tree)
       const idb = getInputs(res2, db.tree)
       _res = idb
