@@ -100,6 +100,9 @@ contract ZKDB {
     uint8[] memory charCodes = new uint8[](value[1]);
     for(uint i = 0; i < value[1];i++) charCodes[i] = uint8(value[i+2]);
     string memory str = toString(charCodes);
+    uint n = 21888242871839275222246405745257275088548364400416034343698204186575808495617;
+    console.log(n);
+
     return str;
   }
   

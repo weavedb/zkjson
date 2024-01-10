@@ -36,10 +36,8 @@ const getInputs = (res, tree) => {
   return { isOld0, oldRoot, oldKey, oldValue, siblings, newRoot }
 }
 
-describe("SMT Verifier test", function () {
+describe("query circuit", function () {
   let circuit
-  let tree
-  let Fr
   let db
   this.timeout(1000000000)
 

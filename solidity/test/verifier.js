@@ -125,7 +125,6 @@ describe("zkDB", function () {
       newKey,
       value,
     }
-
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       write,
       resolve(__dirname, "../../circom/rollup/index_js/index.wasm"),
@@ -243,6 +242,7 @@ describe("zkDB", function () {
     ).map(n => n.toString() * 1)
     expect(float.slice(0, 4)).to.eql([2, 1, 1, 11])
     */
+
     const str = await zkdb.queryString(
       sigs[202],
       sigs[203],
