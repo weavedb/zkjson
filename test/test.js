@@ -1,4 +1,6 @@
 const {
+  str2val,
+  val2str,
   pad,
   encode,
   decode,
@@ -44,6 +46,7 @@ describe("zkJSON", () => {
     for (const j of jsons) {
       const encoded = encode(j)
       //console.log(encoded)
+      expect(str2val(val2str(encoded))).to.eql(encoded)
       expect(decode(encoded)).to.eql(j)
     }
   })

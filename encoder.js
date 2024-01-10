@@ -392,17 +392,37 @@ const id2str = id => {
 function val2str(arr) {
   const _arr = arr.map(n => {
     let str = n.toString().split("")
-    for (let i = str.length; i < 7; i++) {
-      str.unshift("0")
-    }
+    str.unshift(str.length.toString())
     return str.join("")
   })
-  return "1" + _arr.join("")
+  let arrs = []
+  let len = 0
+  let str = ""
+  for (let v of _arr) {
+    if (len + v.length > 75) {
+      len = 0
+      arrs.push(str)
+      str = ""
+    }
+    len += v.length
+    str += v
+  }
+  if (str !== "") arrs.push(str)
+  return arrs
 }
 
-function str2val(str) {
-  str.shift()
-  return splitEvery(7, str).map(n => (+n).toString())
+function str2val(arr) {
+  let _arr = []
+  for (const s of arr) {
+    let str = s.split("")
+    while (str.length > 0) {
+      const len = +str.shift()
+      const nums = str.slice(0, len)
+      str = str.slice(len)
+      _arr.push(+nums.join(""))
+    }
+  }
+  return _arr
 }
 
 module.exports = {
