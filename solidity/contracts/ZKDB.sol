@@ -70,10 +70,10 @@ contract ZKDB {
     
     uint[100] memory value;
     for(uint i = 109; i < 209; i++) value[i - 109] = zkp[i];
-    require(value[0] == 2, "not int");
+    require(value[0] == 2 && value[2] == 0, "not int");
 
     verifyDB(zkp);
     
-    return int(value[2]) * (value[1] == 1 ? int(1) : int(-1));
+    return int(value[3]) * (value[1] == 1 ? int(1) : int(-1));
   }
 }

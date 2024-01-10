@@ -35,12 +35,14 @@ template JSON (size_json,size) {
         _val[0] = type;
         if(type == 1){
             _val[1] = json[i];
-            i++;
+            i++; 
         }else if(type == 2){
             _val[1] = json[i];
             i++;
             _val[2] = json[i];
             i++;
+            _val[3] = json[i];
+            i++;            
         } else if (type == 3){
             var slen =  json[i];
             _val[1] = slen;
@@ -60,9 +62,7 @@ template JSON (size_json,size) {
         if(path_match == 1){
             var _val_match = 1;
             for(var i5 = 0; i5  < size; i5++){
-                if(_val[i5] != val[i5]){
-                    _val_match = 0;
-                } 
+                if(_val[i5] != val[i5]) _val_match = 0;
             }
             if(_val_match == 1) val_match = 1;
         }

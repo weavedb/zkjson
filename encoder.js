@@ -235,7 +235,7 @@ function encode(json) {
   )
 }
 
-function _decode(arr, obj) {
+function _decode(arr) {
   let vals = []
   while (arr.length > 0) {
     let plen = arr.shift()
@@ -263,6 +263,7 @@ function _decode(arr, obj) {
     if (type === 2) {
       val.push(arr.shift())
       val.push(arr.shift())
+      val.push(arr.shift())
     } else if (type === 1) {
       val.push(arr.shift())
     } else if (type === 3) {
@@ -278,7 +279,14 @@ function _decode(arr, obj) {
 function encodeVal(v) {
   let vals = []
   if (typeof v === "number") {
-    vals = v < 0 ? [2, 0, -v] : [2, 1, v]
+    const int = Number.isInteger(v)
+    let moved = 0
+    let num = v
+    while (num % 1 !== 0) {
+      num *= 10
+      moved += 1
+    }
+    vals = v < 0 ? [2, 0, moved, -num] : [2, 1, moved, num]
   } else if (typeof v === "boolean") {
     vals = [1, v ? 1 : 0]
   } else if (v === null) {
@@ -298,7 +306,10 @@ function decodeVal(arr) {
   } else if (type === 1) {
     val = arr[1] ? true : false
   } else if (type === 2) {
-    val = (arr[1] === 0 ? -1 : 1) * arr[2]
+    val = (arr[1] === 0 ? -1 : 1) * arr[3]
+    for (let i = 0; i < arr[2]; i++) {
+      val /= 10
+    }
   } else if (type === 3) {
     val = arr
       .slice(2)

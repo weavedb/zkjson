@@ -33,13 +33,13 @@ describe("zkJSON", () => {
       false,
       10,
       "str",
-      [1, 2, 3],
+      [1.0, 2, 3],
       {
         "": -1,
         bc: [null, false, 3],
         cd: { def: [4, 5, "str", { e: null, "": 6 }] },
       },
-      { "": 3 },
+      { "": -3.3 },
     ]
     for (const j of jsons) {
       const encoded = encode(j)
