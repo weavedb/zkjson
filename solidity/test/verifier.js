@@ -48,7 +48,11 @@ describe("zkDB", function () {
     const Verifier = await ethers.getContractFactory("Groth16Verifier")
     const verifier = await Verifier.deploy()
     const ZKDB = await ethers.getContractFactory("ZKDB")
-    const zkdb = await ZKDB.deploy(verifier.address, verifierDB.address)
+    const zkdb = await ZKDB.deploy(
+      verifier.address,
+      verifierDB.address,
+      owner.address
+    )
     return { verifierDB, verifier, owner, otherAccount, zkdb }
   }
 
@@ -140,6 +144,16 @@ describe("zkDB", function () {
     )
     expect(valid).to.eql(true)
 
+    // commit
+    const inputs2 = [
+      ...proof.pi_a.slice(0, 2),
+      ...proof.pi_b[0].slice(0, 2).reverse(),
+      ...proof.pi_b[1].slice(0, 2).reverse(),
+      ...proof.pi_c.slice(0, 2),
+      ...publicSignals,
+    ]
+    const valid_commit = await zkdb.commit(inputs2)
+
     // verify value
     const col_root = db.tree.F.toObject(db.tree.root).toString()
     const col_res = await db.getCol("docA")
@@ -201,7 +215,7 @@ describe("zkDB", function () {
     ]
     const num =
       (
-        await zkdb.query(sigs[201], sigs[202], sigs.slice(1, 101), inputs)
+        await zkdb.query(sigs[202], sigs[203], sigs.slice(1, 101), inputs)
       ).toString() * 1
     expect(num).to.eql(-5)
   })
