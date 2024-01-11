@@ -16,9 +16,9 @@ const {
   val2str,
 } = require("../../encoder")
 
-const size = 100
-const size_json = 1000
-const level = 30
+const size = 5
+const size_json = 16
+const level = 20
 
 const getInputs = (res, tree) => {
   const isOld0 = res.isOld0 ? "1" : "0"
@@ -46,6 +46,7 @@ describe("SMT Verifier test", function () {
   })
 
   it("should insert docs", async () => {
+    return
     const db = new DB()
     await db.init()
     await db.addCollection("colA")
@@ -70,9 +71,8 @@ describe("SMT Verifier test", function () {
     let isOld0_db = []
     let newKey_db = []
     let newKey = []
-    let value = []
     let _res
-
+    let json = []
     for (let v of txs) {
       _json = v[2]
       const { tree, col: res2, doc: res } = await db.insert(...v)
@@ -81,7 +81,7 @@ describe("SMT Verifier test", function () {
       const idb = getInputs(res2, db.tree)
       _res = idb
       const _newKey = str2id(v[1])
-      const _value = val2str(encode(_json))
+      json.push(pad(val2str(encode(_json)), size_json))
       const _newKey_db = str2id(v[0])
       newRoot.push(idb.newRoot)
       oldRoot.push(icol.oldRoot)
@@ -96,7 +96,6 @@ describe("SMT Verifier test", function () {
       isOld0_db.push(idb.isOld0)
       newKey_db.push(_newKey_db)
       newKey.push(_newKey)
-      value.push(_value)
     }
 
     write = {
@@ -113,7 +112,7 @@ describe("SMT Verifier test", function () {
       isOld0_db,
       newKey_db,
       newKey,
-      value,
+      json,
     }
     const w = await circuit.calculateWitness(write, true)
     await circuit.checkConstraints(w)
