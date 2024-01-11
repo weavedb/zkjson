@@ -16,14 +16,14 @@ const { writeFileSync } = require("fs")
 const { resolve } = require("path")
 const _json = { a: 5 }
 const _path = "a"
-const _val = 5
+const _val = _json[_path]
 
-const level = 30
-const size = 100
-const size_json = 1000
-const json = pad(encode(_json), size_json)
-const path = pad(encodePath(_path), size)
-const __val = pad(encodeVal(_val), size)
+const level = 100
+const size = 5
+const size_json = 16
+const json = pad(val2str(encode(_json)), size_json)
+const path = pad(val2str(encodePath(_path)), size)
+const val = pad(val2str(encodeVal(_val)), size)
 
 const main = async () => {
   const db = new DB()
@@ -42,7 +42,7 @@ const main = async () => {
   let col_siblings = col_res.siblings
   for (let i = 0; i < col_siblings.length; i++)
     col_siblings[i] = db.tree.F.toObject(col_siblings[i])
-  while (col_siblings.length < 30) col_siblings.push(0)
+  while (col_siblings.length < level) col_siblings.push(0)
   col_siblings = col_siblings.map(s => s.toString())
   const col_key = str2id("colA")
 
@@ -52,14 +52,14 @@ const main = async () => {
   let siblings = res.siblings
   for (let i = 0; i < siblings.length; i++)
     siblings[i] = col.tree.F.toObject(siblings[i])
-  while (siblings.length < 30) siblings.push(0)
+  while (siblings.length < level) siblings.push(0)
   siblings = siblings.map(s => s.toString())
   const key = str2id("docA")
   const value = val2str(encode(_json))
   const write = {
-    value,
     path,
-    val: __val,
+    val,
+    json,
     root,
     siblings,
     key,
