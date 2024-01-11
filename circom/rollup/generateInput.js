@@ -15,9 +15,9 @@ const DB = require("../../db")
 const { writeFileSync } = require("fs")
 const { resolve } = require("path")
 
-const size = 100
-const size_json = 1000
-const siblen = 30
+const size = 5
+const size_json = 16
+const level = 20
 const getInputs = (res, tree) => {
   const isOld0 = res.isOld0 ? "1" : "0"
   const oldRoot = tree.F.toObject(res.oldRoot).toString()
@@ -27,7 +27,7 @@ const getInputs = (res, tree) => {
   let siblings = res.siblings
   for (let i = 0; i < siblings.length; i++)
     siblings[i] = tree.F.toObject(siblings[i])
-  while (siblings.length < siblen) siblings.push(0)
+  while (siblings.length < level) siblings.push(0)
   siblings = siblings.map(s => s.toString())
   return { isOld0, oldRoot, oldKey, oldValue, siblings, newRoot }
 }
@@ -55,7 +55,7 @@ const main = async () => {
   let isOld0_db = []
   let newKey_db = []
   let newKey = []
-  let value = []
+  let json = []
 
   for (let v of txs) {
     _json = v[2]
@@ -63,7 +63,7 @@ const main = async () => {
     const icol = getInputs(res, tree)
     const idb = getInputs(res2, db.tree)
     const _newKey = str2id(v[1])
-    const _value = val2str(encode(_json))
+    const _value = pad(val2str(encode(_json)), size_json)
     const _newKey_db = str2id(v[0])
     oldRoot.push(icol.oldRoot)
     newRoot.push(idb.newRoot)
@@ -78,7 +78,7 @@ const main = async () => {
     isOld0_db.push(idb.isOld0)
     newKey_db.push(_newKey_db)
     newKey.push(_newKey)
-    value.push(_value)
+    json.push(_value)
   }
 
   write = {
@@ -95,7 +95,7 @@ const main = async () => {
     isOld0_db,
     newKey_db,
     newKey,
-    value,
+    json,
   }
   console.log(write)
   writeFileSync(resolve(__dirname, "input.json"), JSON.stringify(write))

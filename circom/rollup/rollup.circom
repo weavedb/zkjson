@@ -1,9 +1,9 @@
 pragma circom 2.1.5;
 include "../query/query.circom";
 
-template Rollup (tx_size, level, size_json,size) {
+template Rollup (tx_size, level, size_json, size) {
     signal input siblings[tx_size][level];
-    signal input value[tx_size];
+    signal input json[tx_size][size_json];
     signal input newKey[tx_size];
     signal input oldRoot[tx_size];
     signal input newRoot[tx_size];
@@ -22,7 +22,7 @@ template Rollup (tx_size, level, size_json,size) {
     for(var i = 0;i < tx_size;i++){
         query[i] = Query(level, size_json, size);
         query[i].siblings <== siblings[i];
-        query[i].value <== value[i];
+        query[i].json <== json[i];
         query[i].newKey <== newKey[i];
         query[i].oldRoot <== oldRoot[i];
         query[i].newRoot <== newRoot[i];
