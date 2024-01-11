@@ -1,4 +1,4 @@
 pragma circom 2.1.5;
 include "./collection.circom";
 
-component main {public [key, path, val]} = Collection(50, 1000, 100);
+component main {public [key, path, val]} = Collection(100, 16, 5);

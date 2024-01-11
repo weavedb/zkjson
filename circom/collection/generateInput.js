@@ -1,3 +1,6 @@
+const { writeFileSync } = require("fs")
+const { resolve } = require("path")
+
 const {
   pad,
   encode,
@@ -9,20 +12,17 @@ const {
   str2id,
   val2str,
 } = require("../../encoder")
-const { buildPoseidon } = require("../../circomlibjs")
 const Collection = require("../../collection")
+const _json = { a: 5 }
+const _path = "a"
+const _val = _json[_path]
 
-const { writeFileSync } = require("fs")
-const { resolve } = require("path")
-const _json = JSON.parse(process.argv[2])
-const _path = eval(process.argv[3])
-const _val = eval(process.argv[4])
-
-const size = 100
-const size_json = 1000
-const json = pad(encode(_json), size_json)
-const path = pad(encodePath(_path), size)
-const __val = pad(encodeVal(_val), size)
+const size = 5
+const size_json = 16
+const level = 100
+const json = pad(val2str(encode(_json)), size_json)
+const path = pad(val2str(encodePath(_path)), size)
+const val = pad(val2str(encodeVal(_val)), size)
 
 const main = async () => {
   const doc = val2str(encode(_val))
@@ -37,16 +37,15 @@ const main = async () => {
   let siblings = res.siblings
   for (let i = 0; i < siblings.length; i++)
     siblings[i] = col.tree.F.toObject(siblings[i])
-  while (siblings.length < 50) siblings.push(0)
+  while (siblings.length < level) siblings.push(0)
   siblings = siblings.map(s => s.toString())
   const key = str2id("docA")
-  const value = val2str(encode(_json))
   writeFileSync(
     resolve(__dirname, "input.json"),
     JSON.stringify({
-      value,
       path,
-      val: __val,
+      json,
+      val,
       root,
       siblings,
       key,
