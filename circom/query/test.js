@@ -17,10 +17,10 @@ const {
 } = require("../../encoder")
 
 const _json = { a: 5, b: true }
-const size = 100
-const size_json = 1000
-const json = pad(encode(_json), size_json)
-const level = 30
+const size = 5
+const size_json = 16
+const json = pad(val2str(encode(_json)), size_json)
+const level = 50
 
 const getInputs = (res, tree) => {
   const isOld0 = res.isOld0 ? "1" : "0"
@@ -56,12 +56,10 @@ describe("query circuit", function () {
     await db.insert("colA", "docD", { c: 4 })
 
     const { tree, col: res2, doc: res } = await db.insert("colA", "docA", _json)
-
     const icol = getInputs(res, tree)
     const idb = getInputs(res2, db.tree)
 
     const newKey = str2id("docA")
-    const value = val2str(encode(_json))
     const newKey_db = str2id("colA")
     const write = {
       oldRoot: icol.oldRoot,
@@ -77,7 +75,7 @@ describe("query circuit", function () {
       newRoot: idb.newRoot,
       newKey_db,
       newKey,
-      value,
+      json,
     }
     const w = await circuit.calculateWitness(write, true)
     await circuit.checkConstraints(w)
