@@ -1,21 +1,23 @@
 const newMemEmptyTrie = require("./circomlibjs").newMemEmptyTrie
-const { str2val, val2str, id2str, encode, str2id } = require("./encoder")
+const { pad, str2val, val2str, id2str, encode, str2id } = require("./encoder")
 
 class Collection {
-  constructor() {}
+  constructor(size = 16) {
+    this.size = size
+  }
   async init() {
     this.tree = await newMemEmptyTrie()
   }
   async insert(_key, _val) {
     const doc = encode(_val)
     const id = str2id(_key)
-    const val = val2str(doc)
+    const val = pad(val2str(doc), this.size)
     await this.tree.insert(id, val)
   }
   async update(_key, _val) {
     const doc = encode(_val)
     const id = str2id(_key)
-    const val = val2str(doc)
+    const val = pad(val2str(doc), this.size)
     await this.tree.update(id, val)
   }
 

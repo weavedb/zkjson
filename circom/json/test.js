@@ -1,8 +1,6 @@
 const chai = require("chai")
 const { join } = require("path")
-const Scalar = require("ffjavascript").Scalar
 const wasm_tester = require("circom_tester").wasm
-const assert = chai.assert
 const DB = require("../../db")
 const {
   pad,
