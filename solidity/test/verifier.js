@@ -13,9 +13,9 @@ const {
 } = require("../../encoder")
 const { buildPoseidon } = require("../../circomlibjs")
 const DB = require("../../db")
-const size = 100
-const size_json = 1000
-const level = 30
+const size = 5
+const size_json = 16
+const level = 20
 
 const getInputs = (res, tree) => {
   const isOld0 = res.isOld0 ? "1" : "0"
@@ -81,7 +81,7 @@ describe("zkDB", function () {
     let isOld0_db = []
     let newKey_db = []
     let newKey = []
-    let value = []
+    let json = []
     let _res
 
     for (let v of txs) {
@@ -91,7 +91,7 @@ describe("zkDB", function () {
       const idb = getInputs(res2, db.tree)
       _res = idb
       const _newKey = str2id(v[1])
-      const _value = val2str(encode(_json))
+      const _value = pad(val2str(encode(_json)), size_json)
       const _newKey_db = str2id(v[0])
       newRoot.push(idb.newRoot)
       oldRoot.push(icol.oldRoot)
@@ -106,7 +106,7 @@ describe("zkDB", function () {
       isOld0_db.push(idb.isOld0)
       newKey_db.push(_newKey_db)
       newKey.push(_newKey)
-      value.push(_value)
+      json.push(_value)
     }
 
     write = {
@@ -123,7 +123,7 @@ describe("zkDB", function () {
       isOld0_db,
       newKey_db,
       newKey,
-      value,
+      json,
     }
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       write,
@@ -160,7 +160,7 @@ describe("zkDB", function () {
     let col_siblings = col_res.siblings
     for (let i = 0; i < col_siblings.length; i++)
       col_siblings[i] = db.tree.F.toObject(col_siblings[i])
-    while (col_siblings.length < level) col_siblings.push(0)
+    while (col_siblings.length < 100) col_siblings.push(0)
     col_siblings = col_siblings.map(s => s.toString())
     const col_key = str2id("colA")
 
@@ -170,16 +170,16 @@ describe("zkDB", function () {
     let _siblings = res.siblings
     for (let i = 0; i < _siblings.length; i++)
       _siblings[i] = col.tree.F.toObject(_siblings[i])
-    while (_siblings.length < level) _siblings.push(0)
+    while (_siblings.length < 100) _siblings.push(0)
     _siblings = _siblings.map(s => s.toString())
     const key = str2id("docA")
-    const _value = val2str(encode(_json))
+    const _value = pad(val2str(encode(_json)), size_json)
     const _path = "a"
     const _val = tar.a
-    const path = pad(encodePath(_path), size)
-    const __val = pad(encodeVal(_val), size)
+    const path = pad(val2str(encodePath(_path)), size)
+    const __val = pad(val2str(encodeVal(_val)), size)
     const _write = {
-      value: _value,
+      json: _value,
       path,
       val: __val,
       root,
@@ -189,6 +189,7 @@ describe("zkDB", function () {
       col_siblings,
       col_root,
     }
+
     const { proof: proof2, publicSignals: sigs } =
       await snarkjs.groth16.fullProve(
         _write,
@@ -205,6 +206,7 @@ describe("zkDB", function () {
       sigs
     )
     expect(valid2).to.eql(true)
+
     const inputs = [
       ...proof2.pi_a.slice(0, 2),
       ...proof2.pi_b[0].slice(0, 2).reverse(),
@@ -212,6 +214,7 @@ describe("zkDB", function () {
       ...proof2.pi_c.slice(0, 2),
       ...sigs,
     ]
+
     /*
     const num =
       (
@@ -242,14 +245,12 @@ describe("zkDB", function () {
     ).map(n => n.toString() * 1)
     expect(float.slice(0, 4)).to.eql([2, 1, 1, 11])
     */
-
     const str = await zkdb.queryString(
-      sigs[202],
-      sigs[203],
-      sigs.slice(1, 101),
+      sigs[12],
+      sigs[13],
+      sigs.slice(1, 6),
       inputs
     )
-
     expect(str).to.eql("Hello")
   })
 })
