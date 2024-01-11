@@ -6,11 +6,11 @@ include "../../node_modules/circomlib/circuits/poseidon.circom";
 template DB (level,size_json,size) {  
     signal input path[size];
     signal input val[size];
+    signal input json[size_json];
     signal input siblings[level];
     signal input col_siblings[level];
     signal input col_root;
     signal input col_key;
-    signal input value;
     signal input root;
     signal input key;
     signal output exist;
@@ -32,7 +32,7 @@ template DB (level,size_json,size) {
     _coll.path <== path;
     _coll.val <== val;
     _coll.siblings <== siblings;
-    _coll.value <== value;
+    _coll.json <== json;
     _coll.root <== root;
     _coll.key <== key;
     exist <== _coll.exist;
