@@ -9,12 +9,12 @@ template JSON (size_json, size) {
     signal output exist;
     signal ex;
     var _exists = 0;
-    var  _json[7500] = toArr(size_json, json);
-    var  path2[7500] = toArr(size, path);
-    var  val2[7500] = toArr(size, val);
+    var _json[7500] = toArr(size_json, json);
+    var path2[7500] = toArr(size, path);
+    var val2[7500] = toArr(size, val);
     var i = 0;
-    while(i < 7500){ 
-        var _path[size];
+     while(i < 7500){ 
+        var _path[size * 75];
         var len = _json[i];
         i++;
         _path[0] = len;
@@ -36,7 +36,7 @@ template JSON (size_json, size) {
         }
         var type = _json[i];
         i++;
-        var _val[size];
+        var _val[size * 75];
         _val[0] = type;
         if(type == 1){
             _val[1] = _json[i];
@@ -47,7 +47,7 @@ template JSON (size_json, size) {
             _val[2] = _json[i];
             i++;
             _val[3] = _json[i];
-            i++;            
+            i++;
         } else if (type == 3){
             var slen =  _json[i];
             _val[1] = slen;
