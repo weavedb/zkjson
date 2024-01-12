@@ -175,7 +175,6 @@ module.exports = class ZKDB {
       newKey,
       json,
     }
-
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       write,
       resolve(__dirname, "../../circom/rollup/index_js/index.wasm"),

@@ -8,7 +8,7 @@ interface VerifierDB {
 }
 
 interface VerifierRU {
-  function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[1] calldata _pubSignals) view external returns (bool);
+  function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[3] calldata _pubSignals) view external returns (bool);
 
 }
 
@@ -86,7 +86,8 @@ contract ZKDB {
     return _json;
   }
   
-  function commit (uint[9] calldata zkp) public returns (uint) {
+  function commit (uint[11] calldata zkp) public returns (uint) {
+    require (zkp[9] == root, "wrong merkle root");
     // oldRoot must match the current root, make oldRoot input public
     require(msg.sender == comitter, "sender is not comitter");
     root = zkp[8];
@@ -95,16 +96,16 @@ contract ZKDB {
     
   }
 
-  function verifyRU(uint[9] calldata zkp) public view returns (bool) {
+  function verifyRU(uint[11] calldata zkp) public view returns (bool) {
     uint[2] memory _pA;
     uint[2][2] memory _pB;
     uint[2] memory _pC;
-    uint[1] memory sigs;
+    uint[3] memory sigs;
     for(uint i = 0; i < 2; i++) _pA[i] = zkp[i];
     for(uint i = 2; i < 4; i++) _pB[0][i - 2] = zkp[i];
     for(uint i = 4; i < 6; i++) _pB[1][i - 4] = zkp[i];
     for(uint i = 6; i < 8; i++) _pC[i - 6] = zkp[i];
-    for(uint i = 8; i < 9; i++) sigs[i - 8] = zkp[i];
+    for(uint i = 8; i < 11; i++) sigs[i - 8] = zkp[i];
     require(VerifierRU(verifierRU).verifyProof(_pA, _pB, _pC, sigs), "invalid proof");
     return true;
   }
