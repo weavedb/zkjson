@@ -17,7 +17,7 @@ const { resolve } = require("path")
 
 const size = 5
 const size_json = 16
-const level = 20
+const level = 40
 const getInputs = (res, tree) => {
   const isOld0 = res.isOld0 ? "1" : "0"
   const oldRoot = tree.F.toObject(res.oldRoot).toString()
@@ -36,9 +36,18 @@ const main = async () => {
   const db = new DB()
   await db.init()
   await db.addCollection("colA")
+  await db.addCollection("colB")
   let txs = [
+    ["colB", "docA", { d: 4 }],
+    ["colB", "docC", { d: 4 }],
+    ["colB", "docD", { d: 4 }],
     ["colA", "docD", { b: 4 }],
     ["colA", "docA", { b: 5 }],
+    ["colB", "docA2", { d: 4 }],
+    ["colB", "docC2", { d: 4 }],
+    ["colB", "docD2", { d: 4 }],
+    ["colA", "docD2", { b: 4 }],
+    ["colA", "docA2", { b: 5 }],
   ]
 
   let write, _json

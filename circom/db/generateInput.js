@@ -18,7 +18,7 @@ const _json = { a: 5 }
 const _path = "a"
 const _val = _json[_path]
 
-const level = 20
+const level = 40
 const size = 5
 const size_json = 16
 const json = pad(val2str(encode(_json)), size_json)
