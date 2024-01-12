@@ -46,11 +46,11 @@ describe("SMT Verifier test", function () {
   })
 
   it("should insert docs", async () => {
-    return
     const db = new DB()
     await db.init()
     await db.addCollection("colA")
-    await db.insert("colA", "docB", { b: 2 })
+    await db.addCollection("colB")
+    await db.insert("colB", "docB", { b: 2 })
     await db.insert("colA", "docC", { c: 3 })
     let txs = [
       ["colA", "docD", { c: 4 }],
