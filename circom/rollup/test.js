@@ -18,7 +18,7 @@ const {
 
 const size = 5
 const size_json = 16
-const level = 20
+const level = 40
 
 const getInputs = (res, tree) => {
   const isOld0 = res.isOld0 ? "1" : "0"
@@ -50,11 +50,17 @@ describe("SMT Verifier test", function () {
     await db.init()
     await db.addCollection("colA")
     await db.addCollection("colB")
-    await db.insert("colB", "docB", { b: 2 })
-    await db.insert("colA", "docC", { c: 3 })
     let txs = [
-      ["colA", "docD", { c: 4 }],
-      ["colA", "docA", { a: 5, e: 3 }],
+      ["colB", "docA", { d: 4 }],
+      ["colB", "docC", { d: 4 }],
+      ["colB", "docD", { d: 4 }],
+      ["colA", "docD", { b: 4 }],
+      ["colA", "docA", { b: 5 }],
+      ["colB", "docA2", { d: 4 }],
+      ["colB", "docC2", { d: 4 }],
+      ["colB", "docD2", { d: 4 }],
+      ["colA", "docD2", { b: 4 }],
+      ["colA", "docA2", { b: 5 }],
     ]
 
     let write, _json

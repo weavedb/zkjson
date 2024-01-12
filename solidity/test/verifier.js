@@ -36,9 +36,17 @@ describe("zkDB", function () {
     const json = { a: "Hello", b: true, c: null, d: 1.1, e: 5 }
     let txs = [
       ["colA", "docD", { d: 4 }],
+      ["colA", "docD2", { d: 4 }],
+      ["colA", "docD3", { d: 4 }],
+      ["colA", "docD4", { d: 4 }],
+      ["colA", "docD5", { d: 4 }],
+      ["colA", "docD6", { d: 4 }],
+      ["colA", "docD7", { d: 4 }],
+      ["colA", "docD8", { d: 4 }],
+      ["colA", "docD9", { d: 4 }],
       ["colA", "docA", json],
     ]
-    const _db = new ZKDB(db, zkdb, 5, 16, 20)
+    const _db = new ZKDB(db, zkdb, 5, 16, 40)
     await _db.insert(txs, db, zkdb)
 
     const float = await _db.query("colA", "docA", json, "d")
