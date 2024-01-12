@@ -37,6 +37,7 @@ contract ZKDB {
   function toArr(uint size_json, uint[5] memory json) public pure returns(uint[7500] memory){
     uint[7500]  memory _json;
     uint ji = 0;
+    uint prev = 0;
     for(uint j = 0; j < size_json; j++){
       if(json[j] > 0){
 	uint p = digits(json[j]);
@@ -45,22 +46,36 @@ contract ZKDB {
 	uint cur = 0;
 	uint len = 0;
 	uint num = 0;
+	uint is9 = 0;
 	while(p > 0){
 	  uint n = x / 10 ** (p - 1);
 	  if(on == 0 && n > 0){
 	    on = 1;
-	    len = n;
+	    if(n == 9){
+	      len = 8;
+	      is9 = 0;
+	    }else{
+	      len = n;
+	    }
 	    cur = 0;
 	  }else if(on == 1){
 	    num += n * 10 ** (len - cur - 1);
 	    cur++;
 	    if(cur == len){
-	      _json[ji] = num;
-	      ji++;
+	      prev *= 10 ** len;
+	      if(is9 == 1){
+		prev += num;
+	      }else{
+		num += prev;
+		prev = 0;
+		_json[ji] = num;
+		ji++;
+	      }
 	      cur = 0;
 	      on = 0;
 	      len = 0;
 	      num = 0;
+	      is9 = 0;
 	    }
 	  }
 	  x -= 10 ** (p - 1) * n;
@@ -72,6 +87,7 @@ contract ZKDB {
   }
   
   function commit (uint[9] calldata zkp) public returns (uint) {
+    // oldRoot must match the current root, make oldRoot input public
     require(msg.sender == comitter, "sender is not comitter");
     root = zkp[8];
     verifyRU(zkp);

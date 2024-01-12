@@ -15,17 +15,17 @@ const {
 } = require("../../encoder")
 const DB = require("../../db")
 const Collection = require("../../collection")
-const _json = { a: 5 }
+const _json = { b: 50, a: 3123432423 }
 const _path = "a"
 const _val = _json[_path]
 
 const size = 5
 const size_json = 16
-const level = 100
+const level = 20
 const json = pad(val2str(encode(_json)), size_json)
 const path = pad(val2str(encodePath(_path)), size)
 const val = pad(val2str(encodeVal(_val)), size)
-
+console.log(_val, encodeVal(_val), val)
 describe("JSON circuit", function () {
   let circuit
   this.timeout(1000000000)
@@ -38,13 +38,10 @@ describe("JSON circuit", function () {
   it("should insert docs", async () => {
     const db = new DB()
 
-    const doc = val2str(encode(_val))
     await db.init()
     await db.addCollection("colA")
     await db.insert("colA", "docA", _json)
     await db.insert("colA", "docB", { b: 2 })
-    await db.insert("colA", "docC", { c: 3 })
-    await db.insert("colA", "docD", { c: 4 })
 
     const col_root = db.tree.F.toObject(db.tree.root).toString()
     const col_res = await db.getCol("docA")
@@ -76,6 +73,7 @@ describe("JSON circuit", function () {
       col_siblings,
       col_root,
     }
+    console.log(write)
     const w = await circuit.calculateWitness(write, true)
     await circuit.checkConstraints(w)
     await circuit.assertOut(w, { exist: 1 })

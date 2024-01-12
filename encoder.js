@@ -1,4 +1,4 @@
-const { splitEvery } = require("ramda")
+const { splitEvery, flatten } = require("ramda")
 const base64Map = {
   A: "00",
   B: "01",
@@ -390,11 +390,18 @@ const id2str = id => {
 }
 
 function val2str(arr) {
-  const _arr = arr.map(n => {
-    let str = n.toString().split("")
-    str.unshift(str.length.toString())
-    return str.join("")
-  })
+  const _arr = flatten(
+    arr.map(n => {
+      let str = splitEvery(8, n.toString().split(""))
+      let i = 0
+      str = str.map(s => {
+        const len = i === str.length - 1 ? s.length : 9
+        i++
+        return len.toString() + s.join("")
+      })
+      return str
+    })
+  )
   let arrs = []
   let len = 0
   let str = ""
@@ -413,13 +420,20 @@ function val2str(arr) {
 
 function str2val(arr) {
   let _arr = []
+  let prev = ""
   for (const s of arr) {
     let str = s.split("")
     while (str.length > 0) {
       const len = +str.shift()
-      const nums = str.slice(0, len)
-      str = str.slice(len)
-      _arr.push(+nums.join(""))
+      if (len === 9) {
+        prev += str.slice(0, 8).join("")
+        str = str.slice(8)
+      } else {
+        const nums = str.slice(0, len).join("")
+        str = str.slice(len)
+        _arr.push(+(prev + nums))
+        prev = ""
+      }
     }
   }
   return _arr
