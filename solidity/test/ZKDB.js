@@ -133,16 +133,18 @@ module.exports = class ZKDB {
     let newKey_db = []
     let newKey = []
     let json = []
+    let fnc = []
     let _res
     for (let v of txs) {
       _json = v[2]
-      const { tree, col: res2, doc: res } = await this.db.insert(...v)
+      const { update, tree, col: res2, doc: res } = await this.db.insert(...v)
       const icol = getInputs(res, tree, this.level)
       const idb = getInputs(res2, this.db.tree, this.level)
       _res = idb
       const _newKey = str2id(v[1])
       const _value = pad(val2str(encode(_json)), this.size_json)
       const _newKey_db = str2id(v[0])
+      fnc.push(update ? [0, 1] : [1, 0])
       newRoot.push(idb.newRoot)
       oldRoot.push(icol.oldRoot)
       oldKey.push(icol.oldKey)
@@ -160,6 +162,7 @@ module.exports = class ZKDB {
     }
 
     write = {
+      fnc,
       oldRoot,
       newRoot,
       oldKey,

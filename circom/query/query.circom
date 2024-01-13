@@ -15,6 +15,7 @@ template Query (level, size_json, size) {
     signal input oldKey_db;
     signal input oldValue_db;
     signal input isOld0_db;
+    signal input fnc[2];
     signal input siblings_db[level];
     signal input newKey_db;
         
@@ -25,8 +26,8 @@ template Query (level, size_json, size) {
     for(var i = 0; i < size_json; i++){
         hash.inputs[i] <== json[i];
     }
-    colVerifier.fnc[0] <== 1;
-    colVerifier.fnc[1] <== 0;
+    colVerifier.fnc[0] <== fnc[0];
+    colVerifier.fnc[1] <== fnc[1];
     colVerifier.oldRoot <== oldRoot;
     colVerifier.oldKey <== oldKey;
     colVerifier.oldValue <== oldValue;

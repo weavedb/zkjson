@@ -27,9 +27,16 @@ class DB {
   }
   async insert(col, _key, _val) {
     const _col = this.getColTree(col)
-    const res_doc = await _col.insert(_key, _val)
+    let update = false
+    let res_doc
+    if ((await _col.get(_key)).found) {
+      update = true
+      res_doc = await _col.update(_key, _val)
+    } else {
+      res_doc = await _col.insert(_key, _val)
+    }
     const res_col = await this.updateDB(_col, col)
-    return { doc: res_doc, col: res_col, tree: _col.tree }
+    return { update, doc: res_doc, col: res_col, tree: _col.tree }
   }
   async updateDB(_col, col) {
     const root = _col.tree.F.toObject(_col.tree.root).toString()

@@ -59,7 +59,7 @@ describe("SMT Verifier test", function () {
       ["colB", "docA2", { d: 4 }],
       ["colB", "docC2", { d: 4 }],
       ["colB", "docD2", { d: 4 }],
-      ["colA", "docD2", { b: 4 }],
+      ["colA", "docA2", { b: 4 }],
       ["colA", "docA2", { b: 5 }],
     ]
 
@@ -79,9 +79,10 @@ describe("SMT Verifier test", function () {
     let newKey = []
     let _res
     let json = []
+    let fnc = []
     for (let v of txs) {
       _json = v[2]
-      const { tree, col: res2, doc: res } = await db.insert(...v)
+      const { update, tree, col: res2, doc: res } = await db.insert(...v)
 
       const icol = getInputs(res, tree)
       const idb = getInputs(res2, db.tree)
@@ -89,6 +90,7 @@ describe("SMT Verifier test", function () {
       const _newKey = str2id(v[1])
       json.push(pad(val2str(encode(_json)), size_json))
       const _newKey_db = str2id(v[0])
+      fnc.push(update ? [0, 1] : [1, 0])
       newRoot.push(idb.newRoot)
       oldRoot.push(icol.oldRoot)
       oldKey.push(icol.oldKey)
@@ -105,6 +107,7 @@ describe("SMT Verifier test", function () {
     }
 
     write = {
+      fnc,
       oldRoot,
       newRoot,
       oldKey,

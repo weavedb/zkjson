@@ -38,10 +38,10 @@ describe("JSON circuit", function () {
     const doc = val2str(encode(_val))
     const col = new Collection()
     await col.init()
-    await col.insert("docA", _json)
     await col.insert("docB", { b: 2 })
     await col.insert("docC", { c: 3 })
-    await col.insert("docD", { c: 4 })
+    await col.insert("docA", { c: 4 })
+    await col.update("docA", _json)
     const root = col.tree.F.toObject(col.tree.root).toString()
     const res = await col.get("docA")
     let siblings = res.siblings

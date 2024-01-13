@@ -25,7 +25,6 @@ const level = 40
 const json = pad(val2str(encode(_json)), size_json)
 const path = pad(val2str(encodePath(_path)), size)
 const val = pad(val2str(encodeVal(_val)), size)
-console.log(_val, encodeVal(_val), val)
 describe("JSON circuit", function () {
   let circuit
   this.timeout(1000000000)
@@ -73,7 +72,6 @@ describe("JSON circuit", function () {
       col_siblings,
       col_root,
     }
-    console.log(write)
     const w = await circuit.calculateWitness(write, true)
     await circuit.checkConstraints(w)
     await circuit.assertOut(w, { exist: 1 })

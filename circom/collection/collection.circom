@@ -18,6 +18,7 @@ template Collection (level, size_json, size) {
     for(var i = 0; i < size_json; i++){
         hash.inputs[i] <== json[i];
     }
+
     smtVerifier.enabled <== 1;
     smtVerifier.fnc <== 0;
     smtVerifier.oldKey <== 0;

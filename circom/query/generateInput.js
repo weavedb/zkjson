@@ -42,7 +42,12 @@ const main = async () => {
   await db.insert("colA", "docC", { c: 3 })
   await db.insert("colA", "docD", { c: 4 })
 
-  const { tree, col: res2, doc: res } = await db.insert("colA", "docA", _json)
+  const {
+    update,
+    tree,
+    col: res2,
+    doc: res,
+  } = await db.insert("colA", "docA", _json)
 
   const icol = getInputs(res, tree)
   const idb = getInputs(res2, db.tree)
@@ -50,6 +55,7 @@ const main = async () => {
   const newKey = str2id("docA")
   const newKey_db = str2id("colA")
   const write = {
+    fnc: update ? [0, 1] : [1, 0],
     oldRoot: icol.oldRoot,
     oldKey: icol.oldKey,
     oldValue: icol.oldValue,
