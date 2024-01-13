@@ -40349,7 +40349,6 @@ class SMT {
     let rtOld
 
     const resFind = await this.find(key)
-
     if (resFind.found) throw new Error("Key already exists")
 
     res.siblings = resFind.siblings

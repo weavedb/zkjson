@@ -88,7 +88,6 @@ contract ZKDB {
   
   function commit (uint[19] calldata zkp) public returns (uint) {
     require (zkp[9] == root, "wrong merkle root");
-    // oldRoot must match the current root, make oldRoot input public
     require(msg.sender == comitter, "sender is not comitter");
     root = zkp[8];
     verifyRU(zkp);
