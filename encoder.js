@@ -406,7 +406,7 @@ function val2str(arr) {
   let len = 0
   let str = ""
   for (let v of _arr) {
-    if (len + v.length > 75) {
+    if (len + v.length > 76) {
       len = 0
       arrs.push(str)
       str = ""
