@@ -1,4 +1,5 @@
 const chai = require("chai")
+const { range } = require("ramda")
 const path = require("path")
 const Scalar = require("ffjavascript").Scalar
 const wasm_tester = require("circom_tester").wasm
@@ -19,7 +20,7 @@ const {
 const size = 5
 const size_json = 16
 const level = 40
-
+const size_txs = 10
 const getInputs = (res, tree) => {
   const isOld0 = res.isOld0 ? "1" : "0"
   const oldRoot = tree.F.toObject(res.oldRoot).toString()
@@ -60,7 +61,6 @@ describe("SMT Verifier test", function () {
       ["colB", "docC2", { d: 4 }],
       ["colB", "docD2", { d: 4 }],
       ["colA", "docA2", { b: 4 }],
-      ["colA", "docA2", { b: 5 }],
     ]
 
     let write, _json
@@ -71,6 +71,7 @@ describe("SMT Verifier test", function () {
     let siblings = []
     let isOld0 = []
     let oldRoot_db = []
+    let newRoot_db = []
     let oldKey_db = []
     let oldValue_db = []
     let siblings_db = []
@@ -80,10 +81,28 @@ describe("SMT Verifier test", function () {
     let _res
     let json = []
     let fnc = []
-    for (let v of txs) {
+    for (let i = 0; i < size_txs; i++) {
+      const v = txs[i]
+      if (!v) {
+        json.push(range(0, size_json).map(() => "0"))
+        fnc.push([0, 0])
+        newRoot.push(newRoot[i - 1])
+        oldRoot.push("0")
+        oldKey.push("0")
+        oldValue.push("0")
+        siblings.push(range(0, level).map(() => "0"))
+        isOld0.push("0")
+        oldRoot_db.push(newRoot_db[i - 1])
+        oldKey_db.push("0")
+        oldValue_db.push("0")
+        siblings_db.push(range(0, level).map(() => "0"))
+        isOld0_db.push("0")
+        newKey_db.push("0")
+        newKey.push("0")
+        continue
+      }
       _json = v[2]
       const { update, tree, col: res2, doc: res } = await db.insert(...v)
-
       const icol = getInputs(res, tree)
       const idb = getInputs(res2, db.tree)
       _res = idb
@@ -98,6 +117,7 @@ describe("SMT Verifier test", function () {
       siblings.push(icol.siblings)
       isOld0.push(icol.isOld0)
       oldRoot_db.push(idb.oldRoot)
+      newRoot_db.push(idb.newRoot)
       oldKey_db.push(idb.oldKey)
       oldValue_db.push(idb.oldValue)
       siblings_db.push(idb.siblings)
@@ -123,6 +143,7 @@ describe("SMT Verifier test", function () {
       newKey,
       json,
     }
+
     const w = await circuit.calculateWitness(write, true)
     await circuit.checkConstraints(w)
     await circuit.assertOut(w, { new_root: _res.newRoot })

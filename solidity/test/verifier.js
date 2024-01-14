@@ -46,9 +46,9 @@ describe("zkDB", function () {
       ["colA", "docA", { d: 4 }],
       ["colA", "docA", json],
     ]
-    const _db = new ZKDB(db, zkdb, 5, 16, 40)
+    const _db = new ZKDB(db, zkdb, 5, 16, 40, 10)
     await _db.insert(txs, db, zkdb)
-    return
+
     const float = await _db.query("colA", "docA", json, "d")
     expect(float[3] / 10 ** float[2]).to.eql(1.1)
     const isNull = await _db.query("colA", "docA", json, "c")

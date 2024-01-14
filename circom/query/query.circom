@@ -38,8 +38,9 @@ template Query (level, size_json, size) {
     component hash2 = Poseidon(1);
     hash2.inputs[0] <== colVerifier.newRoot;
     component dbVerifier = SMTProcessor(level);
+    var any = fnc[0] + fnc[1];
     dbVerifier.fnc[0] <== 0;
-    dbVerifier.fnc[1] <== 1;
+    dbVerifier.fnc[1] <== any * 1;
     dbVerifier.oldRoot <== oldRoot_db;
     dbVerifier.oldKey <== oldKey_db;
     dbVerifier.oldValue <== oldValue_db;
