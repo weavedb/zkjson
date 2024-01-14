@@ -23,7 +23,13 @@ Most offchain data on the web are represented in JSON format, and blockchains ha
 - The current decentralized database solutions are too domain specific
 - The current oracle / indexer solutions are limited to a great extent
 
-As a result, data on web2 (offchain) and web3 (onhain) are divided and web3 is missing a great wide variety of usecases with offchain data. What if we could verify any offchain JSON data in onchain smart contracts, and also build a general-purpose database with web2-like performance and scalability? zkJSON and zkDB will allow direct connections from smartcontract to offchain database. And we will further make it practical and sustainable with a blockchain rollup and a decentralized network.
+As a result, data on web2 (offchain) and web3 (onhain) are divided and web3 is missing a great wide variety of usecases with offchain data. What if we could verify any offchain JSON data in onchain smart contracts, and also build a general-purpose database with web2-like performance and scalability? zkJSON and zkDB will allow direct connections from smartcontract to offchain database. And we will further make it practical and sustainable with modular blockchain rollups (Ethereum security + Arweave permanency and scalability) and a decentralized physical infrastructure network (DePIN) using Cosmos IBC.
+
+This entire techstack will enable novel usecases to web3 such as decentralized oracles and indexers, as well as provide a decentralized database alternative to web2 with the performance and scalability of cloud databases. We could, for instance, build a fully decentralized Twitter without any centralized components. Connecting securely with offchain data with privacy is also the way to bring in enterprize usecases to web3 in combination with DID and Verifiable Credentials (VC). We are working on it too.
+
+We envision the web where offchain data are seamlessly connected with blockchains, and any offchain data without zkJSON are not legit, since they are not verifiable onchain.
+
+Onchain verifiability is what scales the decentralized web. Onchain is the new online, and zkJSON expands what's online/onchain (verifiable).
 
 ### How
 
@@ -48,7 +54,7 @@ The key to making JSON verifiable with zkp is to invent a deterministic encoding
 
 ##### Encoding
 
-zk circuits cannot handle arbitrarily nesting dynamic arrays. So we first need to flatten all the paths.
+zk circuits can neither handle objects nor dynamically nesting arrays. So we first need to flatten all the paths into a simple array.
 
 ```
 { "a" : 1, "c" : false, "b" : { "e" : null, "d" : "four" }, "f" : 3.14, "ghi" : [ 5, 6, 7 ] }
@@ -92,9 +98,9 @@ To make it deterministic, items must be lexicographically sorted by the paths.
 ]
 ```
 
-Here's a tricy part, if the value is an array, we need to create a path for each element, but we need to tell the difference between `ghi.0` and `ghi[0]` with just numbers. `ghi.0` is a path to an object, `ghi[0]` is a path to an array element. Also there is a case where the key is empty like `{ "" : "empty" }`, and also just a primitive value without the top level element being an object is also a valid JSON, such as `null`, `true`, `[ 1, 2, 3]`, `1`. You can express the paths with empty string ` `, or something like `a..b` for `{ "a" : { "" : { "b" : 1 } } }`.
+Here's a tricky part, if the value is an array, we need to create a path for each element, but we need to tell the difference between `ghi.0` and `ghi[0]` with just numbers. `ghi.0` is a path to an object, `ghi[0]` is a path to an array element. Also there is a case where the key is empty like `{ "" : "empty" }`. Another case to note is that just a primitive value without the top level element being an object is also a valid JSON, such as `null`, `true`, `[ 1, 2, 3]`, `1`. You can express the paths with empty string ` `, or something like `a..b` for `{ "a" : { "" : { "b" : 1 } } }`.
 
-To address all these edge cases, we prefix each array key with the number of characters, or `0` if the key is empty (followed by `1`) or an array index (followed by another`0`).
+To address all these edge cases, we prefix each array key with the number of characters that follow, or `0` if the key is empty (followed by `1`) or an array index (followed by another`0`).
 
 ```
 [
@@ -176,7 +182,7 @@ Now let's convert the values in our original JSON example.
   [ 2, 3, 103, 104, 105, 0, 0, 2 ], [ 2, 1, 0, 7 ] ]
 ]
 ```
-Now we are to flatten the entire nested arrays, but each number must be prefixed by the number of digits that contains, otherwise there's no way to tell where to partition the series of digits. And here's another tricy part, if the number contains more than 9 digits, you cannot prefix it with 10, 11, 12 ... because when all the numbers are concatenated later, `10` doesn't mean that `10` digits follow, but it means `1` digit follows and it's `0`. So we allow max 8 digits in each partition and `9` means there will be another partition(s) following the current one.
+Now we are to flatten the entire nested arrays, but each number must be prefixed by the number of digits that contains, otherwise there's no way to tell where to partition the series of digits. And here's another tricky part, if the number contains more than 9 digits, you cannot prefix it with 10, 11, 12 ... because when all the numbers are concatenated later, `10` doesn't mean that `10` digits follow, but it means `1` digit follows and it's `0`. So we allow max 8 digits in each partition and `9` means there will be another partition(s) following the current one.
 
 - `123` : `[ 3, 123 ]`
 - `12345678` : `[ 8, 12345678 ]`
@@ -234,9 +240,9 @@ A document-based NoSQL database would have collections, and each collection in t
 
 ##### Collection
 
-We can use a sparse merkle tree (SMT) to represent all the document data in a collection with a root hash. SMT is perfect because curcuits cannot handle dynamic tree sizes and SMT can represent a large number of documents efficiently. Each leaf node will be the poseidon hash of zkJSON encoding of the data. And each leaf node has an index number, so we need to somehow convert the document IDs to numbers without collisions. How many leaf nodes a SMT hss depends on the pre-defined depth of the tree. For example, a 32-level SMT can have `2 ** 32 = 4294967296` leaf nodes. The level must be pre-defined at the circuit compile time, so we need to find the right conversion and balance.
+We can use a sparse merkle tree (SMT) to represent all the document data in a collection with a root hash. SMT is perfect because curcuits cannot handle dynamic tree sizes and SMT can represent a large number of documents efficiently. Each leaf node will be the poseidon hash of zkJSON encoding of the data. And each leaf node has an index number, so we need to somehow convert the document IDs to numbers without collisions. How many leaf nodes a SMT has depends on the pre-defined depth of the tree. For example, a 32-level SMT can have `2 ** 32 = 4294967296` leaf nodes. The level must be pre-defined at the circuit compile time, so we need to find the right conversion and balance.
 
-For this constraint, we only allow 64 characters to keep things compact and efficient, although there can be different optimized setups for your specific usecases. 
+Due to this constraint, we only allow 64 characters to keep things compact and efficient, although there can be different optimized setups for your specific usecases. 
 
 - `A-Z` (0 - 25)
 - `a-z` (26 - 51)
@@ -244,8 +250,18 @@ For this constraint, we only allow 64 characters to keep things compact and effi
 - `-` (62)
 - `_` (63)
 
-Now 2 digits can represent one character with collision free, which means we can have only up to 4 characters in document IDs with a 32 level SMT. We can of course increase the level to have more characters, but the more levels, the more computation with the circuit, so we need to find the right balance. For instance, to allow 10 characters we need 67 levels of SMT.
+Now 2 digits can represent one character with collision free, which means we can have only up to 4 characters in document IDs with a 32 level SMT. The last allowed digit will always have possibility of overflowing, so we prefix the converted numbers with `1` to differenciate `A` from `AA` (they are both `0` without the prefix `1`).
 
+- `A` = `100`
+- `AA` = `10000`
+- `ABC` = `1000102`
+- `abcd` = `126272829` 
+
+We can of course increase the level to have more characters, but the more levels, the more computation with the circuit, so we need to find the right balance. For instance, to allow 10 characters we need 67 levels of SMT.
+
+- `zk_WeaveDB` = `151366322302647300301` 
+
+One way to have longer ID length with the same depth is to restrict the allowed characters to less than 31 since `31 * 31 = 961`. In this case 3 digits can represent 2 characters instead of 4 digits representing 2 characters. But we won't cover it here.
 ##### Database
 
 For the database, we can take the exact same approach with the collections. We can use a SMT to represent multiple collection states in a DB with one root hash, and each leaf node will be the merkle root of a collection, which in turn represents the entire documents in the collection. We will give each collection an ID with the same ID-to-index conversion as the documents.
@@ -260,4 +276,56 @@ How do we make zkDB secure and queriable from other blockchains? We can write a 
 
 Finally, we can deploy the prevous zkDB query circout verifier as a Solidity contract too, and make it possible to securely query any paths with the right proof. When querying, the Solidity contract must check the DB root hash to verify the queried value againts the current database state.
 
+```solidity
+interface IZKDB {
+  function qNull (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (bool);
+  function qBool (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (bool);
+  function qInt (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (int);
+  function qFloat (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (uint[3] memory);
+  function qString (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (string memory);
+}
+```
 
+`qNill` returns `true` only if the value is `null` and otherwise throws an error. And `qFloat` returns the array of encoded numbers without the type prefix ( e.g. `[ 1, 2, 314 ]` ) since Solidity cannot handle float numbers.
+
+We will write circuits to return an array or multiple values, and also for more complex queries using some conditions such as `$where` / `$gt` / `$gte` / `$lt` / `$lte` / `$in` / `$nin` and so on.
+
+### Going Further
+
+With the first 4 components `zkJSON` / `zkDB` / `zkRollup` / `zkQuery`, it's now technically possible to build a fully verifiable zkp-based DB connecting blockchains and offchain data. But this doesn't mean it's practical in real use cases. We will briefly introduce 3 additional steps of `WeaveDB` / `WeaveDB Rollup` / `WeaveChain` to implement zkDB in our real world.
+
+#### WeaveDB
+
+WeaveDB is a general-purpose NoSQL database as a smart contract. It utilizes SCP (Storage-based Consensus Paradigm) enabled by Arweave, and the entire database including indexes is a SmartWeave contract. It has a powerful DSL called FPJSON to operate on JSON objects, which enabled highly advanced features a decentralized database would require.
+
+- Crypto Wallet Authentication
+- ZKP verifiability
+- Data Schema
+- Access Control Rules
+- Auto-executed Crons
+- Triggers to chain queries
+- Onchain indexers
+- Relayers to connect with offchain data / other blockchains
+
+WeaveDB queries are almost compatible with Firestore from Google but way more powerful thanks to FPJSON. In the future, we will write a circuit to prove all the FPJSON operations so zkDB will be even more secure with powerful data manipurations.
+
+Each data block of WeaveDB will be a zkJSON document, so we can query WeaveDB data directly from Ethereum smart contracts as well as from Arweave smart contracts (SmartWeave).
+
+### WeaveDB Rollup
+
+SmartWeave (Arweave smart contract) provides scalability and cost-effectiveness with lazy offchain computation. This is the only way to hyperscale the decentralized web. But when it comes to database, a blockchain sequencer is a bottleneck to performance and latency because of how the sequencer processes transactions in sequence and how a DB must maintain ACID properties with hyper low latency. So WeaveDB has developed a L3 rollup to the L2 sequencer (Warp) to the L1 Arweave permanent storage. In this way, we can have a centralized node for parallel query executions with high performance and low latency of web2 cloud databases, but still keep full decentralization with L1 verifiability and L2 composability. WeaveDB rollups can optionally have the Ethereum (or any EVM) security and interoperability by turning on the zkRollup feature.
+
+WeaveDB Rollup will roll out in 3 phases.
+
+- Rollup Development Kit (RDK)
+- Rollup as a Service (RaaS)
+- Decentralized Physical Infrastructure Network (DePIN)
+
+### WeaveChain
+
+WeaveChain will be a CosmosSDK based blockchain and a marketplace to match database developers / dapps with rollup operators. It's basically a Filecoin for database. zkDB/WeaveDB is to WeaveChain as IPFS is to Filecoin. We will introduce 2 unique components to connect with real-world data and web2.
+
+- WeavePoint - zkp verifiable offchain DB points backed by ERC20
+- WeaveWallet - Privatekey manegement-less biometric only wallet with DID / VC / ZKP
+
+WeaveChain will also be a PoS network to manage rollup nodes and IBC compatible to communicate between different chains.
