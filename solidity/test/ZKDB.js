@@ -1,6 +1,6 @@
 const snarkjs = require("snarkjs")
 const { resolve } = require("path")
-
+const { range } = require("ramda")
 const {
   pad,
   encode,
@@ -28,12 +28,13 @@ const getInputs = (res, tree, level) => {
 }
 
 module.exports = class ZKDB {
-  constructor(db, zkdb, size, size_json, level) {
+  constructor(db, zkdb, size, size_json, level, size_txs) {
     this.db = db
     this.zkdb = zkdb
     this.size = size
     this.size_json = size_json
     this.level = level
+    this.size_txs = size_txs
   }
   async genProof(col, doc, tar, path) {
     const val = tar[path]
@@ -126,6 +127,7 @@ module.exports = class ZKDB {
     let siblings = []
     let isOld0 = []
     let oldRoot_db = []
+    let newRoot_db = []
     let oldKey_db = []
     let oldValue_db = []
     let siblings_db = []
@@ -135,7 +137,26 @@ module.exports = class ZKDB {
     let json = []
     let fnc = []
     let _res
-    for (let v of txs) {
+    for (let i = 0; i < this.size_txs; i++) {
+      const v = txs[i]
+      if (!v) {
+        json.push(range(0, this.size_json).map(() => "0"))
+        fnc.push([0, 0])
+        newRoot.push(newRoot[i - 1])
+        oldRoot.push("0")
+        oldKey.push("0")
+        oldValue.push("0")
+        siblings.push(range(0, this.level).map(() => "0"))
+        isOld0.push("0")
+        oldRoot_db.push(newRoot_db[i - 1])
+        oldKey_db.push("0")
+        oldValue_db.push("0")
+        siblings_db.push(range(0, this.level).map(() => "0"))
+        isOld0_db.push("0")
+        newKey_db.push("0")
+        newKey.push("0")
+        continue
+      }
       _json = v[2]
       const { update, tree, col: res2, doc: res } = await this.db.insert(...v)
       const icol = getInputs(res, tree, this.level)
@@ -152,6 +173,7 @@ module.exports = class ZKDB {
       siblings.push(icol.siblings)
       isOld0.push(icol.isOld0)
       oldRoot_db.push(idb.oldRoot)
+      newRoot_db.push(idb.newRoot)
       oldKey_db.push(idb.oldKey)
       oldValue_db.push(idb.oldValue)
       siblings_db.push(idb.siblings)

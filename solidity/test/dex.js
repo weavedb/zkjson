@@ -40,14 +40,13 @@ describe("zkDB", function () {
       [col, "burn-2", json],
       [col, "burn-3", json],
       [col, "burn-4", json],
-      [col, "burn-5", json],
       [col, "burn-6", json],
       [col, "burn-7", json],
       [col, "burn-8", json],
       [col, "burn-9", json],
       [col, "burn-10", json2],
     ]
-    const _db = new ZKDB(db, zkdb, 5, 16, 40)
+    const _db = new ZKDB(db, zkdb, 5, 16, 40, 10)
     await _db.insert(txs)
     const proof = await _db.genProof(col, "burn-10", json2, "a")
     const proof2 = await _db.genProof(col, "burn-10", json2, "b")
@@ -55,7 +54,7 @@ describe("zkDB", function () {
     const _col = sigs[12]
     const _doc = sigs[13]
     expect((await dex.balances(user.address)).toNumber()).to.eql(0)
-    return
+
     await dex.mint(_col, _doc, proof, proof2)
     expect((await dex.balances(user.address)).toNumber()).to.eql(50)
     let err = false
