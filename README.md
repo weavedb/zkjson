@@ -13,7 +13,7 @@
 
 ## Zero Knowledge Provable JSON
 
-**zkJSON** makes any arbitrary JSON data provable with zero knoledge proof, and makes them verifiable both offchain and onchain (blockchain).
+**zkJSON** makes any arbitrary JSON data provable with zero knowledge proof, and makes them verifiable both offchain and onchain (blockchain).
 
 EVM blockchains like Ethereum will get a hyper scalable NoSQL database extension whereby off-chain JSON data are directly queriable from within Solidity smart contracts.
 
@@ -28,11 +28,11 @@ Most offchain data on the web are represented in JSON format, and blockchains ha
 - The current decentralized database solutions are too domain specific
 - The current oracle / indexer solutions are limited to a great extent
 
-As a result, data on web2 (offchain) and web3 (onhain) are divided and web3 is missing a great wide variety of usecases with offchain data. What if we could verify any offchain JSON data in onchain smart contracts, and also build a general-purpose database with web2-like performance and scalability? zkJSON and zkDB will allow direct connections from smartcontract to offchain database. And we will further make it practical and sustainable with modular blockchain rollups (Ethereum security + Arweave permanency and scalability) and a decentralized physical infrastructure network (DePIN) using Cosmos IBC.
+As a result, data on web2 (offchain) and web3 (onhain) are divided and web3 is missing a great wide variety of usecases with offchain data. What if we could verify any offchain JSON data in onchain smart contracts, and also build a general-purpose database with web2-like performance and scalability? zkJSON and zkDB will allow direct connections from smartcontract to offchain database. And we will further make it practical and sustainable with modular blockchain rollups ([Ethereum](https://ethereum.org/) security + [Arweave](https://arweave.org/) permanency and scalability) and a decentralized physical infrastructure network ([DePIN](https://medium.com/@perma_dao/unveiling-the-background-of-weavedb-and-kwildb-as-mentioned-by-messari-f1d631ec2c91)) using [Cosmos IBC](https://cosmos.network/ibc/).
 
-This entire techstack will enable novel usecases to web3 such as decentralized oracles and indexers, as well as provide a decentralized database alternative to web2 with the performance and scalability of cloud databases. We could, for instance, build a fully decentralized Twitter without any centralized components. Connecting securely with offchain data with privacy is also the way to bring in enterprize usecases to web3 in combination with DID and Verifiable Credentials (VC). We are working on it too.
+This entire techstack will enable novel usecases to web3 such as decentralized oracles and indexers, as well as provide a decentralized database alternative to web2 with the performance and scalability of cloud databases. We could, for instance, build [a fully decentralized Twitter](https://www.jots.social/) without any centralized components. Connecting securely with offchain data with privacy is also the way to bring in enterprize usecases to web3 in combination with DID and Verifiable Credentials (VC). We are working on it too with [PolygonID](https://polygonid.com/) and [ICP VETKeys](https://internetcomputer.org/blog/features/vetkey-primer).
 
-We envision the web where offchain data are seamlessly connected with blockchains, and any offchain data without zkJSON are not legit, since they are not verifiable onchain.
+We envision the web where offchain data are seamlessly connected with blockchains. Our ultimate goal is to liberate the web2 data silos, and redirect the huge monopolistic web2 revenue models such as ad networks and future AI-based networks to web3. Any offchain data without zkJSON are not legit, since they are not verifiable onchain.
 
 Onchain verifiability is what scales the decentralized web. Onchain is the new online, and zkJSON expands what's online/onchain (verifiable).
 
@@ -257,7 +257,7 @@ A document-based NoSQL database would have collections, and each collection in t
 
 ##### Collection
 
-We can use a sparse merkle tree (SMT) to represent all the document data in a collection with a root hash. SMT is perfect because curcuits cannot handle dynamic tree sizes and SMT can represent a large number of documents efficiently. Each leaf node will be the poseidon hash of zkJSON encoding of the data. 
+We can use a sparse merkle tree ([SMT](https://docs.iden3.io/getting-started/mt/)) to represent all the document data in a collection with a root hash. SMT is perfect because curcuits cannot handle dynamic tree sizes and SMT can represent a large number of documents efficiently. Each leaf node will be the [poseidon hash](https://www.poseidon-hash.info/) of zkJSON encoding of the data. 
 
 <div align="center"><img src="./assets/collection.png" /></div>
 
@@ -341,7 +341,7 @@ With the first 4 components `zkJSON` / `zkDB` / `zkRollup` / `zkQuery`, it's now
 
 #### WeaveDB
 
-WeaveDB is a general-purpose NoSQL database as a smart contract. It utilizes SCP (Storage-based Consensus Paradigm) enabled by Arweave, and the entire database including indexes is a SmartWeave contract. It has a powerful DSL called FPJSON to operate on JSON objects, which enabled highly advanced features a decentralized database would require.
+WeaveDB is a general-purpose NoSQL database as a smart contract. It utilizes SCP ([Storage-based Consensus Paradigm](https://medium.com/@perma_dao/storage-consensus-paradigm-non-blockchain-for-the-next-generation-of-blockchain-f635980c6510)) enabled by Arweave, and the entire database including indexes is a SmartWeave contract. It has a powerful DSL called [FPJSON](https://fpjson.weavedb.dev) to operate on JSON objects, which enabled highly advanced features a decentralized database would require.
 
 - Crypto Wallet Authentication
 - ZKP verifiability
@@ -356,9 +356,19 @@ WeaveDB queries are almost compatible with Firestore from Google but way more po
 
 Each data block of WeaveDB will be a zkJSON document, so we can query WeaveDB data directly from Ethereum smart contracts as well as from Arweave smart contracts (SmartWeave).
 
+- [WeaveDB Docs](https://weavedb.vercel.app/docs/get-started/intro)
+- [FPJSON](https://fpjson.weavedb.dev)
+- [FPJSON 2.0 Docs](https://weavedb.vercel.app/docs/get-started/fpjson)
+
 ### WeaveDB Rollup
 
-SmartWeave (Arweave smart contract) provides scalability and cost-effectiveness with lazy offchain computation. This is the only way to hyperscale the decentralized web. But when it comes to database, a blockchain sequencer is a bottleneck to performance and latency because of how the sequencer processes transactions in sequence and how a DB must maintain ACID properties with hyper low latency. So WeaveDB has developed a L3 rollup to the L2 sequencer (Warp) to the L1 Arweave permanent storage. In this way, we can have a centralized node for parallel query executions with high performance and low latency of web2 cloud databases, but still keep full decentralization with L1 verifiability and L2 composability. WeaveDB rollups can optionally have the Ethereum (or any EVM) security and interoperability by turning on the zkRollup feature.
+[SmartWeave](https://github.com/ArweaveTeam/SmartWeave) (Arweave smart contract) provides scalability and cost-effectiveness with lazy offchain computation. This is the only way to hyperscale the decentralized web. But when it comes to database, a blockchain sequencer is a bottleneck to performance and latency because of how the sequencer processes transactions in sequence and how a DB must maintain [ACID](https://en.wikipedia.org/wiki/ACID) properties with hyper low latency. So WeaveDB has developed a L3 rollup to the L2 sequencer ([Warp](https://warp.cc/)) to the L1 Arweave permanent storage. In this way, we can have a centralized node for parallel query executions with high performance and low latency of web2 cloud databases, but still keep full decentralization with L1 verifiability and L2 composability.
+
+Although Arweave already guarantees permanent data verifiability and full decentralization, WeaveDB rollups can optionally inherit the Ethereum (or any EVM) security and interoperability with EVM smart contracts via zkp by turning on the zkRollup feature.
+
+<div align="center"><img src="./assets/weavedb.png" /></div>
+
+- [WeaeDB Rollup Docs (WIP)](https://weavedb.vercel.app/docs/advanced/rollup)
 
 WeaveDB Rollup will roll out in 3 phases.
 
@@ -368,9 +378,9 @@ WeaveDB Rollup will roll out in 3 phases.
 
 ### WeaveChain
 
-WeaveChain will be a CosmosSDK based blockchain and a marketplace to match database developers / dapps with rollup operators. It's basically a Filecoin for database. zkDB/WeaveDB is to WeaveChain as IPFS is to Filecoin. We will introduce 2 unique components to connect with real-world data and web2.
+WeaveChain will be a CosmosSDK based DePIN blockchain and a marketplace to match database developers / dapps with rollup operators. It's basically a Filecoin for database. zkDB/WeaveDB is to WeaveChain as [IPFS](https://ipfs.tech/) is to [Filecoin](https://filecoin.io/). We will introduce 2 unique components to connect with real-world data and web2.
 
-- WeavePoint - zkp verifiable offchain DB points backed by ERC20
-- WeaveWallet - Privatekey manegement-less biometric only wallet with DID / VC / ZKP
+- WeavePoint Protocol - Offchain DB points backed by ERC20 via zkJSON
+- WeaveWallet - Biometric wallet with [PolygonID](https://polygonid.com/) (DID / VC / ZKP) utilizing [Passkeys](https://passkeys.dev/) and ICP [VETKeys](https://internetcomputer.org/blog/features/vetkey-primer)
 
-WeaveChain will also be a PoS network to manage rollup nodes and IBC compatible to communicate between different chains.
+WeaveChain will also be a PoS network to manage rollup nodes and [IBC](https://cosmos.network/ibc/) compatible to communicate between different chains.
