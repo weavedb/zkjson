@@ -105,17 +105,15 @@ module.exports = class ZKDB {
         : 4
     switch (type) {
       case 0:
-        return await this.zkdb.queryNull(...params)
+        return await this.zkdb.qNull(...params)
       case 1:
-        return await this.zkdb.queryBool(...params)
+        return await this.zkdb.qBool(...params)
       case 2:
-        return (await this.zkdb.queryInt(...params)).toString() * 1
+        return (await this.zkdb.qInt(...params)).toString() * 1
       case 2.5:
-        return (await this.zkdb.queryFloat(...params)).map(
-          n => n.toString() * 1
-        )
+        return (await this.zkdb.qFloat(...params)).map(n => n.toString() * 1)
       case 3:
-        return await this.zkdb.queryString(...params)
+        return await this.zkdb.qString(...params)
     }
   }
   async insert(txs) {

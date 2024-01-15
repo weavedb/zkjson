@@ -4,9 +4,9 @@ import "hardhat/console.sol";
 
 interface IZKDB {
   
-  function queryInt (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (int);
+  function qInt (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (int);
   
-  function queryString (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (string memory);
+  function qString (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (string memory);
   
 }
   
@@ -55,9 +55,9 @@ contract DEX {
     path[0] = 1111297;
     uint[5] memory path2;
     path2[0] = 1111298;
-    string memory str = IZKDB(zkdb).queryString(col, doc, path, zkp);
+    string memory str = IZKDB(zkdb).qString(col, doc, path, zkp);
     address addr = toAddr(str);
-    int balance = IZKDB(zkdb).queryInt(col, doc, path2, zkp2);
+    int balance = IZKDB(zkdb).qInt(col, doc, path2, zkp2);
     balances[addr] += uint(balance);
     return addr;
   }
