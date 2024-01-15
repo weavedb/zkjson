@@ -136,7 +136,7 @@ contract ZKDB {
     return toArr(5, value);
   }
 
-  function queryInt (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (int) {
+  function qInt (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (int) {
     uint[7500] memory value = validateQuery(collection, doc, path, zkp);
     require(value[0] == 2 && value[2] == 0, "not int");
     verifyDB(zkp);
@@ -149,14 +149,18 @@ contract ZKDB {
     return string(stringBytes);
   }
 
-  function queryFloat (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (uint[7500] memory) {
+  function qFloat (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (uint[3] memory) {
     uint[7500] memory value = validateQuery(collection, doc, path, zkp);
     require(value[0] == 2 && value[2] == 1, "not float");
     verifyDB(zkp);
-    return value;
+    uint[3] memory float;
+    float[0] = value[1];
+    float[1] = value[2];
+    float[2] = value[3];
+    return float;
   }
 
-  function queryString (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (string memory) {
+  function qString (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (string memory) {
     uint[7500] memory value = validateQuery(collection, doc, path, zkp);
     require(value[0] == 3, "not string");
     verifyDB(zkp);
@@ -166,14 +170,14 @@ contract ZKDB {
     return str;
   }
 
-  function queryBool (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (bool) {
+  function qBool (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (bool) {
     uint[7500] memory value = validateQuery(collection, doc, path, zkp);
     require(value[0] == 1, "not bool");
     verifyDB(zkp);
     return value[1] == 1 ? true : false;
   }
   
-  function queryNull (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (bool) {
+  function qNull (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (bool) {
     uint[7500] memory value = validateQuery(collection, doc, path, zkp);
     require(value[0] == 0, "not null");
     verifyDB(zkp);

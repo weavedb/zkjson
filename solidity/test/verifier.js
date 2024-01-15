@@ -36,7 +36,6 @@ describe("zkDB", function () {
     const json = { a: "Hello", b: true, c: null, d: 1.1, e: 5 }
     let txs = [
       ["colA", "docD", { d: 4 }],
-      ["colA", "docD2", { d: 4 }],
       ["colA", "docD3", { d: 4 }],
       ["colA", "docD4", { d: 4 }],
       ["colA", "docD5", { d: 4 }],
@@ -50,7 +49,8 @@ describe("zkDB", function () {
     await _db.insert(txs, db, zkdb)
 
     const float = await _db.query("colA", "docA", json, "d")
-    expect(float[3] / 10 ** float[2]).to.eql(1.1)
+    expect(float[2] / 10 ** float[1]).to.eql(1.1)
+
     const isNull = await _db.query("colA", "docA", json, "c")
     expect(isNull).to.eql(true)
 
