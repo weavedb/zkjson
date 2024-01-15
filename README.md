@@ -14,6 +14,8 @@
 
 EVM blockchains like Ethereum will get a hyper scalable NoSQL database extension whereby off-chain JSON data are directly queriable from within Solidity smart contracts.
 
+<div align="center"><img src="./assets/zkjson.png" /></div>
+
 ### Why
 
 Most offchain data on the web are represented in JSON format, and blockchains have been failing to connect with them efficiently for some cricical reasosns.
@@ -46,7 +48,7 @@ And 3 bonus steps to make it practical and sustainable (using Arweave & Cosmos I
 6. make WeaveDB performant, scalable, and secure with Arweave+EVM hybrid rollup - **WeaveDB Rollup**
 7. make the rollups sustainable with DePIN - **WeaveChain**
 
-*This repo contains only the first 4 steps.*
+*This repo contains only the first 4 steps.* You can find the rest [here](https://github.com/weavedb/weavedb).
 
 #### zkJSON
 
@@ -54,10 +56,18 @@ The key to making JSON verifiable with zkp is to invent a deterministic encoding
 
 ##### Encoding
 
+<div align="center"><img src="./assets/encode.png" /></div>
+
 zk circuits can neither handle objects nor dynamically nesting arrays. So we first need to flatten all the paths into a simple array.
 
 ```js
-{ "a" : 1, "c" : false, "b" : { "e" : null, "d" : "four" }, "f" : 3.14, "ghi" : [ 5, 6, 7 ] }
+{
+  "a": 1,
+  "c": false,
+  "b": { "e": null, "d": "four" },
+  "f": 3.14,
+  "ghi": [ 5, 6, 7 ],
+}
 ```
 
 becomes
@@ -221,14 +231,13 @@ which means up to 76 digits are safe and a 77-digit-number could overflow. So as
 
 ```js
 [
-  "1111297121110111211298113100131431023111311731141211298113101101111299111011",
-  "1131021211123314121331033104310510101012111015121331033104310510101112111016",
-  "121331033104310510101212111017",
-  "0",
-  "0",
-  ...
+  1111297121110111211298113100131431023111311731141211298113101101111299111011,
+  1131021211123314121331033104310510101012111015121331033104310510101112111016,
+  121331033104310510101212111017
 ]
 ```
+
+What's suprizing here is that the entire JSON is compressed into just 3 integers in the end. It's just `uint[3]` in Solidity. This indeed is extreme efficiency!
 
 Now we can build a circuit to handle these digits and prove the value of a selected path without revealing the entire JSON. It's easy to explain the encoding, but harder to write the actual encoder/decorder and a circuit to properly process this encoding. But fortunately, we already did write them!
 
@@ -241,9 +250,15 @@ Once we get zkJSON, we can build a database structure with zkJSON as base buildi
 
 A document-based NoSQL database would have collections, and each collection in turn would have a bunch of documents, which are JSONs.
 
+<div align="center"><img src="./assets/structure.png" /></div>
+
 ##### Collection
 
-We can use a sparse merkle tree (SMT) to represent all the document data in a collection with a root hash. SMT is perfect because curcuits cannot handle dynamic tree sizes and SMT can represent a large number of documents efficiently. Each leaf node will be the poseidon hash of zkJSON encoding of the data. And each leaf node has an index number, so we need to somehow convert the document IDs to numbers without collisions. How many leaf nodes a SMT has depends on the pre-defined depth of the tree. For example, a 32-level SMT can have `2 ** 32 = 4294967296` leaf nodes. The level must be pre-defined at the circuit compile time, so we need to find the right conversion and balance.
+We can use a sparse merkle tree (SMT) to represent all the document data in a collection with a root hash. SMT is perfect because curcuits cannot handle dynamic tree sizes and SMT can represent a large number of documents efficiently. Each leaf node will be the poseidon hash of zkJSON encoding of the data. 
+
+<div align="center"><img src="./assets/collection.png" /></div>
+
+And each leaf node has an index number, so we need to somehow convert the document IDs to numbers without collisions. How many leaf nodes a SMT has depends on the pre-defined depth of the tree. For example, a 32-level SMT can have `2 ** 32 = 4294967296` leaf nodes. The level must be pre-defined at the circuit compile time, so we need to find the right conversion and balance.
 
 Due to this constraint, we only allow 64 characters to keep things compact and efficient, although there can be different optimized setups for your specific usecases. 
 
@@ -269,11 +284,23 @@ One way to have longer ID length with the same depth is to restrict the allowed 
 
 For the database, we can take the exact same approach with the collections. We can use a SMT to represent multiple collection states in a DB with one root hash, and each leaf node will be the merkle root of a collection, which in turn represents the entire documents in the collection. We will give each collection an ID with the same ID-to-index conversion as the documents.
 
+<div align="center"><img src="./assets/db.png" /></div>
+
 Now we can write a circuit to proove a collection root hash, then we can write another circuit to prove a database root hash, which represents multiple collections within the database. This circuit can also prove any value in any JSON document in any collection in a database without revealing the entire JSON data. zkJSON enables this.
 
 #### zkRollup
 
 How do we make zkDB secure and queriable from other blockchains? We can write a circuit to prove the merkle tree hash transitions and deploy a Solidity contract to verify that proofs onchain. Fortunately, Circom auto generates a Solidity verifier for us, so we can use that function in our verifier contract. We need to keep track of the current database root merkle hash as a Solidity contract state.
+
+```solidity
+interface IZKDB {
+  address public comitter;
+  uint public root;
+  function commit (uint[19] calldata zkp) external returns (uint);
+}
+```
+
+<div align="center"><img src="./assets/rollup.png" /></div>
 
 #### zkQuery
 
@@ -292,6 +319,8 @@ interface IZKDB {
 `qNill` returns `true` only if the value is `null` and otherwise throws an error. And `qFloat` returns the array of encoded numbers without the type prefix ( e.g. `[ 1, 2, 314 ]` ) since Solidity cannot handle float numbers.
 
 We will write circuits to return an array or multiple values, and also for more complex queries using some conditions such as `$where` / `$gt` / `$gte` / `$lt` / `$lte` / `$in` / `$nin` and so on.
+
+<div align="center"><img src="./assets/query.png" /></div>
 
 ### Going Further
 
