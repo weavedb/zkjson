@@ -61,7 +61,7 @@ The key to making JSON verifiable with zkp is to invent a deterministic encoding
 
 <div align="center"><img src="./assets/encode.png" /></div>
 
-zk circuits can neither handle objects nor dynamically nesting arrays. So we first need to flatten all the paths into a simple array.
+zk circuits can neither handle objects nor dynamically nested arrays. So we first need to flatten all the paths into a simple array.
 
 ```js
 {
@@ -244,7 +244,7 @@ What's suprizing here is that the entire JSON is compressed into just 3 integers
 
 Now we can build a circuit to handle these digits and prove the value of a selected path without revealing the entire JSON. It's easy to explain the encoding, but harder to write the actual encoder/decorder and a circuit to properly process this encoding. But fortunately, we already did write them!
 
-
+- [zkJSON Circuit](https://github.com/weavedb/zkjson/blob/master/circom/json/json.circom)
 - [A simple zkJSON demo](https://zkjson-zeta.vercel.app/)
 
 #### zkDB
@@ -283,6 +283,9 @@ We can of course increase the level to have more characters, but the more levels
 - `zk_WeaveDB` = `151366322302647300301` 
 
 One way to have longer ID length with the same depth is to restrict the allowed characters to less than 31 since `31 * 31 = 961`. In this case 3 digits can represent 2 characters instead of 4 digits representing 2 characters. But we won't cover it here.
+
+- [Collection Circuit](https://github.com/weavedb/zkjson/blob/master/circom/collection/collection.circom)
+
 ##### Database
 
 For the database, we can take the exact same approach with the collections. We can use a SMT to represent multiple collection states in a DB with one root hash, and each leaf node will be the merkle root of a collection, which in turn represents the entire documents in the collection. We will give each collection an ID with the same ID-to-index conversion as the documents.
@@ -290,6 +293,8 @@ For the database, we can take the exact same approach with the collections. We c
 <div align="center"><img src="./assets/db.png" /></div>
 
 Now we can write a circuit to proove a collection root hash, then we can write another circuit to prove a database root hash, which represents multiple collections within the database. This circuit can also prove any value in any JSON document in any collection in a database without revealing the entire JSON data. zkJSON enables this.
+
+- [DB Circuit](https://github.com/weavedb/zkjson/blob/master/circom/db/db.circom)
 
 #### zkRollup
 
@@ -304,6 +309,9 @@ interface IZKDB {
 ```
 
 <div align="center"><img src="./assets/rollup.png" /></div>
+
+- [Single Query Circuit](https://github.com/weavedb/zkjson/blob/master/circom/query/query.circom)
+- [Batch Rollup Circuit](https://github.com/weavedb/zkjson/blob/master/circom/rollup/rollup.circom)
 
 #### zkQuery
 
@@ -324,6 +332,8 @@ interface IZKDB {
 We will write circuits to return an array or multiple values, and also for more complex queries using some conditions such as `$where` / `$gt` / `$gte` / `$lt` / `$lte` / `$in` / `$nin` and so on.
 
 <div align="center"><img src="./assets/query.png" /></div>
+
+- [ZKDB Solidity Contract](https://github.com/weavedb/zkjson/blob/master/solidity/contracts/ZKDB.sol)
 
 ### Going Further
 
