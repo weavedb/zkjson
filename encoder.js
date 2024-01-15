@@ -203,6 +203,7 @@ function _encode(v, path = []) {
 
 function encode(json) {
   let flattened = _encode(json)
+
   flattened.sort((a, b) => {
     const isUndefined = v => typeof v === "undefined"
     const max = Math.max(a[0].length, b[0].length)
@@ -229,6 +230,7 @@ function encode(json) {
     }
     return 0
   })
+
   return flattened.reduce(
     (arr, v) => arr.concat([...flattenPath(v[0]), ...v[1]]),
     []

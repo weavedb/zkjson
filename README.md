@@ -56,25 +56,25 @@ The key to making JSON verifiable with zkp is to invent a deterministic encoding
 
 zk circuits can neither handle objects nor dynamically nesting arrays. So we first need to flatten all the paths into a simple array.
 
-```
+```js
 { "a" : 1, "c" : false, "b" : { "e" : null, "d" : "four" }, "f" : 3.14, "ghi" : [ 5, 6, 7 ] }
 ```
 
 becomes
 
-```
+```js
 [
   [ "a", 1 ],
   [ "c", false ]
   [ "b.e", null ],
   [ "b.d", "four" ],
   [ "f", 3.14 ],
-  [ "ghi, [ 5, 6, 7 ] ],
+  [ "ghi", [ 5, 6, 7 ] ],
 ]
 ```
 Each path will be converted to an unicode number.
 
-```
+```js
 [
   [ [ [ 97 ] ], 1 ],
   [ [ [ 99 ] ], false ]
@@ -87,7 +87,7 @@ Each path will be converted to an unicode number.
 
 To make it deterministic, items must be lexicographically sorted by the paths.
 
-```
+```js
 [
   [ [ [ 97 ] ], 1 ],
   [ [ [ 98 ], [ 100 ] ], "four" ],
@@ -102,7 +102,7 @@ Here's a tricky part, if the value is an array, we need to create a path for eac
 
 To address all these edge cases, we prefix each array key with the number of characters that follow, or `0` if the key is empty (followed by `1`) or an array index (followed by another`0`).
 
-```
+```js
 [
   [ [ [ 1, 97 ] ], 1 ],
   [ [ [ 1, 98 ], [ 1, 100 ] ], "four" ],
@@ -117,11 +117,11 @@ To address all these edge cases, we prefix each array key with the number of cha
 
 Now we flatten the paths, but also prefix them with how many nested keys each path contains.
 
-```
+```js
 [
   [ 1, 1, 97 ], 1 ],
   [ 2, 1, 98 , 1, 100 ], "four" ],
-  [ 2,  1, 987, 1, 101 ], null ],
+  [ 2,  1, 98, 1, 101 ], null ],
   [ 1, 1, 99 ], false ]
   [ 1, 1, 102 ], 3.14 ],
   [ 2, 3, 103, 104, 105, 0, 0, 0 ], 5 ],
@@ -170,11 +170,11 @@ The first digit is the type `3` and the second digit tells how many characters, 
 
 Now let's convert the values in our original JSON example.
 
-```
+```js
 [
   [ 1, 1, 97 ], [ 2, 1, 0, 1 ] ],
   [ 2, 1, 98 , 1, 100 ], [ 3, 4, 102, 111, 117, 114 ] ],
-  [ 2,  1, 987, 1, 101 ], [ 0 ] ],
+  [ 2,  1, 98, 1, 101 ], [ 0 ] ],
   [ 1, 1, 99 ], [ 1, 0 ] ]
   [ 1, 1, 102 ], [ 2, 1, 2, 314 ] ],
   [ 2, 3, 103, 104, 105, 0, 0, 0 ], [ 2, 1, 0, 5 ] ],
@@ -194,11 +194,11 @@ By the way, digits are in fact stored as strings, so a leading 0 won't disapper.
 
 This is the prefixed version.
 
-```
+```js
 [
   [ 1, 1, 1, 1, 2, 97 ], [ 1, 2, 1, 1, 1, 0, 1, 1 ] ],
   [ 1, 2, 1, 1, 2, 98 , 1, 1, 3, 100 ], [ 1, 3, 1, 4, 3, 102, 3, 111, 3, 117, 3, 114 ] ],
-  [ 1, 2,  1, 1, 3, 987, 1, 1, 3, 101 ], [ 1, 0 ] ],
+  [ 1, 2,  1, 1, 3, 98, 1, 1, 3, 101 ], [ 1, 0 ] ],
   [ 1, 1, 1, 1, 2, 99 ], [ 1, 1, 1, 0 ] ]
   [ 1, 1, 1, 1, 3, 102 ], [ 1, 2, 1, 1, 1, 2, 3, 314 ] ],
   [ 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 0 ], [ 1, 2, 1, 1, 1, 0, 1, 5 ] ],
@@ -209,8 +209,8 @@ This is the prefixed version.
 
 Then this is the final form all flattened.
 
-```
-[ 1, 1, 1, 1, 2, 97, 1, 2, 1, 1, 1, 0, 1, 1, 1, 2, 1, 1, 2, 98, 1, 1, 3, 100, 1, 3, 1, 4, 3, 102, 3, 111, 3, 117, 3, 114, 1, 2, 1, 1, 3, 987, 1, 1, 3, 101, 1, 0, 1, 1, 1, 1, 2, 99, 1, 1, 1, 0, 1, 1, 1, 1, 3, 102, 1, 2, 1, 1, 1, 2, 3, 314, 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 0, 1, 2, 1, 1, 1, 0, 1, 5, 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 1, 1, 2, 1, 1, 1, 0, 1, 6, 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 2, 1, 2, 1, 1, 1, 0, 1, 7 ]
+```js
+[ 1, 1, 97, 2, 1, 0, 1, 2, 1, 98, 1, 100, 3, 4, 102, 111, 117, 114, 2, 1, 98, 1, 101, 0, 1, 1, 99, 1, 0, 1, 1, 102, 2, 1, 2, 314, 2, 3, 103, 104, 105, 0, 0, 0, 2, 1, 0, 5, 2, 3, 103, 104, 105, 0, 0, 1, 2, 1, 0, 6, 2, 3, 103, 104, 105, 0, 0, 2, 2, 1, 0, 7 ]
 ```
 
 When passed to a circuit, all digits will be concatenated into one number. Circom uses modulo with
@@ -219,11 +219,11 @@ When passed to a circuit, all digits will be concatenated into one number. Circo
 
 which means up to 76 digits are safe and a 77-digit-number could overflow. So as a circuit signal, it becomes
 
-```
+```js
 [
-  "111129712111011121129811310013143102311131173114121139871131011011112991110",
-  "1111310212111233141213310331043105101010121110151213310331043105101011121110",
-  "15121331033104310510101112111016121331033104310510101212111017",
+  "1111297121110111211298113100131431023111311731141211298113101101111299111011",
+  "1131021211123314121331033104310510101012111015121331033104310510101112111016",
+  "121331033104310510101212111017",
   "0",
   "0",
   ...
@@ -231,6 +231,9 @@ which means up to 76 digits are safe and a 77-digit-number could overflow. So as
 ```
 
 Now we can build a circuit to handle these digits and prove the value of a selected path without revealing the entire JSON. It's easy to explain the encoding, but harder to write the actual encoder/decorder and a circuit to properly process this encoding. But fortunately, we already did write them!
+
+
+- [A simple zkJSON demo](https://zkjson-zeta.vercel.app/)
 
 #### zkDB
 
