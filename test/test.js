@@ -8,7 +8,7 @@ const {
   decodePath,
   encodeVal,
   decodeVal,
-} = require("../encoder")
+} = require("../sdk")
 const { expect } = require("chai")
 
 describe("zkJSON", () => {

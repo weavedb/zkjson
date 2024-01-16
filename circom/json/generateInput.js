@@ -1,26 +1,15 @@
-const {
-  pad,
-  encode,
-  decode,
-  encodePath,
-  decodePath,
-  encodeVal,
-  decodeVal,
-  val2str,
-} = require("../../sdk")
+const { Doc } = require("../../sdk")
 const { writeFileSync } = require("fs")
 const { resolve } = require("path")
-const _json = { a: 1.234, b: 5.5 }
-const _path = "b"
-const _val = _json.b
 
-const size = 10
-const size_json = 100
-const json = pad(val2str(encode(_json)), size_json)
-const path = pad(val2str(encodePath(_path)), size)
-const val = pad(val2str(encodeVal(_val)), size)
+const main = async () => {
+  const doc = new Doc({ size: 10, size_json: 100 })
+  const inputs = await doc.getInputs({
+    json: { a: 1.234, b: 5.5 },
+    path: "b",
+    val: 5.5,
+  })
 
-writeFileSync(
-  resolve(__dirname, "input.json"),
-  JSON.stringify({ json, path, val })
-)
+  writeFileSync(resolve(__dirname, "input.json"), JSON.stringify(inputs))
+}
+main()
