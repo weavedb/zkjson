@@ -441,6 +441,9 @@ function str2val(arr) {
   return _arr
 }
 
+const toSignal = val2str
+const fromSignal = str2val
+
 module.exports = {
   encode,
   decode,
@@ -455,4 +458,6 @@ module.exports = {
   val2str,
   str2val,
   id2str,
+  toSignal,
+  fromSignal,
 }

@@ -247,6 +247,35 @@ Now we can build a circuit to handle these digits and prove the value of a selec
 - [zkJSON Circuit](https://github.com/weavedb/zkjson/blob/master/circom/json/json.circom)
 - [A simple zkJSON demo](https://zkjson-zeta.vercel.app/)
 
+You can use `zkjson` node package to encode and decode JSON.
+
+```bash
+yarn add zkjson
+```
+
+```javascript
+const { encode, decode, toSignal, fromSignal } = require("zkjson")
+
+const json = { a : 1 }
+const encoded = encode(json) // [ 1, 1, 97, 2, 1, 0,  1 ]
+const signal = toSignal(encoded) // [ '111129712111011' ]
+const encoded2 = fromSignal(signal) // [ 1, 1, 97, 2, 1, 0, 1 ]
+const decoded = decode(encoded2) // { a : 1 }
+```
+
+```javascript
+const { encodePath, decodePath, encodeVal, decodeVal } = require("zkjson")
+
+const path = "a"
+const encodedPath = encodePath(path) // [ 1, 1, 97 ]
+const decodedPath = decodePath(encodedPath) // "a"
+
+const val = 1
+const encodedVal = encodeVal(val) // [ 2, 1, 0, 1 ]
+const decodedVal = decodeVal(encodedVal) // 1
+
+```
+
 #### zkDB
 
 Once we get zkJSON, we can build a database structure with zkJSON as base building blocks.
