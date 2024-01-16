@@ -9,9 +9,8 @@ const {
   decodeVal,
   str2id,
   val2str,
-} = require("../../encoder")
-const { buildPoseidon } = require("../../circomlibjs")
-const DB = require("../../db")
+} = require("../../sdk")
+const DB = require("../../sdk")
 
 const { writeFileSync } = require("fs")
 const { resolve } = require("path")

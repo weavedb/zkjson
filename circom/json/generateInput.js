@@ -7,7 +7,7 @@ const {
   encodeVal,
   decodeVal,
   val2str,
-} = require("../../encoder")
+} = require("../../sdk")
 const { writeFileSync } = require("fs")
 const { resolve } = require("path")
 const _json = { a: 1.234, b: 5.5 }

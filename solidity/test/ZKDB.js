@@ -11,7 +11,7 @@ const {
   decodeVal,
   str2id,
   val2str,
-} = require("../../encoder")
+} = require("../../sdk")
 
 const getInputs = (res, tree, level) => {
   const isOld0 = res.isOld0 ? "1" : "0"

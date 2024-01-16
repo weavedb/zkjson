@@ -11,8 +11,8 @@ const {
   decodeVal,
   str2id,
   val2str,
-} = require("../../encoder")
-const Collection = require("../../collection")
+} = require("../../sdk")
+const Collection = require("../../sdk")
 const _json = { a: 5 }
 const _path = "a"
 const _val = _json[_path]
