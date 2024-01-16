@@ -311,6 +311,15 @@ We can of course increase the level to have more characters, but the more levels
 
 - `zk_WeaveDB` = `151366322302647300301` 
 
+You can use `zkjson` to convert string to SMT index.
+
+```javascript
+ const { toIndex, fromIndexs } = require("zkjson")
+ 
+ const index = toIndex("zkJSON") // 1513609181413
+ const str = fromIndex(index) // "zkJSON"
+```
+
 One way to have longer ID length with the same depth is to restrict the allowed characters to less than 31 since `31 * 31 = 961`. In this case 3 digits can represent 2 characters instead of 4 digits representing 2 characters. But we won't cover it here.
 
 - [Collection Circuit](https://github.com/weavedb/zkjson/blob/master/circom/collection/collection.circom)
