@@ -4,7 +4,7 @@ const path = require("path")
 const Scalar = require("ffjavascript").Scalar
 const wasm_tester = require("circom_tester").wasm
 const assert = chai.assert
-const DB = require("../../sdk")
+const { DB } = require("../../sdk")
 const {
   pad,
   encode,
@@ -41,17 +41,16 @@ describe("SMT Verifier test", function () {
   this.timeout(1000000000)
 
   before(async () => {
-    db = new DB()
     circuit = await wasm_tester(path.join(__dirname, "index.circom"))
     await circuit.loadSymbols()
   })
 
   it("should insert docs", async () => {
-    const db = new DB()
+    const db = new DB({ size: 5, size_json: 16, level: 40, size_txs: 10 })
     await db.init()
     await db.addCollection("colA")
     await db.addCollection("colB")
-    let txs = [
+    let queries = [
       ["colB", "docA", { d: 4 }],
       ["colB", "docC", { d: 4 }],
       ["colB", "docD", { d: 4 }],
@@ -62,90 +61,9 @@ describe("SMT Verifier test", function () {
       ["colB", "docD2", { d: 4 }],
       ["colA", "docA2", { b: 4 }],
     ]
-
-    let write, _json
-    let oldRoot = []
-    let newRoot = []
-    let oldKey = []
-    let oldValue = []
-    let siblings = []
-    let isOld0 = []
-    let oldRoot_db = []
-    let newRoot_db = []
-    let oldKey_db = []
-    let oldValue_db = []
-    let siblings_db = []
-    let isOld0_db = []
-    let newKey_db = []
-    let newKey = []
-    let _res
-    let json = []
-    let fnc = []
-    for (let i = 0; i < size_txs; i++) {
-      const v = txs[i]
-      if (!v) {
-        json.push(range(0, size_json).map(() => "0"))
-        fnc.push([0, 0])
-        newRoot.push(newRoot[i - 1])
-        oldRoot.push("0")
-        oldKey.push("0")
-        oldValue.push("0")
-        siblings.push(range(0, level).map(() => "0"))
-        isOld0.push("0")
-        oldRoot_db.push(newRoot_db[i - 1])
-        oldKey_db.push("0")
-        oldValue_db.push("0")
-        siblings_db.push(range(0, level).map(() => "0"))
-        isOld0_db.push("0")
-        newKey_db.push("0")
-        newKey.push("0")
-        continue
-      }
-      _json = v[2]
-      const { update, tree, col: res2, doc: res } = await db.insert(...v)
-      const icol = getInputs(res, tree)
-      const idb = getInputs(res2, db.tree)
-      _res = idb
-      const _newKey = str2id(v[1])
-      json.push(pad(val2str(encode(_json)), size_json))
-      const _newKey_db = str2id(v[0])
-      fnc.push(update ? [0, 1] : [1, 0])
-      newRoot.push(idb.newRoot)
-      oldRoot.push(icol.oldRoot)
-      oldKey.push(icol.oldKey)
-      oldValue.push(icol.oldValue)
-      siblings.push(icol.siblings)
-      isOld0.push(icol.isOld0)
-      oldRoot_db.push(idb.oldRoot)
-      newRoot_db.push(idb.newRoot)
-      oldKey_db.push(idb.oldKey)
-      oldValue_db.push(idb.oldValue)
-      siblings_db.push(idb.siblings)
-      isOld0_db.push(idb.isOld0)
-      newKey_db.push(_newKey_db)
-      newKey.push(_newKey)
-    }
-
-    write = {
-      fnc,
-      oldRoot,
-      newRoot,
-      oldKey,
-      oldValue,
-      siblings,
-      isOld0,
-      oldRoot_db,
-      oldKey_db,
-      oldValue_db,
-      siblings_db,
-      isOld0_db,
-      newKey_db,
-      newKey,
-      json,
-    }
-
-    const w = await circuit.calculateWitness(write, true)
+    const inputs = await db.getRollupInputs({ queries })
+    const w = await circuit.calculateWitness(inputs, true)
     await circuit.checkConstraints(w)
-    await circuit.assertOut(w, { new_root: _res.newRoot })
+    await circuit.assertOut(w, { new_root: db.tree.F.toObject(db.tree.root) })
   })
 })
