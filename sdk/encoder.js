@@ -385,9 +385,12 @@ const str2id = str => {
 }
 
 const id2str = id => {
-  id.shift()
-  return splitEvery(2, id)
-    .map(s => strMap[s])
+  let _id = id.toString().split("")
+  _id.shift()
+  return splitEvery(2, _id)
+    .map(s => {
+      return strMap[s.join("")]
+    })
     .join("")
 }
 
@@ -443,6 +446,8 @@ function str2val(arr) {
 
 const toSignal = val2str
 const fromSignal = str2val
+const toIndex = str2id
+const fromIndex = id2str
 
 module.exports = {
   encode,
@@ -460,4 +465,6 @@ module.exports = {
   id2str,
   toSignal,
   fromSignal,
+  toIndex,
+  fromIndex,
 }
