@@ -1,5 +1,5 @@
 const ZKDB = require("./ZKDB")
-const DB = require("../../db")
+const DB = require("../../sdk")
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers")
 const { expect } = require("chai")
 

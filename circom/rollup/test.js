@@ -4,7 +4,7 @@ const path = require("path")
 const Scalar = require("ffjavascript").Scalar
 const wasm_tester = require("circom_tester").wasm
 const assert = chai.assert
-const DB = require("../../db")
+const DB = require("../../sdk")
 const {
   pad,
   encode,
@@ -15,7 +15,7 @@ const {
   decodeVal,
   str2id,
   val2str,
-} = require("../../encoder")
+} = require("../../sdk")
 
 const size = 5
 const size_json = 16
