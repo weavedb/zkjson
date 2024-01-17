@@ -295,6 +295,8 @@ function encodeVal(v) {
     vals = [0]
   } else if (typeof v === "string") {
     vals = [3, v.length, ...v.split("").map(c => c.charCodeAt(0))]
+  } else {
+    vals = [4, ...encode(v)]
   }
   return vals
 }
@@ -317,6 +319,8 @@ function decodeVal(arr) {
       .slice(2)
       .map(c => String.fromCharCode(c))
       .join("")
+  } else if (type === 4) {
+    val = decode(arr.slice(1))
   }
   return val
 }

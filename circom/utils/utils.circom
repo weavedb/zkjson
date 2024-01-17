@@ -9,7 +9,7 @@ function digits (x) {
     return p;
 }
 
-function toArr(size_json, json){
+function toArr(size_json, json, _len){
     var  _json[7500];
     var ji = 0;
     var prev = 0;
@@ -44,7 +44,7 @@ function toArr(size_json, json){
                         }else{
                             num += prev;
                             prev = 0;
-                            _json[ji] = num;
+                            _json[ji + _len] = num;
                             ji++;
                         }
                         cur = 0;
@@ -59,5 +59,6 @@ function toArr(size_json, json){
             }
         }
     }
+    if(_len == 1) _json[0] = ji;
     return _json;
 }
