@@ -114,6 +114,8 @@ module.exports = class ZKDB {
         return (await this.zkdb.qFloat(...params)).map(n => n.toString() * 1)
       case 3:
         return await this.zkdb.qString(...params)
+      case 4:
+        return (await this.zkdb.qRaw(...params)).map(n => n.toString() * 1)
     }
   }
   async insert(txs) {

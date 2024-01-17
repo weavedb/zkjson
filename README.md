@@ -370,10 +370,24 @@ interface IZKDB {
   function qInt (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (int);
   function qFloat (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (uint[3] memory);
   function qString (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (string memory);
+  function qRaw (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (uint[7500] memory);
 }
 ```
 
 `qNill` returns `true` only if the value is `null` and otherwise throws an error. And `qFloat` returns the array of encoded numbers without the type prefix ( e.g. `[ 1, 2, 314 ]` ) since Solidity cannot handle float numbers.
+
+`qRaw` returns the raw encoded value and you can further query the raw value with the `qX` functions. Pass the raw value returned from `qRaw` with the path to query, instead of `zkp` proof.
+
+```solidity
+interface IZKDB {
+  function qNull (uint[5] memory path, uint[7500] memory raw) external view returns (bool);
+  function qBool (uint[5] memory path, uint[7500] memory raw) external view returns (bool);
+  function qInt (uint[5] memory path, uint[7500]  memory raw) external view returns (int);
+  function qFloat (uint[5] memory path, uint[7500] memory raw) external view returns (uint[3] memory);
+  function qString (uint[5] memory path, uint[7500] memory raw) external view returns (string memory);
+  function qRaw (uint[5] memory path, uint[7500] memory raw) external view returns (uint[7500] memory);
+}
+```
 
 We will write circuits to return an array or multiple values, and also for more complex queries using some conditions such as `$where` / `$gt` / `$gte` / `$lt` / `$lte` / `$in` / `$nin` and so on.
 

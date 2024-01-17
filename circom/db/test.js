@@ -4,8 +4,8 @@ const wasm_tester = require("circom_tester").wasm
 
 const { DB } = require("../../sdk")
 
-const _json = { b: 50, a: 3123432423 }
-const _path = "a"
+const _json = { b: 50, a: 3123432423, c: [1, 2, 3] }
+const _path = "c"
 const _val = _json[_path]
 
 const size = 5

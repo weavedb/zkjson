@@ -1,4 +1,4 @@
-const DB = require("../../sdk")
+const { DB } = require("../../sdk")
 const ZKDB = require("./ZKDB")
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers")
 const { expect } = require("chai")
@@ -27,13 +27,13 @@ describe("zkDB", function () {
     zkdb = dep.zkdb
     verifier = dep.verifier
     verifierDB = dep.verifierDB
-    db = new DB()
+    db = new DB({ level: 40, size: 5, size_json: 16, size_txs: 10 })
     await db.init()
     await db.addCollection("colA")
   })
 
   it("Should verify rollup transactions", async function () {
-    const json = { a: "Hello", b: true, c: null, d: 1.1, e: 5 }
+    const json = { a: "Hello", b: true, c: null, d: 1.1, e: 5, f: [1, 2, 3] }
     let txs = [
       ["colA", "docD", { d: 4 }],
       ["colA", "docD3", { d: 4 }],
@@ -62,5 +62,8 @@ describe("zkDB", function () {
 
     const bool = await _db.query("colA", "docA", json, "b")
     expect(bool).to.eql(true)
+
+    const array = await _db.query("colA", "docA", json, "f")
+    console.log(array)
   })
 })

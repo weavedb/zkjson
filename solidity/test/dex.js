@@ -25,7 +25,7 @@ describe("zkDB", function () {
   this.timeout(1000000000)
   it("Should transfer point token", async function () {
     const col = "bridge"
-    const db = new DB()
+    db = new DB({ level: 40, size: 5, size_json: 16, size_txs: 10 })
     await db.init()
     await db.addCollection(col)
     const { user, owner, dex, zkdb } = await loadFixture(deploy)
