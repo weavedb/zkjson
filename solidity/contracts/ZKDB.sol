@@ -160,6 +160,13 @@ contract ZKDB {
     return float;
   }
 
+  function qRaw (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (uint[7500] memory) {
+    uint[7500] memory value = validateQuery(collection, doc, path, zkp);
+    require(value[0] == 4, "not object or array");
+    verifyDB(zkp);
+    return value;
+  }
+  
   function qString (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (string memory) {
     uint[7500] memory value = validateQuery(collection, doc, path, zkp);
     require(value[0] == 3, "not string");

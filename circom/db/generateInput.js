@@ -1,4 +1,4 @@
-const DB = require("../../sdk")
+const { DB } = require("../../sdk")
 
 const { writeFileSync } = require("fs")
 const { resolve } = require("path")
