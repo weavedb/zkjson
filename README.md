@@ -150,6 +150,7 @@ Let's numerify the values in a similar fashion. There are only 6 valid data type
 - boolean (`1`)
 - number (`2`)
 - string (`3`)
+- array | object (`4`)
 
 The first digit will always be the type number.
 
@@ -180,6 +181,13 @@ for instance,
 
 The first digit is the type `3` and the second digit tells how many characters, then each characters are converted to a unicode number (e.g. `abc` = `[ 3, 3, 97, 98, 99 ]`).
 
+###### array | object (4)
+
+In case of array and object, it prefixes `4` and recursively encodes all the nested values. The final array includes internal paths too.
+
+- `[ 1, 2 ]` : `[ 4, 1, 0, 0, 0, 2, 1, 0, 1, 1, 0, 0, 1, 2, 1, 0, 2 ]`
+
+Note that the path to `1` is `1, 0, 0, 0` and the path to `2` is `1, 0, 0, 1`, and they are included.
 
 Now let's convert the values in our original JSON example.
 
@@ -353,7 +361,7 @@ interface IZKDB {
 
 #### zkQuery
 
-Finally, we can deploy the prevous zkDB query circout verifier as a Solidity contract too, and make it possible to securely query any paths with the right proof. When querying, the Solidity contract must check the DB root hash to verify the queried value againts the current database state.
+Finally, we can deploy the prevous zkDB query circout verifier as a Solidity contract too, and make it possible to securely query any paths with the right proof. When querying, the Solidity contract must check the DB root hash to verify the queried value against the current database state.
 
 ```solidity
 interface IZKDB {
