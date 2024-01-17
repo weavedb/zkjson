@@ -1,24 +1,27 @@
 pragma circom 2.1.5;
 
 include "../utils/utils.circom";
+include "../../node_modules/circomlib/circuits/poseidon.circom";
 
 template JSON (size_json, size) {  
     signal input json[size_json];  
     signal input path[size];
     signal input val[size];
     signal output exist;
+    signal output hash;
     signal ex;
+    var arr_size = 10000;
     var _exists = 0;
-    var _json[7500] = toArr(size_json, json, 0);
-    var path2[7500] = toArr(size, path, 1);
-    var val2[7500] = toArr(size, val, 0);
-    var partial[7500];
+    var _json[arr_size] = toArr(size_json, json, 0);
+    var path2[arr_size] = toArr(size, path, 1);
+    var val2[arr_size] = toArr(size, val, 0);
+    var partial[arr_size];
     partial[0] = 4;
     var pi2 = 1;
     var i = 0;
-    while(i < 7500){ 
+    while(i < arr_size){ 
         var vi = 0;
-        var _path[size * 75];
+        var _path[size * 77];
         var len = _json[i];
         i++;
         _path[0] = len;
@@ -40,7 +43,7 @@ template JSON (size_json, size) {
         }
         var type = _json[i];
         i++;
-        var _val[size * 75];
+        var _val[size * 77];
         _val[0] = type;
         if(type == 1){
             _val[1] = _json[i];
@@ -69,7 +72,7 @@ template JSON (size_json, size) {
         var path_match = 1;
         var val_match = 0;
         var path_partial_match = 1;
-         for(var i4 = 0; i4  < size * 75; i4++){
+         for(var i4 = 0; i4  < size * 77; i4++){
             if(_path[i4] != path2[i4 + 1]){
                 path_match = 0;
                 if(path2[0] > i4 && i4 != 0) path_partial_match = 0;
@@ -77,7 +80,7 @@ template JSON (size_json, size) {
         }
         if(path_match == 1){
             var _val_match = 1;
-            for(var i5 = 0; i5  < size * 75; i5++){
+            for(var i5 = 0; i5  < size * 77; i5++){
                 if(_val[i5] != val2[i5]) _val_match = 0;
             }
             if(_val_match == 1) val_match = 1;
@@ -99,11 +102,22 @@ template JSON (size_json, size) {
     }
      if(pi2 > 0){
         var val_match = 1;
-        for(var i5 = 0; i5  < size * 75; i5++){
+        for(var i5 = 0; i5  < size * 77; i5++){
             if(partial[i5] != val2[i5]) val_match = 0;
         }
         if(val_match == 1) _exists = 1;
     }
     ex <-- _exists;
     exist <== ex * ex;
+
+    component all_hash = Poseidon(16);
+    component _hash[16];
+    for(var i = 0; i < 16; i++){
+      _hash[i] = Poseidon(16);
+      for(var i2 = 0; i2 < 16; i2++){
+        _hash[i].inputs[i2] <== json[i * 16 + i2];
+      }
+      all_hash.inputs[i] <== _hash[i].out;
+    } 
+    hash <== all_hash.out;
 }

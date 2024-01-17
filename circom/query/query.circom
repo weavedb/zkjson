@@ -22,10 +22,15 @@ template Query (level, size_json, size) {
     signal output new_root;
     
     component colVerifier = SMTProcessor(level);
-    component hash = Poseidon(size_json);
-    for(var i = 0; i < size_json; i++){
-        hash.inputs[i] <== json[i];
-    }
+    component all_hash = Poseidon(16);
+    component _hash[16];
+    for(var i = 0; i < 16; i++){
+      _hash[i] = Poseidon(16);
+      for(var i2 = 0; i2 < 16; i2++){
+        _hash[i].inputs[i2] <== json[i * 16 + i2];
+      }
+      all_hash.inputs[i] <== _hash[i].out;
+    } 
     colVerifier.fnc[0] <== fnc[0];
     colVerifier.fnc[1] <== fnc[1];
     colVerifier.oldRoot <== oldRoot;
@@ -34,7 +39,7 @@ template Query (level, size_json, size) {
     colVerifier.isOld0 <== isOld0;
     colVerifier.siblings <== siblings;
     colVerifier.newKey <== newKey;
-    colVerifier.newValue <== hash.out;
+    colVerifier.newValue <== all_hash.out;
     component hash2 = Poseidon(1);
     hash2.inputs[0] <== colVerifier.newRoot;
     component dbVerifier = SMTProcessor(level);

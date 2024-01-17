@@ -1,7 +1,7 @@
 "use strict"
 
 Object.defineProperty(exports, "__esModule", { value: true })
-
+const { splitEvery } = require("ramda")
 var ffjavascript = require("ffjavascript")
 var blake2b = require("blake2b")
 var createBlakeHash = require("blake-hash")
@@ -40201,9 +40201,18 @@ class SMT {
 
   async update(_key, _newValue) {
     const poseidon = await buildPoseidon()
+    let _hash_value = _newValue
+    if (_newValue.length === 256) {
+      _hash_value = []
+      for (let v of splitEvery(16, _newValue)) {
+        const poseidon = await buildPoseidon()
+        const value = poseidon(v)
+        _hash_value.push(value)
+      }
+    }
+    const newValue = poseidon(_hash_value)
     const F = this.F
     const key = F.e(_key)
-    const newValue = poseidon(_newValue)
     const resFind = await this.find(key)
     const res = {}
     res.oldRoot = this.root
@@ -40338,9 +40347,19 @@ class SMT {
 
   async insert(_key, _value) {
     const poseidon = await buildPoseidon()
+    let _hash_value = _value
+    if (_value.length === 256) {
+      _hash_value = []
+      for (let v of splitEvery(16, _value)) {
+        const poseidon = await buildPoseidon()
+        const value = poseidon(v)
+        _hash_value.push(value)
+      }
+    }
+
+    const value = poseidon(_hash_value)
     const F = this.F
     const key = F.e(_key)
-    const value = poseidon(_value)
     let addedOne = false
     const res = {}
     res.oldRoot = this.root

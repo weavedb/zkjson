@@ -1,10 +1,10 @@
-const { DB } = require("../../db")
+const { DB } = require("../../sdk")
 
 const { writeFileSync } = require("fs")
 const { resolve } = require("path")
 
 const main = async () => {
-  const db = new DB({ size: 5, size_json: 16, level: 50 })
+  const db = new DB({ size: 5, size_json: 256, level: 100 })
   await db.init()
   await db.addCollection("colA")
   await db.addCollection("colB")

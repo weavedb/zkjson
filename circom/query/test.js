@@ -14,7 +14,7 @@ describe("query circuit", function () {
   })
 
   it("should insert docs", async () => {
-    const db = new DB({ size: 5, size_json: 16, level: 50 })
+    const db = new DB({ size: 5, size_json: 256, level: 100 })
     await db.init()
     await db.addCollection("colA")
     await db.addCollection("colB")

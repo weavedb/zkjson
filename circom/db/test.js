@@ -22,7 +22,7 @@ describe("JSON circuit", function () {
   })
 
   it("should insert docs", async () => {
-    const db = new DB({ size: 5, size_json: 16, level: 40 })
+    const db = new DB({ size: 5, size_json: 256, level: 32 })
     await db.init()
     await db.addCollection("colA")
     await db.insert("colA", "docA", _json)
