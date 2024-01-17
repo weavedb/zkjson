@@ -1,8 +1,7 @@
-const { DB } = require("../../sdk")
+const { pad, toSignal, encodePath, DB } = require("../../sdk")
 const ZKDB = require("./ZKDB")
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers")
 const { expect } = require("chai")
-
 async function deploy() {
   const [owner, otherAccount] = await ethers.getSigners()
   const VerifierDB = await ethers.getContractFactory("Groth16VerifierDB")
@@ -64,6 +63,10 @@ describe("zkDB", function () {
     expect(bool).to.eql(true)
 
     const array = await _db.query("colA", "docA", json, "f")
-    console.log(array)
+    expect(
+      (
+        await zkdb.getInt(pad(toSignal(encodePath("[1]")), 5), array)
+      ).toString() * 1
+    ).to.eql(2)
   })
 })

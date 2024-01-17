@@ -370,26 +370,27 @@ interface IZKDB {
   function qInt (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (int);
   function qFloat (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (uint[3] memory);
   function qString (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (string memory);
-  function qRaw (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (uint[7500] memory);
+  function qRaw (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (uint[100] memory);
 }
 ```
 
 `qNill` returns `true` only if the value is `null` and otherwise throws an error. And `qFloat` returns the array of encoded numbers without the type prefix ( e.g. `[ 1, 2, 314 ]` ) since Solidity cannot handle float numbers.
 
-`qRaw` returns the raw encoded value and you can further query the raw value with the `qX` functions. Pass the raw value returned from `qRaw` with the path to query, instead of `zkp` proof.
+`qRaw` returns the raw encoded value for non-primitive data types (array and object), and you can further query the raw value with the `getX` functions. Pass the raw value returned from `qRaw` with the path to query, instead of `zkp` proof.
 
 ```solidity
 interface IZKDB {
-  function qNull (uint[5] memory path, uint[7500] memory raw) external view returns (bool);
-  function qBool (uint[5] memory path, uint[7500] memory raw) external view returns (bool);
-  function qInt (uint[5] memory path, uint[7500]  memory raw) external view returns (int);
-  function qFloat (uint[5] memory path, uint[7500] memory raw) external view returns (uint[3] memory);
-  function qString (uint[5] memory path, uint[7500] memory raw) external view returns (string memory);
-  function qRaw (uint[5] memory path, uint[7500] memory raw) external view returns (uint[7500] memory);
+  function getNull (uint[5] memory path, uint[100] memory raw) external view returns (bool);
+  function getBool (uint[5] memory path, uint[100] memory raw) external view returns (bool);
+  function getInt (uint[5] memory path, uint[100]  memory raw) external view returns (int);
+  function getFloat (uint[5] memory path, uint[100] memory raw) external view returns (uint[3] memory);
+  function getString (uint[5] memory path, uint[100] memory raw) external view returns (string memory);
 }
 ```
 
-We will write circuits to return an array or multiple values, and also for more complex queries using some conditions such as `$where` / `$gt` / `$gte` / `$lt` / `$lte` / `$in` / `$nin` and so on.
+We will write circuits for more complex queries using some conditions such as `$where` / `$gt` / `$gte` / `$lt` / `$lte` / `$in` / `$nin` and so on.
+
+You could also write a function to get an array of numbers or a specific data structure, but it's up to your applications what data types to extract, so we will leave it up to you.
 
 <div align="center"><img src="./assets/query.png" /></div>
 
