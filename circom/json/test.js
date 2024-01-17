@@ -2,7 +2,6 @@ const chai = require("chai")
 const { join } = require("path")
 const wasm_tester = require("circom_tester").wasm
 const { fromSignal, Doc } = require("../../sdk")
-
 describe("JSON circuit", function () {
   let circuit
   this.timeout(1000000000)
@@ -13,11 +12,17 @@ describe("JSON circuit", function () {
   })
 
   it("should insert docs", async () => {
-    const doc = new Doc({ size: 10, size_json: 100 })
+    const doc = new Doc({ size: 5, size_json: 256 })
+    const json = {
+      title: "Introducing zkJSON - zero knowledge proovable JSON",
+      timestamp: Date.now(),
+      addr: "0xabcdefgfkjaslfjasdlkfjsalkfjasdlkfjsdal;kfjsadl;kfjsdal;kfsadjfl;asdjf",
+    }
+    const path = "title"
     const inputs = await doc.getInputs({
-      json: { a: 1.234, b: 5.5, c: [1, 2, [3, 4, { a: 3 }]] },
-      path: "c[2][2].a",
-      val: 3,
+      json,
+      path,
+      val: json[path],
     })
     const w = await circuit.calculateWitness(inputs, true)
     await circuit.checkConstraints(w)

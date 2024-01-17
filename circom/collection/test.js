@@ -17,7 +17,7 @@ describe("JSON circuit", function () {
   })
 
   it("should insert docs", async () => {
-    const col = new Collection({ size: 5, size_json: 16, level: 100 })
+    const col = new Collection({ size: 5, size_json: 256, level: 100 })
     const id = "docA"
     await col.init()
     await col.insert("docB", { b: 2 })

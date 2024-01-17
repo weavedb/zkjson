@@ -10,7 +10,7 @@ function digits (x) {
 }
 
 function toArr(size_json, json, _len){
-    var  _json[7500];
+    var  _json[10000];
     var ji = 0;
     var prev = 0;
     for(var j = 0; j < size_json; j++){

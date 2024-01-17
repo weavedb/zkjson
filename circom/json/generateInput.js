@@ -3,7 +3,7 @@ const { writeFileSync } = require("fs")
 const { resolve } = require("path")
 
 const main = async () => {
-  const doc = new Doc({ size: 10, size_json: 100 })
+  const doc = new Doc({ size: 5, size_json: 256 })
   const inputs = await doc.getInputs({
     json: { a: 1.234, b: 5.5, c: [1, 2, [3, 4, { a: 3 }]] },
     path: "c[2][2].a",

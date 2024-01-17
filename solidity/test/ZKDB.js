@@ -78,6 +78,8 @@ module.exports = class ZKDB {
         resolve(__dirname, "../../circom/db/index_js/index.wasm"),
         resolve(__dirname, "../../circom/db/index_0001.zkey")
       )
+    console.log(proof2)
+    console.log(sigs)
     return [
       ...proof2.pi_a.slice(0, 2),
       ...proof2.pi_b[0].slice(0, 2).reverse(),

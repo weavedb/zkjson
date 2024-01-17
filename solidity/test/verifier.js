@@ -26,7 +26,7 @@ describe("zkDB", function () {
     zkdb = dep.zkdb
     verifier = dep.verifier
     verifierDB = dep.verifierDB
-    db = new DB({ level: 40, size: 5, size_json: 16, size_txs: 10 })
+    db = new DB({ level: 32, size: 5, size_json: 256, size_txs: 10 })
     await db.init()
     await db.addCollection("colA")
   })
@@ -44,7 +44,7 @@ describe("zkDB", function () {
       ["colA", "docA", { d: 4 }],
       ["colA", "docA", json],
     ]
-    const _db = new ZKDB(db, zkdb, 5, 16, 40, 10)
+    const _db = new ZKDB(db, zkdb, 5, 256, 32, 10)
     await _db.insert(txs, db, zkdb)
 
     const float = await _db.query("colA", "docA", json, "d")
