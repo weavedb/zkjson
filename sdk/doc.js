@@ -1,7 +1,7 @@
 const { pad, toSignal, encode, encodePath, encodeVal } = require("./encoder")
 
 module.exports = class Doc {
-  constructor({ size = 16, size_json = 100 }) {
+  constructor({ size = 5, size_json = 256 }) {
     this.size = size
     this.size_json = size_json
   }

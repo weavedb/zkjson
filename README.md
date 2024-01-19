@@ -294,11 +294,13 @@ A document-based NoSQL database would have collections, and each collection in t
 
 ##### Collection
 
-We can use a sparse merkle tree ([SMT](https://docs.iden3.io/getting-started/mt/)) to represent all the document data in a collection with a root hash. SMT is perfect because curcuits cannot handle dynamic tree sizes and SMT can represent a large number of documents efficiently. Each leaf node will be the [poseidon hash](https://www.poseidon-hash.info/) of zkJSON encoding of the data. To hash 267 * 77 digits, 16 poseidon hashes are hashed together into another poseidon hash. This allows a fairly large JSON size to be proven.
+We can use a sparse merkle tree ([SMT](https://docs.iden3.io/getting-started/mt/)) to represent all the document data in a collection with a root hash. SMT is perfect because curcuits cannot handle dynamic tree sizes and SMT can represent a large number of documents efficiently, and any data membership or non-nmembership can be proven efficiently with a zk proof without the actual merkle proof. This is what enables efficient direct queries to offchain databases from within EVM smart contracts.
 
 <div align="center"><img src="./assets/collection.png" /></div>
 
-And each leaf node has an index number, so we need to somehow convert the document IDs to numbers without collisions. How many leaf nodes an SMT has depends on the pre-defined depth of the tree. For example, a 32-level SMT can have `2 ** 32 = 4294967296` leaf nodes. The level must be pre-defined at the circuit compile time, so we need to find the right conversion and balance.
+Each leaf node will be the [poseidon hash](https://www.poseidon-hash.info/) of zkJSON encoding of the data. To hash 256 * 77 digits, 16 poseidon hashes are hased together into another poseidon hash. This allows a fairly large JSON size to be proven.
+
+And each leaf node has an index number, so we need to somehow convert the document IDs to numbers without collisions. How many leaf nodes a SMT has depends on the pre-defined depth of the tree. For example, a 32-level SMT can have `2 ** 32 = 4294967296` leaf nodes. The level must be pre-defined at the circuit compile time, so we need to find the right conversion and balance.
 
 Due to this constraint, we only allow 64 characters to keep things compact and efficient, although there can be different optimized setups for your specific use cases. 
 
