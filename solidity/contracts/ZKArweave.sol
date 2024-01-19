@@ -197,7 +197,7 @@ contract ZKArweave {
     return string(stringBytes);
   }
   
-  function qInt (string memory txid, uint collection, uint doc, uint[5] memory path, uint[20] calldata zkp, bytes memory sig) public view returns (int) {
+  function qInt (string memory txid, uint[5] memory path, uint[20] calldata zkp, bytes memory sig) public view returns (int) {
     uint[100] memory value = validateQuery(txid, path, zkp, sig);
     require(value[0] == 2 && value[2] == 0, "not int");
     verify(zkp);
