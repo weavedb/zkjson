@@ -1,10 +1,14 @@
 import Head from "next/head"
 import Link from "next/link"
+import { Contract, providers } from "ethers"
 import { Select, Box, Flex, Input, Textarea } from "@chakra-ui/react"
 import { useState, useEffect } from "react"
 import { map, append, concat } from "ramda"
 const snarkjs = require("snarkjs")
 import { Doc } from "zkjson"
+const abi = require("../lib/ZKArweave.json").abi
+const contractAddr = process.env.NEXT_PUBLIC_CONTRACT_ADDR
+
 export default function Home() {
   const [signals, setSignals] = useState(null)
   const [proof, setProof] = useState(null)
@@ -17,6 +21,9 @@ export default function Home() {
   const [bool, setBool] = useState(true)
   const [str, setStr] = useState("")
   const [txid, setTxid] = useState("")
+  const [hash, setHash] = useState("")
+  const [qval, setQval] = useState("")
+  const [signature, setSignature] = useState("")
   let valid = false
   try {
     let _j = null
@@ -53,27 +60,6 @@ export default function Home() {
               contracts with a zkJSON proof.
             </Box>
             <Box mt={4}>
-              <Flex>
-                <Box as="label">Arweave Transaction ID</Box> <Box flex={1} />
-                <Box
-                  mr={2}
-                  color="#5037C6"
-                  sx={{
-                    textDecoration: "underline",
-                    cursor: "pointer",
-                    ":hover": { opacity: 0.75 },
-                  }}
-                  onClick={() => {
-                    const rand = (i, start = 0) =>
-                      Math.floor(Math.random() * i) + start
-                    const enc = _encode(JSON.parse(json))
-                    const v = enc[rand(enc.length)]
-                    setPath(decodePath(flattenPath(v[0])))
-                  }}
-                >
-                  generate
-                </Box>
-              </Flex>
               <Input
                 bg="white"
                 placeholder="Arweave TxID"
@@ -133,6 +119,30 @@ export default function Home() {
                       setJSON(JSON.stringify(json))
                       const paths = getPath(json)
                       setPaths(paths)
+                      setPath(paths[0])
+                      const getVal = (j, p) => {
+                        return p.length === 0 ? j : getVal(j[p[0]], p.slice(1))
+                      }
+                      const _paths = paths[0].split(".")
+                      const val = getVal(json, _paths)
+                      const type = val === null ? "null" : typeof val
+                      setType(type)
+                      if (type === "number") {
+                        setNum(val)
+                      } else if (type === "boolean") {
+                        setBool(val)
+                      } else if (type === "string") {
+                        setStr(val)
+                      }
+                      const { hash, signature } = await fetch("/api/arweave", {
+                        method: "POST",
+                        headers: {
+                          "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({ txid }),
+                      }).then(v => v.json())
+                      setHash(hash)
+                      setSignature(signature)
                     } catch (e) {
                       alert("JSON fetch failed")
                     }
@@ -156,6 +166,21 @@ export default function Home() {
                 placeholder="{ a : 1 }"
                 value={json}
                 onChange={e => setJSON(e.target.value)}
+              />
+            </Box>
+            <Box mt={4}>
+              <Flex>
+                <Box as="label" color={signature !== "" ? "" : "crimson"}>
+                  Validator Signature (veridating the existence of the Arweave
+                  Tx)
+                </Box>
+                <Box flex={1} />
+              </Flex>
+              <Input
+                disabled={true}
+                bg="white"
+                placeholder="{ a : 1 }"
+                value={signature}
               />
             </Box>
             <Box mt={4}>
@@ -345,6 +370,65 @@ export default function Home() {
                       proof
                     )
                     setResult(res)
+                    const provider = new providers.Web3Provider(
+                      window.ethereum,
+                      "any"
+                    )
+                    const zkar = await new Contract(contractAddr, abi, provider)
+
+                    const inputs = [
+                      ...proof.pi_a.slice(0, 2),
+                      ...proof.pi_b[0].slice(0, 2).reverse(),
+                      ...proof.pi_b[1].slice(0, 2).reverse(),
+                      ...proof.pi_c.slice(0, 2),
+                      ...signals,
+                    ]
+                    const sigs = inputs.slice(8)
+                    const params = [txid, sigs.slice(2, 7), inputs, signature]
+                    const getVal = (j, p) => {
+                      return p.length === 0 ? j : getVal(j[p[0]], p.slice(1))
+                    }
+                    const _json = JSON.parse(json)
+                    const paths = path.split(".")
+                    const val = getVal(_json, paths)
+                    let type =
+                      val === null
+                        ? 0
+                        : typeof val === "string"
+                        ? 3
+                        : typeof val === "boolean"
+                        ? 1
+                        : typeof val === "number"
+                        ? Number.isInteger(val)
+                          ? 2
+                          : 2.5
+                        : 4
+                    let qval = null
+                    switch (type) {
+                      case 0:
+                        qval = await zkar.qNull(...params)
+                        break
+                      case 1:
+                        qval = await zkar.qBool(...params)
+                        break
+                      case 2:
+                        qval = (await zkar.qInt(...params)).toString() * 1
+                        break
+                      case 2.5:
+                        qval = (await zkar.qFloat(...params)).map(
+                          n => n.toString() * 1
+                        )
+                        break
+                      case 3:
+                        qval = await zkar.qString(...params)
+                        break
+                      case 4:
+                        qval = (await zkar.qRaw(...params)).map(
+                          n => n.toString() * 1
+                        )
+                        break
+                    }
+                    setQval(qval)
                   }
                 }}
               >
@@ -363,9 +447,7 @@ export default function Home() {
                 color="#5037C6"
                 sx={{ borderRadius: "5px" }}
               >
-                {result
-                  ? `VALID ( ${signals[0] === "1" ? "exist" : "not exist"} )`
-                  : ""}
+                {result ? `VALID ( ${qval} )` : ""}
               </Flex>
             </Flex>
           </Box>
