@@ -10,7 +10,7 @@ const {
   encodeVal,
   decodeVal,
   str2id,
-  val2str,
+  toSignal,
 } = require("../../sdk")
 
 const getInputs = (res, tree, level) => {
@@ -58,9 +58,9 @@ module.exports = class ZKDB {
     _siblings = _siblings.map(s => s.toString())
     const key = str2id(doc)
 
-    const _json = pad(val2str(encode(tar)), this.size_json)
-    const _path = pad(val2str(encodePath(path)), this.size)
-    const _val = pad(val2str(encodeVal(val)), this.size)
+    const _json = pad(toSignal(encode(tar)), this.size_json)
+    const _path = pad(toSignal(encodePath(path)), this.size)
+    const _val = pad(toSignal(encodeVal(val)), this.size)
     const _write = {
       json: _json,
       path: _path,
@@ -163,7 +163,7 @@ module.exports = class ZKDB {
       const idb = getInputs(res2, this.db.tree, this.level)
       _res = idb
       const _newKey = str2id(v[1])
-      const _value = pad(val2str(encode(_json)), this.size_json)
+      const _value = pad(toSignal(encode(_json)), this.size_json)
       const _newKey_db = str2id(v[0])
       fnc.push(update ? [0, 1] : [1, 0])
       newRoot.push(idb.newRoot)
