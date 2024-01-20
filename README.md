@@ -368,14 +368,16 @@ Finally, we can deploy the previous zkDB query circout verifier as a Solidity co
 
 ```solidity
 interface IZKDB {
-  function qNull (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (bool);
-  function qBool (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (bool);
-  function qInt (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (int);
-  function qFloat (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (uint[3] memory);
-  function qString (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (string memory);
-  function qRaw (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (uint[] memory);
+  function qNull (uint[] memory path, uint[] calldata zkp) external view returns (bool);
+  function qBool (uint[] memory path, uint[] calldata zkp) external view returns (bool);
+  function qInt (uint[] memory path, uint[] calldata zkp) external view returns (int);
+  function qFloat (uint[] memory path, uint[] calldata zkp) external view returns (uint[3] memory);
+  function qString (uint[] memory path, uint[] calldata zkp) external view returns (string memory);
+  function qRaw (uint[] memory path, uint[] calldata zkp) external view returns (uint[] memory);
 }
 ```
+
+`path[0]` is a collection index, and `path[1]` is a doc index, then the rest of the path follows.
 
 `qNill` returns `true` only if the value is `null` and otherwise throws an error. And `qFloat` returns the array of encoded numbers without the type prefix ( e.g. `[ 1, 2, 314 ]` ) since Solidity cannot handle float numbers.
 
@@ -383,11 +385,11 @@ interface IZKDB {
 
 ```solidity
 interface IZKDB {
-  function getNull (uint[5] memory path, uint[] memory raw) external view returns (bool);
-  function getBool (uint[5] memory path, uint[] memory raw) external view returns (bool);
-  function getInt (uint[5] memory path, uint[]  memory raw) external view returns (int);
-  function getFloat (uint[5] memory path, uint[] memory raw) external view returns (uint[3] memory);
-  function getString (uint[5] memory path, uint[] memory raw) external view returns (string memory);
+  function getNull (uint[] memory path, uint[] memory raw) external view returns (bool);
+  function getBool (uint[] memory path, uint[] memory raw) external view returns (bool);
+  function getInt (uint[] memory path, uint[]  memory raw) external view returns (int);
+  function getFloat (uint[] memory path, uint[] memory raw) external view returns (uint[3] memory);
+  function getString (uint[] memory path, uint[] memory raw) external view returns (string memory);
 }
 ```
 

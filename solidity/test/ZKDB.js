@@ -90,7 +90,7 @@ module.exports = class ZKDB {
     const val = tar[path]
     const inputs = await this.genProof(col, doc, tar, path)
     const sigs = inputs.slice(8)
-    const params = [sigs[12], sigs[13], sigs.slice(1, 6), inputs]
+    const params = [[sigs[12], sigs[13], ...sigs.slice(1, 6)], inputs]
     let type =
       val === null
         ? 0
