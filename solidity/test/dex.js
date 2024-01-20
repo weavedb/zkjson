@@ -54,7 +54,6 @@ describe("zkDB", function () {
     const _col = sigs[12]
     const _doc = sigs[13]
     expect((await dex.balances(user.address)).toNumber()).to.eql(0)
-
     await dex.mint(_col, _doc, proof, proof2)
     expect((await dex.balances(user.address)).toNumber()).to.eql(50)
     let err = false

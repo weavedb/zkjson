@@ -17,12 +17,12 @@ contract ZKDB {
   address public verifierDB;
   address public comitter;
   uint public root;
+  uint constant public SIZE = 5;
   
   constructor (address _verifierRU, address _verifierDB, address _comitter){
     verifierRU = _verifierRU;
     verifierDB = _verifierDB;
     comitter = _comitter;
-    
   }
 
   function digits (uint x) public pure returns(uint) {
@@ -34,7 +34,7 @@ contract ZKDB {
     return p;
   }
 
-  function getValLen(uint[5] memory path, uint[] memory _json) public pure returns(uint, uint){
+  function getValLen(uint[] memory path, uint[] memory _json) public pure returns(uint, uint){
     require (_json[0] == 4, "not raw value");
     uint i = 1;
     uint start;
@@ -110,7 +110,7 @@ contract ZKDB {
     return pi;
   }
   
-  function getVal(uint[5] memory path, uint[] memory _json) public pure returns(uint[] memory){
+  function getVal(uint[] memory path, uint[] memory _json) public pure returns(uint[] memory){
     require (_json[0] == 4, "not raw value");
     (uint vallen, uint i) = getValLen(path, _json);
     uint[] memory val = new uint[](vallen);
@@ -177,7 +177,7 @@ contract ZKDB {
     return val;
   }
   
-  function getLen(uint[5] memory json) public pure returns(uint, uint){
+  function getLen(uint[] memory json) public pure returns(uint, uint){
     uint ji = 0;
     uint prev = 0;
     uint jlen = 0;
@@ -229,7 +229,7 @@ contract ZKDB {
     return (ji, jlen);
   }
   
-  function toArr(uint[5] memory json) public pure returns(uint[] memory){
+  function toArr(uint[] memory json) public pure returns(uint[] memory){
     (uint _len, uint _jlen) = getLen(json);
     uint[]  memory _json = new uint[](_len);
     uint ji = 0;
@@ -280,7 +280,7 @@ contract ZKDB {
     return _json;
   }
   
-  function commit (uint[19] calldata zkp) public returns (uint) {
+  function commit (uint[] calldata zkp) public returns (uint) {
     require (zkp[9] == root, "wrong merkle root");
     require(msg.sender == comitter, "sender is not comitter");
     root = zkp[8];
@@ -289,7 +289,7 @@ contract ZKDB {
     
   }
 
-  function verifyRU(uint[19] calldata zkp) public view returns (bool) {
+  function verifyRU(uint[] calldata zkp) public view returns (bool) {
     uint[2] memory _pA;
     uint[2][2] memory _pB;
     uint[2] memory _pC;
@@ -303,40 +303,41 @@ contract ZKDB {
     return true;
   }
 
-  function verifyDB(uint[22] calldata zkp) public view returns (bool) {
+  function verifyDB(uint[] calldata zkp) public view returns (bool) {
     uint[2] memory _pA;
     uint[2][2] memory _pB;
     uint[2] memory _pC;
-    uint[14] memory sigs;
+    uint[SIZE * 2 + 4] memory sigs;
     for(uint i = 0; i < 2; i++) _pA[i] = zkp[i];
     for(uint i = 2; i < 4; i++) _pB[0][i - 2] = zkp[i];
     for(uint i = 4; i < 6; i++) _pB[1][i - 4] = zkp[i];
     for(uint i = 6; i < 8; i++) _pC[i - 6] = zkp[i];
-    for(uint i = 8; i < 22; i++) sigs[i - 8] = zkp[i];
+    for(uint i = 8; i < SIZE * 2 + 12; i++) sigs[i - 8] = zkp[i];
     require(VerifierDB(verifierDB).verifyProof(_pA, _pB, _pC, sigs), "invalid proof");
     return true;
   }
 
-  function validateQuery(uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns(uint[] memory){
+  function validateQuery(uint[] memory path, uint[] calldata zkp) public view returns(uint[] memory){
     require(zkp[19] == root, "root mismatch");
     require(zkp[8] == 1, "value doesn't exist");
-    require(zkp[20] == collection, "wrong collection");
-    require(zkp[21] == doc, "wrong doc");
-    for(uint i = 9; i < 14; i++) require(path[i - 9] == zkp[i], "wrong path");
+    require(zkp[SIZE * 2 + 10] == path[0], "wrong collection");
+    require(zkp[SIZE * 2 + 11] == path[1], "wrong doc");
+    require(path.length <= SIZE + 2, "path too long");
+    for(uint i = 9; i < 9 + path.length - 2; i++) require(path[i - 7] == zkp[i], "wrong path");
     
-    uint[5] memory value;
-    for(uint i = 14; i < 19; i++) value[i - 14] = zkp[i];
+    uint[] memory value = new uint[](SIZE);
+    for(uint i = 9 + SIZE; i < 9 + SIZE * 2; i++) value[i - (9 + SIZE)] = zkp[i];
     
     return toArr(value);
   }
 
-  function getInt (uint[5] memory path, uint[] memory raw) public pure returns (int) {
+  function getInt (uint[] memory path, uint[] memory raw) public pure returns (int) {
     uint[] memory value = getVal(path, raw);
     require(value[0] == 2 && value[2] == 0, "not int");
     return int(value[3]) * (value[1] == 1 ? int(1) : int(-1));
   }
 
-  function getString (uint[5] memory path, uint[] memory raw) public pure returns (string memory) {
+  function getString (uint[] memory path, uint[] memory raw) public pure returns (string memory) {
     uint[] memory value = getVal(path, raw);
     require(value[0] == 3, "not string");
     uint8[] memory charCodes = new uint8[](value[1]);
@@ -345,20 +346,20 @@ contract ZKDB {
     return str;
   }
 
-  function getBool (uint[5] memory path, uint[] memory raw) public pure returns (bool) {
+  function getBool (uint[] memory path, uint[] memory raw) public pure returns (bool) {
     uint[] memory value = getVal(path, raw);
     require(value[0] == 1, "not bool");
     return value[1] == 1 ? true : false;
   }
 
-  function getNull (uint[5] memory path, uint[] memory raw) public pure returns (bool) {
+  function getNull (uint[] memory path, uint[] memory raw) public pure returns (bool) {
     uint[] memory value = getVal(path, raw);
     require(value[0] == 0, "not null");
     return true;
   }
 
-  function qInt (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (int) {
-    uint[] memory value = validateQuery(collection, doc, path, zkp);
+  function qInt (uint[] memory path, uint[] calldata zkp) public view returns (int) {
+    uint[] memory value = validateQuery(path, zkp);
     require(value[0] == 2 && value[2] == 0, "not int");
     verifyDB(zkp);
     return int(value[3]) * (value[1] == 1 ? int(1) : int(-1));
@@ -370,8 +371,8 @@ contract ZKDB {
     return string(stringBytes);
   }
 
-  function qFloat (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (uint[3] memory) {
-    uint[] memory value = validateQuery(collection, doc, path, zkp);
+  function qFloat (uint[] memory path, uint[] calldata zkp) public view returns (uint[3] memory) {
+    uint[] memory value = validateQuery(path, zkp);
     require(value[0] == 2 && value[2] == 1, "not float");
     verifyDB(zkp);
     uint[3] memory float;
@@ -381,15 +382,15 @@ contract ZKDB {
     return float;
   }
 
-  function qRaw (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (uint[] memory) {
-    uint[] memory value = validateQuery(collection, doc, path, zkp);
+  function qRaw (uint[] memory path, uint[] calldata zkp) public view returns (uint[] memory) {
+    uint[] memory value = validateQuery(path, zkp);
     require(value[0] == 4, "not object or array");
     verifyDB(zkp);
     return value;
   }
   
-  function qString (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (string memory) {
-    uint[] memory value = validateQuery(collection, doc, path, zkp);
+  function qString (uint[] memory path, uint[] calldata zkp) public view returns (string memory) {
+    uint[] memory value = validateQuery(path, zkp);
     require(value[0] == 3, "not string");
     verifyDB(zkp);
     uint8[] memory charCodes = new uint8[](value[1]);
@@ -398,15 +399,15 @@ contract ZKDB {
     return str;
   }
 
-  function qBool (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (bool) {
-    uint[] memory value = validateQuery(collection, doc, path, zkp);
+  function qBool (uint[] memory path, uint[] calldata zkp) public view returns (bool) {
+    uint[] memory value = validateQuery(path, zkp);
     require(value[0] == 1, "not bool");
     verifyDB(zkp);
     return value[1] == 1 ? true : false;
   }
   
-  function qNull (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) public view returns (bool) {
-    uint[] memory value = validateQuery(collection, doc, path, zkp);
+  function qNull (uint[] memory path, uint[] calldata zkp) public view returns (bool) {
+    uint[] memory value = validateQuery(path, zkp);
     require(value[0] == 0, "not null");
     verifyDB(zkp);
     return true;

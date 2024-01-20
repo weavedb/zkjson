@@ -4,9 +4,9 @@ import "hardhat/console.sol";
 
 interface IZKDB {
   
-  function qInt (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (int);
+  function qInt (uint[] memory path, uint[] calldata zkp) external view returns (int);
   
-  function qString (uint collection, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (string memory);
+  function qString ( uint[] memory path, uint[] calldata zkp) external view returns (string memory);
   
 }
   
@@ -48,16 +48,20 @@ contract DEX {
     else return bytes1(uint8(b) + 0x57);
   }
   
-  function mint(uint col, uint doc, uint[22] calldata zkp, uint[22] calldata zkp2) public returns (address){
+  function mint(uint col, uint doc, uint[] calldata zkp, uint[] calldata zkp2) public returns (address){
     require(done[doc] == false, "already minted");
     done[doc] = true;
-    uint[5] memory path;
-    path[0] = 1111297;
-    uint[5] memory path2;
-    path2[0] = 1111298;
-    string memory str = IZKDB(zkdb).qString(col, doc, path, zkp);
+    uint[] memory path = new uint[](3);
+    path[0] = col;
+    path[1] = doc;
+    path[2] = 1111297;
+    uint[] memory path2 = new uint[](3);
+    path2[0] = col;
+    path2[1] = doc;
+    path2[2] = 1111298;
+    string memory str = IZKDB(zkdb).qString(path, zkp);
     address addr = toAddr(str);
-    int balance = IZKDB(zkdb).qInt(col, doc, path2, zkp2);
+    int balance = IZKDB(zkdb).qInt(path2, zkp2);
     balances[addr] += uint(balance);
     return addr;
   }
