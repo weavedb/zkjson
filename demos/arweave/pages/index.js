@@ -189,6 +189,7 @@ export default function Home() {
                         setSignature(signature)
                       } catch (e) {
                         alert("JSON fetch failed")
+                        setJSON("")
                       }
                     }
                   }}
@@ -221,12 +222,17 @@ export default function Home() {
                 </Box>
                 {signature === "" ? (
                   <Box mt={4}>
-                    <Flex mt={1} mb={2} justify="center">
+                    <Flex mt={1} mb={2} justify="center" align="center">
                       <Box
                         as="label"
-                        color={signature !== "" ? "" : "crimson"}
+                        color={signature !== "" ? "" : "#5037C6"}
                         textAlign="center"
                       >
+                        <Box
+                          as="i"
+                          className="fas fa-spin fa-circle-notch"
+                          mr={2}
+                        />
                         Validating Arweave Tx...
                       </Box>
                     </Flex>
@@ -272,12 +278,9 @@ export default function Home() {
                                 const sp = p[0].split("[")
                                 for (let v of sp) {
                                   if (/]$/.test(v)) {
-                                    console.log(v.replace(/]$/, "") * 1)
                                     j = j[v.replace(/]$/, "") * 1]
-                                    console.log(j)
                                   } else {
                                     j = j[v]
-                                    console.log(j)
                                   }
                                 }
                                 return getVal(j, p.slice(1))
@@ -405,7 +408,7 @@ export default function Home() {
                                   })
                                   const res = await snarkjs.groth16.verify(
                                     vkey,
-                                    signals,
+                                    publicSignals,
                                     proof
                                   )
                                   setResult(res)
@@ -414,7 +417,7 @@ export default function Home() {
                                     ...proof.pi_b[0].slice(0, 2).reverse(),
                                     ...proof.pi_b[1].slice(0, 2).reverse(),
                                     ...proof.pi_c.slice(0, 2),
-                                    ...signals,
+                                    ...publicSignals,
                                   ]
                                   const sigs = inputs2.slice(8)
                                   const params = [
@@ -476,15 +479,59 @@ export default function Home() {
                                       break
                                   }
                                   setParams({ op, params })
+                                  /*
+                                  const provider = new providers.Web3Provider(
+                                    window.ethereum,
+                                    "any"
+                                  )
+                                  const zkar = await new Contract(
+                                    contractAddr,
+                                    abi,
+                                    provider
+                                  )
+                                  switch (type2) {
+                                    case 0:
+                                      console.log(await zkar.qNull(...params))
+                                      break
+                                    case 1:
+                                      console.log(await zkar.qBool(...params))
+                                      op = "qBool"
+                                      break
+                                    case 2:
+                                      console.log(await zkar.qInt(...params))
+                                      op = "qInt"
+                                      break
+                                    case 2.5:
+                                      console.log(await zkar.qFloat(...params))
+                                      op = "qFloat"
+                                      break
+                                    case 3:
+                                      console.log(await zkar.qString(...params))
+                                      op = "qString"
+                                      break
+                                    case 4:
+                                      console.log(await zkar.qRaw(...params))
+                                      op = "qRaw"
+                                      break
+                                      }
+                                      */
                                 }
                               } catch (e) {
+                                console.log(e)
                                 alert("something went wrong, please try again.")
                               }
                               setGenerating(false)
                             }
                           }}
                         >
-                          {generating ? "......" : "Generate Proof"}
+                          {generating ? (
+                            <Box
+                              as="i"
+                              className="fas fa-spin fa-circle-notch"
+                            />
+                          ) : (
+                            "Generate Proof"
+                          )}
                         </Flex>
                       </Flex>
                     </Box>
@@ -513,7 +560,7 @@ export default function Home() {
                     </Box>
                     <Box mt={2}>
                       <Box mx={2} mb={1}>
-                        txid (string)
+                        txid (string) - Arweave TxId
                       </Box>
                       <Box
                         mx={2}
@@ -528,7 +575,7 @@ export default function Home() {
                     </Box>
                     <Box mt={2}>
                       <Box mx={2} mb={1}>
-                        path (uint256[5])
+                        path (uint256[5]) - encoded path to value
                       </Box>
                       <Box
                         mx={2}
@@ -543,7 +590,7 @@ export default function Home() {
                     </Box>
                     <Box mt={2}>
                       <Box mx={2} mb={1}>
-                        zkp (uint256[20])
+                        zkp (uint256[20]) - zk proof and public signals
                       </Box>
                       <Box
                         mx={2}
@@ -558,7 +605,7 @@ export default function Home() {
                     </Box>
                     <Box mt={2}>
                       <Box mx={2} mb={1}>
-                        sig (bytes)
+                        sig (bytes) - validator signature
                       </Box>
                       <Box
                         mx={2}
@@ -596,6 +643,57 @@ export default function Home() {
                 </Box>
               </Box>
             )}
+            <Box mt={6}>
+              <Box
+                bg="white"
+                w="100%"
+                mb={4}
+                color="#5037C6"
+                p={4}
+                sx={{ borderRadius: "5px" }}
+                fontSize="12px"
+              >
+                <Box mb={2} fontWeight="bold" fontSize="14px">
+                  How it works?
+                </Box>
+                <Box>
+                  We could simply prove an arbitrary JSON with zkJSON on
+                  Ethereum, but there needs to be logic to validate existence of
+                  Arweave transactions. For this demo, we use a simple
+                  centralized validator to check an Arweave gateway and sign the
+                  poseidon hash of the encoded JSON. Once you have the
+                  signature, you can query any data field in that JSON with the
+                  Ethereum smart contract. The ethereum contract (Polygon
+                  Mumbai) checks the zkJSON proof and the validator's signature.
+                </Box>
+                <Box mt={2}>
+                  However, for real use cases, we can use a decentralized
+                  validator such as Lit protocol's PKP and Lit Action to do the
+                  same. WeaveDB also has a zkDB and zkRollup mechanisms to build
+                  hyper-scalable decentralized databases.
+                </Box>
+                <Box mt={2}>
+                  We could also remove the validator signature check from the
+                  smart contract and zk-proof the signature with another
+                  circuit. This will make the onchain computation lighter and
+                  simpler, but the offchain circuit computation heaviour and
+                  more complex.
+                </Box>
+                <Box mt={2}>
+                  These optimizations are out of scope for this simple demo.
+                </Box>
+                <Flex mt={2} justify="center">
+                  <Box
+                    as="a"
+                    sx={{ textDecoration: "underline" }}
+                    target="_blank"
+                    href="https://github.com/weavedb/zkjson"
+                  >
+                    Go Check the Litepaper
+                  </Box>
+                </Flex>
+              </Box>
+            </Box>
           </Box>
           <Flex justify="center" mt={4} color="#5037C6">
             <Link href="https://github.com/weavedb/zkjson" target="_blank">

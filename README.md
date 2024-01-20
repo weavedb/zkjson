@@ -254,6 +254,7 @@ Now we can build a circuit to handle these digits and prove the value of a selec
 
 - [zkJSON Circuit](https://github.com/weavedb/zkjson/blob/master/circom/json/json.circom)
 - [A simple zkJSON demo](https://zkjson-zeta.vercel.app/)
+- [Arweave | Ethereum demo](https://zkjson-arweave.vercel.app)
 
 You can use `zkjson` node package to encode and decode JSON.
 
