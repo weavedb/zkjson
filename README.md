@@ -373,7 +373,7 @@ interface IZKDB {
   function qInt (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (int);
   function qFloat (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (uint[3] memory);
   function qString (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (string memory);
-  function qRaw (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (uint[100] memory);
+  function qRaw (uint col, uint doc, uint[5] memory path, uint[22] calldata zkp) external view returns (uint[] memory);
 }
 ```
 
@@ -383,11 +383,11 @@ interface IZKDB {
 
 ```solidity
 interface IZKDB {
-  function getNull (uint[5] memory path, uint[100] memory raw) external view returns (bool);
-  function getBool (uint[5] memory path, uint[100] memory raw) external view returns (bool);
-  function getInt (uint[5] memory path, uint[100]  memory raw) external view returns (int);
-  function getFloat (uint[5] memory path, uint[100] memory raw) external view returns (uint[3] memory);
-  function getString (uint[5] memory path, uint[100] memory raw) external view returns (string memory);
+  function getNull (uint[5] memory path, uint[] memory raw) external view returns (bool);
+  function getBool (uint[5] memory path, uint[] memory raw) external view returns (bool);
+  function getInt (uint[5] memory path, uint[]  memory raw) external view returns (int);
+  function getFloat (uint[5] memory path, uint[] memory raw) external view returns (uint[3] memory);
+  function getString (uint[5] memory path, uint[] memory raw) external view returns (string memory);
 }
 ```
 
