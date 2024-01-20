@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "pages/api/arweave.js": {
+      "maxDuration": 30
+    }
+  }
+}
