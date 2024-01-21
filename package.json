@@ -14,5 +14,6 @@
     "circomlibjs": "^0.1.7",
     "mocha": "^10.2.0",
     "ramda": "^0.29.1"
-  }
+  },
+  "license": "MIT"
 }
