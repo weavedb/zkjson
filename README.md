@@ -193,14 +193,14 @@ Now let's convert the values in our original JSON example.
 
 ```js
 [
-  [ 1, 1, 97 ], [ 2, 1, 0, 1 ] ],
-  [ 2, 1, 98 , 1, 100 ], [ 3, 4, 102, 111, 117, 114 ] ],
-  [ 2,  1, 98, 1, 101 ], [ 0 ] ],
-  [ 1, 1, 99 ], [ 1, 0 ] ]
-  [ 1, 1, 102 ], [ 2, 1, 2, 314 ] ],
-  [ 2, 3, 103, 104, 105, 0, 0, 0 ], [ 2, 1, 0, 5 ] ],
-  [ 2, 3, 103, 104, 105, 0, 0, 1 ], [ 2, 1, 0, 6 ] ],
-  [ 2, 3, 103, 104, 105, 0, 0, 2 ], [ 2, 1, 0, 7 ] ]
+  [ [ 1, 1, 97 ], [ 2, 1, 0, 1 ] ],
+  [ [ 2, 1, 98 , 1, 100 ], [ 3, 4, 102, 111, 117, 114 ] ],
+  [ [ 2,  1, 98, 1, 101 ], [ 0 ] ],
+  [ [ 1, 1, 99 ], [ 1, 0 ] ],
+  [ [ 1, 1, 102 ], [ 2, 1, 2, 314 ] ],
+  [ [ 2, 3, 103, 104, 105, 0, 0, 0 ], [ 2, 1, 0, 5 ] ],
+  [ [ 2, 3, 103, 104, 105, 0, 0, 1 ], [ 2, 1, 0, 6 ] ],
+  [ [ 2, 3, 103, 104, 105, 0, 0, 2 ], [ 2, 1, 0, 7 ] ]
 ]
 ```
 Now we are to flatten the entire nested arrays, but each number must be prefixed by the number of digits that contains, otherwise, there's no way to tell where to partition the series of digits. And here's another tricky part, if the number contains more than 9 digits, you cannot prefix it with 10, 11, 12 ... because when all the numbers are concatenated later, `10` doesn't mean that `10` digits follow, but it means `1` digit follows and it's `0`. So we allow max 8 digits in each partition and `9` means there will be another partition(s) following the current one.
@@ -217,28 +217,31 @@ This is the prefixed version.
 
 ```js
 [
-  [ 1, 1, 1, 1, 2, 97 ], [ 1, 2, 1, 1, 1, 0, 1, 1 ] ],
-  [ 1, 2, 1, 1, 2, 98 , 1, 1, 3, 100 ], [ 1, 3, 1, 4, 3, 102, 3, 111, 3, 117, 3, 114 ] ],
-  [ 1, 2,  1, 1, 3, 98, 1, 1, 3, 101 ], [ 1, 0 ] ],
-  [ 1, 1, 1, 1, 2, 99 ], [ 1, 1, 1, 0 ] ]
-  [ 1, 1, 1, 1, 3, 102 ], [ 1, 2, 1, 1, 1, 2, 3, 314 ] ],
-  [ 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 0 ], [ 1, 2, 1, 1, 1, 0, 1, 5 ] ],
-  [ 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 1 ], [ 1, 2, 1, 1, 1, 0, 1, 6 ] ],
-  [ 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 2 ], [ 1, 2, 1, 1, 1, 0, 1, 7 ] ]
+  [ [ 1, 1, 1, 1, 2, 97 ], [ 1, 2, 1, 1, 1, 0, 1, 1 ] ],
+  [ [ 1, 2, 1, 1, 2, 98 , 1, 1, 3, 100 ], [ 1, 3, 1, 4, 3, 102, 3, 111, 3, 117, 3, 114 ] ],
+  [ [ 1, 2,  1, 1, 3, 98, 1, 1, 3, 101 ], [ 1, 0 ] ],
+  [ [ 1, 1, 1, 1, 2, 99 ], [ 1, 1, 1, 0 ] ],
+  [ [ 1, 1, 1, 1, 3, 102 ], [ 1, 2, 1, 1, 1, 2, 3, 314 ] ],
+  [ [ 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 0 ], [ 1, 2, 1, 1, 1, 0, 1, 5 ] ],
+  [ [ 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 1 ], [ 1, 2, 1, 1, 1, 0, 1, 6 ] ],
+  [ [ 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 2 ], [ 1, 2, 1, 1, 1, 0, 1, 7 ] ]
 ]
 ```
 
 Then this is the final form all flattened.
 
 ```js
-[ 1, 1, 97, 2, 1, 0, 1, 2, 1, 98, 1, 100, 3, 4, 102, 111, 117, 114, 2, 1, 98, 1, 101, 0, 1, 1, 99, 1, 0, 1, 1, 102, 2, 1, 2, 314, 2, 3, 103, 104, 105, 0, 0, 0, 2, 1, 0, 5, 2, 3, 103, 104, 105, 0, 0, 1, 2, 1, 0, 6, 2, 3, 103, 104, 105, 0, 0, 2, 2, 1, 0, 7 ]
+[ 1, 1, 1, 1, 2, 97, 1, 2, 1, 1, 1, 0, 1, 1, 1, 2, 1, 1, 2, 98, 1, 1, 3, 100, 1, 3, 1, 4, 3, 102, 3, 111, 3, 117, 3, 114, 1, 2, 1, 1, 3, 98, 1, 1, 3, 101, 1, 0, 1, 1, 1, 1, 2, 99, 1, 1, 1, 0, 1, 1, 1, 1, 3, 102, 1, 2, 1, 1, 1, 2, 3, 314, 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 0, 1, 2, 1, 1, 1, 0, 1, 5, 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 1, 1, 2, 1, 1, 1, 0, 1, 6, 1, 2, 1, 3, 3, 103, 3, 104, 3, 105, 1, 0, 1, 0, 1, 2, 1, 2, 1, 1, 1, 0, 1, 7 ]
 ```
+It's 144 integers, or 182 digits. The original JSON was 66 character long when JSON.stringified, so it's not too bad considering integer vs character (let's say one ascii char takes up 3 digits and one unicode char takes up 7 digits). And zk circuits and Solidity cannot handle just stringified JSONs anyway. But it gets better.
 
-When passed to a circuit, all digits will be concatenated into one number. Circom uses modulo with
+When passed to a circuit, all digits will be concatenated into one integer. [Circom](https://docs.circom.io/circom-language/basic-operators/) by default uses modulo with
 
 `21888242871839275222246405745257275088548364400416034343698204186575808495617` (77  digits)
 
-which means up to 76 digits are safe and a 77-digit number could overflow. So as a circuit signal, it becomes
+which means up to 76 digits are safe and a 77-digit number could overflow, which is also within the range of `uint / uint256` in Solidity.
+
+So to convert the encoded array to a circuit signal, it becomes
 
 ```js
 [
@@ -248,7 +251,7 @@ which means up to 76 digits are safe and a 77-digit number could overflow. So as
 ]
 ```
 
-What's surprising here is that the entire JSON is compressed into just 3 integers in the end. It's just `uint[3]` in Solidity. This indeed is extreme efficiency!
+What's surprising here is that the entire JSON is compressed into just 3 integers in the end. It's just `uint[3]` in Solidity. This indeed is extreme efficiency! zkJSON by default allows up to 256 integers (256 * 76 digits), which can contain a huge JSON data size, and Solidity handles it efficiently with a dynamic array `uint[]`. What's even better is that the only bits passed to Solidity is the tiny bits of the value at the queried path, and not the entire JSON bits. So if you are querying the value at the path `a`, `1111297`(path: "a") and `12111011`(value: 1) are the only digits passed to Solidity as public signals of zkp.
 
 Now we can build a circuit to handle these digits and prove the value of a selected path without revealing the entire JSON. It's easy to explain the encoding, but harder to write the actual encoder/decoder and a circuit to properly process this encoding. But fortunately, we already did write them!
 
@@ -299,7 +302,7 @@ We can use a sparse merkle tree ([SMT](https://docs.iden3.io/getting-started/mt/
 
 <div align="center"><img src="./assets/collection.png" /></div>
 
-Each leaf node will be the [poseidon hash](https://www.poseidon-hash.info/) of zkJSON encoding of the data. To hash 256 * 77 digits, 16 poseidon hashes are hased together into another poseidon hash. This allows a fairly large JSON size to be proven.
+Each leaf node will be the [poseidon hash](https://www.poseidon-hash.info/) of zkJSON encoding of the data. To hash 256 * 76 digits, 16 poseidon hashes are hased together into another poseidon hash. This allows a fairly large JSON size to be proven.
 
 And each leaf node has an index number, so we need to somehow convert the document IDs to numbers without collisions. How many leaf nodes a SMT has depends on the pre-defined depth of the tree. For example, a 32-level SMT can have `2 ** 32 = 4294967296` leaf nodes. The level must be pre-defined at the circuit compile time, so we need to find the right conversion and balance.
 

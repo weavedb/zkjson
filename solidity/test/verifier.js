@@ -64,9 +64,7 @@ describe("zkDB", function () {
 
     const array = await _db.query("colA", "docA", json, "f")
     expect(
-      (
-        await zkdb.getInt(pad(toSignal(encodePath("[1]")), 5), array)
-      ).toString() * 1
+      (await zkdb.getInt(toSignal(encodePath("[1]")), array)).toString() * 1
     ).to.eql(2)
   })
 })
