@@ -1,10 +1,10 @@
 const { spawn } = require("node:child_process")
 const { writeFileSync, existsSync, mkdirSync } = require("fs")
 const { resolve } = require("path")
-
+const { v4: uuidv4 } = require("uuid")
 let {
   power,
-  entropy,
+  entropy = uuidv4(),
   circuit,
   size = 5,
   size_json = 256,
@@ -13,7 +13,7 @@ let {
   name,
 } = require("yargs")(process.argv.slice(2)).options({
   name: { type: "string" },
-  entropy: { type: "string", demandOption: true },
+  entropy: { type: "string" },
   power: { type: "number", demandOption: true },
   circuit: {
     type: "string",
@@ -73,7 +73,7 @@ component main {public [oldRoot]} = Rollup(${size_txs}, ${level}, ${size_json}, 
   writeFileSync(index, script)
 
   const gen = require(`../${circuit}/gen`)
-  const { inputs } = await gen({ size_json, size, level })
+  const { inputs } = await gen({ size_json, size, level, size_txs })
   writeFileSync(input, JSON.stringify(inputs))
 
   const compile = resolve(__dirname, "./compile.sh")
