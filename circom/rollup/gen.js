@@ -6,7 +6,7 @@ const gen = async ({
   level = 32,
   size_txs = 10,
 }) => {
-  const db = new DB({ size: 5, size_json: 256, level: 32, size_txs: 10 })
+  const db = new DB({ size, size_json, level, size_txs })
   await db.init()
   await db.addCollection("colA")
   await db.addCollection("colB")
