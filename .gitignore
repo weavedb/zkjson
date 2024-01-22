@@ -1,3 +1,4 @@
+build/
 hardhat.config.js
 \*shell\*
 *.ptau
