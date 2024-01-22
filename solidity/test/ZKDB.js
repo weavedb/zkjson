@@ -28,12 +28,13 @@ const getInputs = (res, tree, level) => {
 }
 
 module.exports = class ZKDB {
-  constructor(db, zkdb, size, size_json, level, size_txs) {
+  constructor(db, zkdb, size, size_json, level, size_txs, level_col) {
     this.db = db
     this.zkdb = zkdb
     this.size = size
     this.size_json = size_json
     this.level = level
+    this.level_col = level_col
     this.size_txs = size_txs
   }
   async genProof(col, doc, tar, path) {
@@ -44,9 +45,9 @@ module.exports = class ZKDB {
     let col_siblings = col_res.siblings
     for (let i = 0; i < col_siblings.length; i++)
       col_siblings[i] = this.db.tree.F.toObject(col_siblings[i])
-    while (col_siblings.length < this.level) col_siblings.push(0)
+    while (col_siblings.length < this.level_col) col_siblings.push(0)
     col_siblings = col_siblings.map(s => s.toString())
-    const col_key = str2id(col)
+    const col_key = col
 
     const _col = this.db.getColTree(col)
     const root = _col.tree.F.toObject(_col.tree.root).toString()
@@ -75,8 +76,11 @@ module.exports = class ZKDB {
     const { proof: proof2, publicSignals: sigs } =
       await snarkjs.groth16.fullProve(
         _write,
-        resolve(__dirname, "../../circom/db/index_js/index.wasm"),
-        resolve(__dirname, "../../circom/db/index_0001.zkey")
+        resolve(
+          __dirname,
+          "../../circom/build/circuits/db/index_js/index.wasm"
+        ),
+        resolve(__dirname, "../../circom/build/circuits/db/index_0001.zkey")
       )
     return [
       ...proof2.pi_a.slice(0, 2),
@@ -151,7 +155,7 @@ module.exports = class ZKDB {
         oldRoot_db.push(newRoot_db[i - 1])
         oldKey_db.push("0")
         oldValue_db.push("0")
-        siblings_db.push(range(0, this.level).map(() => "0"))
+        siblings_db.push(range(0, this.level_col).map(() => "0"))
         isOld0_db.push("0")
         newKey_db.push("0")
         newKey.push("0")
@@ -160,11 +164,11 @@ module.exports = class ZKDB {
       _json = v[2]
       const { update, tree, col: res2, doc: res } = await this.db.insert(...v)
       const icol = getInputs(res, tree, this.level)
-      const idb = getInputs(res2, this.db.tree, this.level)
+      const idb = getInputs(res2, this.db.tree, this.level_col)
       _res = idb
       const _newKey = str2id(v[1])
       const _value = pad(toSignal(encode(_json)), this.size_json)
-      const _newKey_db = str2id(v[0])
+      const _newKey_db = v[0]
       fnc.push(update ? [0, 1] : [1, 0])
       newRoot.push(idb.newRoot)
       oldRoot.push(icol.oldRoot)
@@ -202,8 +206,11 @@ module.exports = class ZKDB {
     }
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       write,
-      resolve(__dirname, "../../circom/rollup/index_js/index.wasm"),
-      resolve(__dirname, "../../circom/rollup/index_0001.zkey")
+      resolve(
+        __dirname,
+        "../../circom/build/circuits/rollup/index_js/index.wasm"
+      ),
+      resolve(__dirname, "../../circom/build/circuits/rollup/index_0001.zkey")
     )
     const inputs2 = [
       ...proof.pi_a.slice(0, 2),

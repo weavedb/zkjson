@@ -12,19 +12,27 @@ const {
 const Collection = require("./collection")
 
 class DB {
-  constructor({ size = 5, level = 40, size_json = 16, size_txs = 10 }) {
+  constructor({
+    size = 5,
+    level = 40,
+    size_json = 256,
+    size_txs = 10,
+    level_col = 8,
+  }) {
+    this.level_col = level_col
     this.size = size
     this.level = level
     this.size_json = size_json
     this.size_txs = size_txs
+    this.count = 0
   }
 
   async init() {
     this.tree = await newMemEmptyTrie()
-    this.cols = {}
+    this.cols = []
   }
 
-  parse(res, tree) {
+  parse(res, tree, level) {
     const isOld0 = res.isOld0 ? "1" : "0"
     const oldRoot = tree.F.toObject(res.oldRoot).toString()
     const newRoot = tree.F.toObject(res.newRoot).toString()
@@ -33,7 +41,7 @@ class DB {
     let siblings = res.siblings
     for (let i = 0; i < siblings.length; i++)
       siblings[i] = tree.F.toObject(siblings[i])
-    while (siblings.length < this.level) siblings.push(0)
+    while (siblings.length < level) siblings.push(0)
     siblings = siblings.map(s => s.toString())
     return { isOld0, oldRoot, oldKey, oldValue, siblings, newRoot }
   }
@@ -71,7 +79,7 @@ class DB {
         oldRoot_db.push(newRoot_db[i - 1])
         oldKey_db.push("0")
         oldValue_db.push("0")
-        siblings_db.push(range(0, this.level).map(() => "0"))
+        siblings_db.push(range(0, this.level_col).map(() => "0"))
         isOld0_db.push("0")
         newKey_db.push("0")
         newKey.push("0")
@@ -79,12 +87,12 @@ class DB {
       }
       _json = v[2]
       const { update, tree, col: res2, doc: res } = await this.insert(...v)
-      const icol = this.parse(res, tree)
-      const idb = this.parse(res2, this.tree)
+      const icol = this.parse(res, tree, this.level)
+      const idb = this.parse(res2, this.tree, this.level_col)
       _res = idb
       const _newKey = str2id(v[1])
       json.push(pad(val2str(encode(_json)), this.size_json))
-      const _newKey_db = str2id(v[0])
+      const _newKey_db = v[0]
       fnc.push(update ? [0, 1] : [1, 0])
       newRoot.push(idb.newRoot)
       oldRoot.push(icol.oldRoot)
@@ -128,10 +136,10 @@ class DB {
       col: res2,
       doc: res,
     } = await this.insert(col_id, id, json)
-    const icol = this.parse(res, tree)
-    const idb = this.parse(res2, this.tree)
+    const icol = this.parse(res, tree, this.level)
+    const idb = this.parse(res2, this.tree, this.level_col)
     const newKey = str2id(id)
-    const newKey_db = str2id(col_id)
+    const newKey_db = col_id
     return {
       fnc: update ? [0, 1] : [1, 0],
       oldRoot: icol.oldRoot,
@@ -158,9 +166,9 @@ class DB {
     let col_siblings = col_res.siblings
     for (let i = 0; i < col_siblings.length; i++)
       col_siblings[i] = this.tree.F.toObject(col_siblings[i])
-    while (col_siblings.length < this.level) col_siblings.push(0)
+    while (col_siblings.length < this.level_col) col_siblings.push(0)
     col_siblings = col_siblings.map(s => s.toString())
-    const col_key = str2id(col_id)
+    const col_key = col_id
     const col = this.getColTree(col_id)
     const col_inputs = await col.getInputs({ id, json, path, val })
     return {
@@ -176,8 +184,8 @@ class DB {
     }
   }
 
-  async addCollection(_key) {
-    const id = str2id(_key)
+  async addCollection() {
+    const id = this.count++
     const col = await this.tree.find(id)
     if (col.found) throw Error("collection exists")
     const _col = new Collection({
@@ -186,9 +194,10 @@ class DB {
       size_json: this.size_json,
     })
     await _col.init()
-    this.cols[_key] = _col
+    this.cols[id] = _col
     const root = _col.tree.F.toObject(_col.tree.root).toString()
     await this.tree.insert(id, [root])
+    return id
   }
   getColTree(col) {
     const _col = this.cols[col]
@@ -210,7 +219,7 @@ class DB {
   }
   async updateDB(_col, col) {
     const root = _col.tree.F.toObject(_col.tree.root).toString()
-    const colD = str2id(col)
+    const colD = col
     return await this.tree.update(colD, [root])
   }
   async update(col, _key, _val) {

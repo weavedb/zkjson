@@ -24,10 +24,15 @@ async function deploy() {
 describe("zkDB", function () {
   this.timeout(1000000000)
   it("Should transfer point token", async function () {
-    const col = "bridge"
-    const db = new DB({ level: 32, size: 5, size_json: 256, size_txs: 10 })
+    const db = new DB({
+      level: 40,
+      size: 5,
+      size_json: 256,
+      size_txs: 10,
+      level_col: 8,
+    })
     await db.init()
-    await db.addCollection(col)
+    const col = await db.addCollection()
     const { user, owner, dex, zkdb } = await loadFixture(deploy)
     const addr = owner.address.toLowerCase().slice(2, 10)
     const addr2 = user.address.toLowerCase().slice(2, 10)
@@ -46,7 +51,7 @@ describe("zkDB", function () {
       [col, "burn-9", json],
       [col, "burn-10", json2],
     ]
-    const _db = new ZKDB(db, zkdb, 5, 256, 32, 10)
+    const _db = new ZKDB(db, zkdb, 5, 256, 40, 10, 8)
     await _db.insert(txs)
     const proof = await _db.genProof(col, "burn-10", json2, "a")
     const proof2 = await _db.genProof(col, "burn-10", json2, "b")

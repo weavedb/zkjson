@@ -17,24 +17,6 @@ const {
   val2str,
 } = require("../../sdk")
 
-const size = 5
-const size_json = 16
-const level = 40
-const size_txs = 10
-const getInputs = (res, tree) => {
-  const isOld0 = res.isOld0 ? "1" : "0"
-  const oldRoot = tree.F.toObject(res.oldRoot).toString()
-  const newRoot = tree.F.toObject(res.newRoot).toString()
-  const oldKey = res.isOld0 ? "0" : tree.F.toObject(res.oldKey).toString()
-  const oldValue = res.isOld0 ? "0" : tree.F.toObject(res.oldValue).toString()
-  let siblings = res.siblings
-  for (let i = 0; i < siblings.length; i++)
-    siblings[i] = tree.F.toObject(siblings[i])
-  while (siblings.length < level) siblings.push(0)
-  siblings = siblings.map(s => s.toString())
-  return { isOld0, oldRoot, oldKey, oldValue, siblings, newRoot }
-}
-
 describe("SMT Verifier test", function () {
   let circuit
   this.timeout(1000000000)

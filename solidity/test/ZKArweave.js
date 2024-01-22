@@ -28,8 +28,11 @@ module.exports = class ZKArweave {
     const _inputs = { json, path, val }
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       _inputs,
-      resolve(__dirname, "../../circom/json/index_js/index.wasm"),
-      resolve(__dirname, "../../circom/json/index_0001.zkey")
+      resolve(
+        __dirname,
+        "../../circom/build/circuits/json/index_js/index.wasm"
+      ),
+      resolve(__dirname, "../../circom/build/circuits/json/index_0001.zkey")
     )
     return [
       ...proof.pi_a.slice(0, 2),
