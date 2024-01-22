@@ -1,14 +1,19 @@
 const { Doc } = require("../../sdk")
 const { writeFileSync } = require("fs")
 const { resolve } = require("path")
+const gen = require("./gen")
+
+let {
+  input = resolve(__dirname, "input.json"),
+  size = 5,
+  size_json = 256,
+} = require("yargs")(process.argv.slice(2)).options({
+  size: { type: "number" },
+  size_json: { type: "number" },
+}).argv
 
 const main = async () => {
-  const doc = new Doc({ size: 5, size_json: 256 })
-  const inputs = await doc.getInputs({
-    json: { a: 1.234, b: 5.5, c: [1, 2, [3, 4, { a: 3 }]] },
-    path: "c[2][2].a",
-    val: 3,
-  })
-  writeFileSync(resolve(__dirname, "input.json"), JSON.stringify(inputs))
+  const { inputs } = await gen({ size_json, size })
+  writeFileSync(input, JSON.stringify(inputs))
 }
 main()

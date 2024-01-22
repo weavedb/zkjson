@@ -1,16 +1,7 @@
 const chai = require("chai")
 const { join } = require("path")
 const wasm_tester = require("circom_tester").wasm
-
-const { DB } = require("../../sdk")
-
-const _json = { b: 50, a: 3123432423, c: [1, 2, 3] }
-const _path = "c"
-const _val = _json[_path]
-
-const size = 5
-const size_json = 16
-const level = 40
+const gen = require("./gen")
 
 describe("JSON circuit", function () {
   let circuit
@@ -22,18 +13,7 @@ describe("JSON circuit", function () {
   })
 
   it("should insert docs", async () => {
-    const db = new DB({ size: 5, size_json: 256, level: 32 })
-    await db.init()
-    await db.addCollection("colA")
-    await db.insert("colA", "docA", _json)
-    await db.insert("colA", "docB", { b: 2 })
-    const inputs = await db.getInputs({
-      col_id: "colA",
-      id: "docA",
-      json: _json,
-      path: _path,
-      val: _val,
-    })
+    const { inputs } = await gen({})
     const w = await circuit.calculateWitness(inputs, true)
     await circuit.checkConstraints(w)
     await circuit.assertOut(w, { exist: 1 })

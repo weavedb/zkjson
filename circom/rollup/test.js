@@ -4,7 +4,7 @@ const path = require("path")
 const Scalar = require("ffjavascript").Scalar
 const wasm_tester = require("circom_tester").wasm
 const assert = chai.assert
-const { DB } = require("../../sdk")
+const gen = require("./gen")
 const {
   pad,
   encode,
@@ -37,7 +37,6 @@ const getInputs = (res, tree) => {
 
 describe("SMT Verifier test", function () {
   let circuit
-  let db
   this.timeout(1000000000)
 
   before(async () => {
@@ -46,22 +45,7 @@ describe("SMT Verifier test", function () {
   })
 
   it("should insert docs", async () => {
-    const db = new DB({ size: 5, size_json: 256, level: 32, size_txs: 10 })
-    await db.init()
-    await db.addCollection("colA")
-    await db.addCollection("colB")
-    let queries = [
-      ["colB", "docA", { d: 4 }],
-      ["colB", "docC", { d: 4 }],
-      ["colB", "docD", { d: 4 }],
-      ["colA", "docD", { b: 4 }],
-      ["colA", "docA", { b: 5 }],
-      ["colB", "docA2", { d: 4 }],
-      ["colB", "docC2", { d: 4 }],
-      ["colB", "docD2", { d: 4 }],
-      ["colA", "docA2", { b: 4 }],
-    ]
-    const inputs = await db.getRollupInputs({ queries })
+    const { db, inputs } = await gen({})
     const w = await circuit.calculateWitness(inputs, true)
     await circuit.checkConstraints(w)
     await circuit.assertOut(w, { new_root: db.tree.F.toObject(db.tree.root) })
