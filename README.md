@@ -340,7 +340,7 @@ One way to have a longer ID length with the same depth is to restrict the allowe
 
 ##### Database
 
-For the database, we can take the exact same approach with the collections. We can use an SMT to represent multiple collection states in a DB with one root hash, and each leaf node will be the merkle root of a collection, which in turn represents the entire documents in the collection. We will give each collection an ID with the same ID-to-index conversion as the documents.
+For the database, we can take the exact same approach with the collections. We can use an SMT to represent multiple collection states in a DB with one root hash, and each leaf node will be the merkle root of a collection, which in turn represents the entire documents in the collection. We could give each collection an ID with the same ID-to-index conversion as the documents, however, collection IDs are not as essential as document IDs since document IDs are usually a part of access control rules, but collection IDs are not. We can use an incremental count for collection IDs and no well-strucrtured DB has so many collections as documents. Let's say `2 ** 8 = 256`, so an 8 level SMT can give us 256 collections and it should be more than enough for most applications. If you need alphanumeric IDs for collections, you could map them with numeric indexes offchain (e.g. `0 = FirstCollection`, `1 = AnotherCollection`, `2 = YetAnotherCollection`...). Note that this is different from the deterministic `toIndex / fromIndex` conversion. In this way we can use a smaller tree and keep the circuit small.
 
 <div align="center"><img src="./assets/db.png" /></div>
 

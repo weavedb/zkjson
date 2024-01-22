@@ -18,7 +18,7 @@ async function deploy() {
 }
 
 describe("zkDB", function () {
-  let zkdb, verifier, verifierDB, db
+  let zkdb, verifier, verifierDB, db, col_id
   this.timeout(1000000000)
 
   beforeEach(async () => {
@@ -26,43 +26,49 @@ describe("zkDB", function () {
     zkdb = dep.zkdb
     verifier = dep.verifier
     verifierDB = dep.verifierDB
-    db = new DB({ level: 32, size: 5, size_json: 256, size_txs: 10 })
+    db = new DB({
+      level: 32,
+      size: 5,
+      size_json: 256,
+      size_txs: 10,
+      level_col: 8,
+    })
     await db.init()
-    await db.addCollection("colA")
+    col_id = await db.addCollection("colA")
   })
 
   it("Should verify rollup transactions", async function () {
     const json = { a: "Hello", b: true, c: null, d: 1.1, e: 5, f: [1, 2, 3] }
     let txs = [
-      ["colA", "docD", { d: 4 }],
-      ["colA", "docD3", { d: 4 }],
-      ["colA", "docD4", { d: 4 }],
-      ["colA", "docD5", { d: 4 }],
-      ["colA", "docD6", { d: 4 }],
-      ["colA", "docD7", { d: 4 }],
-      ["colA", "docD8", { d: 4 }],
-      ["colA", "docA", { d: 4 }],
-      ["colA", "docA", json],
+      [col_id, "docD", { d: 4 }],
+      [col_id, "docD3", { d: 4 }],
+      [col_id, "docD4", { d: 4 }],
+      [col_id, "docD5", { d: 4 }],
+      [col_id, "docD6", { d: 4 }],
+      [col_id, "docD7", { d: 4 }],
+      [col_id, "docD8", { d: 4 }],
+      [col_id, "docA", { d: 4 }],
+      [col_id, "docA", json],
     ]
-    const _db = new ZKDB(db, zkdb, 5, 256, 32, 10)
+    const _db = new ZKDB(db, zkdb, 5, 256, 40, 10, 8)
     await _db.insert(txs, db, zkdb)
 
-    const float = await _db.query("colA", "docA", json, "d")
+    const float = await _db.query(col_id, "docA", json, "d")
     expect(float[2] / 10 ** float[1]).to.eql(1.1)
 
-    const isNull = await _db.query("colA", "docA", json, "c")
+    const isNull = await _db.query(col_id, "docA", json, "c")
     expect(isNull).to.eql(true)
 
-    const num = await _db.query("colA", "docA", json, "e")
+    const num = await _db.query(col_id, "docA", json, "e")
     expect(num).to.eql(5)
 
-    const str = await _db.query("colA", "docA", json, "a")
+    const str = await _db.query(col_id, "docA", json, "a")
     expect(str).to.eql("Hello")
 
-    const bool = await _db.query("colA", "docA", json, "b")
+    const bool = await _db.query(col_id, "docA", json, "b")
     expect(bool).to.eql(true)
 
-    const array = await _db.query("colA", "docA", json, "f")
+    const array = await _db.query(col_id, "docA", json, "f")
     expect(
       (await zkdb.getInt(toSignal(encodePath("[1]")), array)).toString() * 1
     ).to.eql(2)

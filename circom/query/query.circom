@@ -2,7 +2,7 @@ pragma circom 2.1.5;
 include "../../node_modules/circomlib/circuits/smt/smtprocessor.circom";
 include "../../node_modules/circomlib/circuits/poseidon.circom";
 
-template Query (level, size_json, size) {
+template Query (level_col, level, size_json, size) {
     signal input siblings[level];
     signal input json[size_json];
     signal input newRoot;
@@ -16,7 +16,7 @@ template Query (level, size_json, size) {
     signal input oldValue_db;
     signal input isOld0_db;
     signal input fnc[2];
-    signal input siblings_db[level];
+    signal input siblings_db[level_col];
     signal input newKey_db;
         
     signal output new_root;
@@ -42,8 +42,8 @@ template Query (level, size_json, size) {
     colVerifier.newValue <== all_hash.out;
     component hash2 = Poseidon(1);
     hash2.inputs[0] <== colVerifier.newRoot;
-    component dbVerifier = SMTProcessor(level);
-    var any = fnc[0] + fnc[1];
+    component dbVerifier = SMTProcessor(level_col);
+    var any = fnc[0] + fnc[1];    
     dbVerifier.fnc[0] <== 0;
     dbVerifier.fnc[1] <== any * 1;
     dbVerifier.oldRoot <== oldRoot_db;

@@ -4,15 +4,20 @@ const _json = { a: 5 }
 const _path = "a"
 const _val = _json[_path]
 
-const gen = async ({ size = 5, size_json = 256, level = 32 }) => {
-  const db = new DB({ size, size_json, level })
+const gen = async ({
+  size = 5,
+  size_json = 256,
+  level = 32,
+  level_col = 8,
+}) => {
+  const db = new DB({ size, size_json, level, level_col })
   await db.init()
-  await db.addCollection("colA")
-  await db.insert("colA", "docA", _json)
-  await db.insert("colA", "docB", { b: 2 })
+  const col_index = await db.addCollection()
+  await db.insert(col_index, "docA", _json)
+  await db.insert(col_index, "docB", { b: 2 })
   return {
     inputs: await db.getInputs({
-      col_id: "colA",
+      col_id: col_index,
       id: "docA",
       json: _json,
       path: _path,

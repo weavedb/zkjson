@@ -9,6 +9,7 @@ let {
   size = 5,
   size_json = 256,
   level = 40,
+  level_col = 8,
   size_txs = 10,
   name,
 } = require("yargs")(process.argv.slice(2)).options({
@@ -38,6 +39,7 @@ const main = async () => {
       process.exit()
     }
   for (const v of [circuits, circuits_x]) if (!existsSync(v)) mkdirSync(v)
+
   let script = ""
   if (circuit === "json") {
     script = `pragma circom 2.1.5;
@@ -53,27 +55,22 @@ component main {public [key, path, val]} = Collection(${level}, ${size_json}, ${
     script = `pragma circom 2.1.5;
 include "../../../db/db.circom";
 
-component main {public [col_key, key, path, val, col_root]} = DB(${level}, ${size_json}, ${size});`
-  } else if (circuit === "db") {
-    script = `pragma circom 2.1.5;
-include "../../../db/db.circom";
-
-component main {public [col_key, key, path, val, col_root]} = DB(${level}, ${size_json}, ${size});`
+component main {public [col_key, key, path, val, col_root]} = DB(${level_col}, ${level}, ${size_json}, ${size});`
   } else if (circuit === "query") {
     script = `pragma circom 2.1.5;
 include "../../../query/query.circom";
 
-component main {public [oldRoot]} = Query(${level}, ${size_json}, ${size});`
+component main {public [oldRoot]} = Query(${level_col}, ${level}, ${size_json}, ${size});`
   } else if (circuit === "rollup") {
     script = `pragma circom 2.1.5;
 include "../../../rollup/rollup.circom";
 
-component main {public [oldRoot]} = Rollup(${size_txs}, ${level}, ${size_json}, ${size});`
+component main {public [oldRoot]} = Rollup(${size_txs}, ${level_col}, ${level}, ${size_json}, ${size});`
   }
   writeFileSync(index, script)
 
   const gen = require(`../${circuit}/gen`)
-  const { inputs } = await gen({ size_json, size, level, size_txs })
+  const { inputs } = await gen({ size_json, size, level, size_txs, level_col })
   writeFileSync(input, JSON.stringify(inputs))
 
   const compile = resolve(__dirname, "./compile.sh")

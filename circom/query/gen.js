@@ -1,18 +1,23 @@
 const { DB } = require("../../sdk")
 
-const gen = async ({ size = 5, size_json = 256, level = 32 }) => {
-  const db = new DB({ size, size_json, level })
+const gen = async ({
+  size = 5,
+  size_json = 256,
+  level = 32,
+  level_col = 8,
+}) => {
+  const db = new DB({ size, size_json, level, level_col })
   await db.init()
-  await db.addCollection("colA")
-  await db.addCollection("colB")
-  await db.insert("colB", "docB", { b: 2 })
-  await db.insert("colA", "docB", { b: 2 })
-  await db.insert("colA", "docC", { c: 3 })
-  await db.insert("colA", "docA", { c: 4 })
+  const col1 = await db.addCollection()
+  const col2 = await db.addCollection()
+  await db.insert(col2, "docB", { b: 2 })
+  await db.insert(col1, "docB", { b: 2 })
+  await db.insert(col1, "docC", { c: 3 })
+  await db.insert(col1, "docA", { c: 4 })
   return {
     db,
     inputs: await db.getQueryInputs({
-      col_id: "colA",
+      col_id: col1,
       id: "docA",
       json: { a: 5 },
     }),
