@@ -55,7 +55,7 @@ And 3 bonus steps to make it practical and sustainable (using Arweave & Cosmos I
 
 #### zkJSON
 
-The key to making JSON verifiable with zkp is to invent a deterministic encoding that is friendly to zk circuits. zk circuits can only handle arithmetic operations with natural numbers, so we need to convert any JSON to a series of natural numbers back and forth. Just to clarify, you cannot simply convert it to a binary format or any existing encoding formats, because it has to specifically make sense to the circuit logic.
+The key to making JSON verifiable with zkp is to invent a deterministic encoding that is friendly to zk circuits. zk circuits can only handle arithmetic operations with natural numbers, so we need to convert any JSON to a series of natural numbers back and forth, then pack everything into as few `uint` as possible to efficiently save space. The default storage block in Solidity is `uint256` and Circom uses a modulo just below the 256 bit range. So optimizing for `uint` makes sense. Just to clarify, you cannot simply convert JSON to a binary format or any existing encoding formats, because it has to specifically make sense to the circuit logic and Solidity.
 
 ##### Encoding
 
@@ -235,7 +235,7 @@ Then this is the final form all flattened.
 ```
 It's 144 integers, or 182 digits. The original JSON was 66 character long when JSON.stringified, so it's not too bad considering integer vs character (let's say one ascii char takes up 3 digits and one unicode char takes up 7 digits). And zk circuits and Solidity cannot handle just stringified JSONs anyway. But it gets better.
 
-When passed to a circuit, all digits will be concatenated into one integer. [Circom](https://docs.circom.io/circom-language/basic-operators/) by default uses modulo with
+When passed to a circuit, all digits will be concatenated into one integer. [Circom](https://docs.circom.io/circom-language/basic-operators/) by default uses a modulo with
 
 `21888242871839275222246405745257275088548364400416034343698204186575808495617` (77  digits)
 
@@ -251,7 +251,7 @@ So to convert the encoded array to a circuit signal, it becomes
 ]
 ```
 
-What's surprising here is that the entire JSON is compressed into just 3 integers in the end. It's just `uint[3]` in Solidity. This indeed is extreme efficiency! zkJSON by default allows up to 256 integers (256 * 76 digits), which can contain a huge JSON data size, and Solidity handles it efficiently with a dynamic array `uint[]`. What's even better is that the only bits passed to Solidity is the tiny bits of the value at the queried path, and not the entire JSON bits. So if you are querying the value at the path `a`, `1111297`(path: "a") and `12111011`(value: 1) are the only digits passed to Solidity as public signals of zkp.
+What's surprising here is that the entire JSON is compressed into just 3 integers in the end. It's just `uint[3]` in Solidity. This indeed is extreme efficiency! The zkJSON circuit by default allows up to 256 integers (256 * 76 digits), which can contain a huge JSON data size, and Solidity handles it efficiently with a dynamic array `uint[]`. What's even better is that the only bits passed to Solidity is the tiny bits of the value at the queried path, and not the entire JSON bits. So if you are querying the value at the path `a`, `1111297`(path: "a") and `12111011`(value: 1) are the only digits passed to Solidity as public signals of zkp.
 
 Now we can build a circuit to handle these digits and prove the value of a selected path without revealing the entire JSON. It's easy to explain the encoding, but harder to write the actual encoder/decoder and a circuit to properly process this encoding. But fortunately, we already did write them!
 

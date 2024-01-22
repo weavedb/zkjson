@@ -3,13 +3,14 @@
 pragma solidity >=0.7.0 <0.9.0;
 import "hardhat/console.sol";
 import "./ZKJson.sol";
+import "./ZKQuery.sol";
 
 interface VerifierRU {
   function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[11] calldata _pubSignals) view external returns (bool);
 
 }
 
-contract ZKRollup is ZKJson {
+contract ZKRollup is ZKQuery {
   address public verifierRU;
   address public comitter;
   uint public root;
