@@ -4,8 +4,8 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "test": "mocha",
-    "compile": "cd circom && sh compile.sh"
+    "ceremony": "node circom/scripts/ceremony.js",
+    "compile": "node circom/scripts/compile.js"
   },
   "dependencies": {
     "chai": "^4",
@@ -13,7 +13,7 @@
     "circomlib": "^2.0.5",
     "circomlibjs": "^0.1.7",
     "mocha": "^10.2.0",
-    "ramda": "^0.29.1"
-  },
-  "license": "MIT"
+    "ramda": "^0.29.1",
+    "yargs": "^17.7.2"
+  }
 }
