@@ -170,14 +170,8 @@ describe("MyApp", function () {
 
   it("should query JSON values", async function () {
     const doc = new Doc({
-      wasm: resolve(
-        __dirname,
-        "../../zkjson/circom/build/circuits/json/index_js/index.wasm"
-      ),
-      zkey: resolve(
-        __dirname,
-        "../../zkjson/circom/build/circuits/json/index_0001.zkey"
-      ),
+      wasm: resolve( __dirname, "../../zkjson/circom/build/circuits/json/index_js/index.wasm" ),
+      zkey: resolve( __dirname, "../../zkjson/circom/build/circuits/json/index_0001.zkey" ),
     })
 	
     const json = {

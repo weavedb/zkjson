@@ -172,11 +172,7 @@ async function deploy() {
   const verifierDB = await VerifierDB.deploy()
 
   const MyRU = await ethers.getContractFactory("MyRollup")
-  const myru = await MyRU.deploy(
-    verifierRU.address,
-    verifierDB.address,
-    committer.address
-  )
+  const myru = await MyRU.deploy( verifierRU.address, verifierDB.address, committer.address )
   return { myru, committer }
 }
 
@@ -198,22 +194,10 @@ describe("MyRollup", function () {
       size_json: 256,
       size_txs: 10,
       level_col: 8,
-      wasmRU: resolve(
-        __dirname,
-        "../../zkjson/circom/build/circuits/rollup/index_js/index.wasm"
-      ),
-      zkeyRU: resolve(
-        __dirname,
-        "../../zkjson/circom/build/circuits/rollup/index_0001.zkey"
-      ),
-      wasm: resolve(
-        __dirname,
-        "../../zkjson/circom/build/circuits/db/index_js/index.wasm"
-      ),
-      zkey: resolve(
-        __dirname,
-        "../../zkjson/circom/build/circuits/db/index_0001.zkey"
-      ),
+      wasmRU: resolve(  __dirname, "../../zkjson/circom/build/circuits/rollup/index_js/index.wasm" ),
+      zkeyRU: resolve(  __dirname, "../../zkjson/circom/build/circuits/rollup/index_0001.zkey" ),
+      wasm: resolve(  __dirname, "../../zkjson/circom/build/circuits/db/index_js/index.wasm" ),
+      zkey: resolve( __dirname, "../../zkjson/circom/build/circuits/db/index_0001.zkey" ),
     })
     await db.init()
     col_id = await db.addCollection()
@@ -223,36 +207,19 @@ describe("MyRollup", function () {
       { name: "Mike", age: 30 },
       { name: "Beth", age: 40 },
     ]
-    let txs = people.map(v => {
-      return [col_id, v.name, v]
-    })
+    let txs = people.map(v => { return [col_id, v.name, v] })
 	
-	// batch commit queries
+    // batch commit write queries
     const zkp = await db.genRollupProof(txs)
     await myru.commit(zkp)
 
-    const zkp2 = await db.genProof({
-      json: people[0],
-      col_id,
-      path: "age",
-      id: "Bob",
-    })
-
-    expect(
-      (
-        await myru.qInt([col_id, toIndex("Bob"), ...path("age")], zkp2)
-      ).toNumber()
-    ).to.eql(10)
-
-    const zkp3 = await db.genProof({
-      json: people[3],
-      col_id,
-      path: "name",
-      id: "Beth",
-    })
-    expect(
-      await myru.qString([col_id, toIndex("Beth"), ...path("name")], zkp3)
-    ).to.eql("Beth")
+    // query Bob's age
+    const zkp2 = await db.genProof({ json: people[0], col_id, path: "age", id: "Bob" })
+    expect((await myru.qInt([col_id, toIndex("Bob"), ...path("age")], zkp2)).toNumber()).to.eql(10)
+	
+    // query Beth's name
+    const zkp3 = await db.genProof({ json: people[3], col_id, path: "name", id: "Beth" })
+    expect(await myru.qString([col_id, toIndex("Beth"), ...path("name")], zkp3)).to.eql("Beth")
   })
 })
 ```
