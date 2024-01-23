@@ -160,7 +160,7 @@ contract MyRollup is ZKRollup {
 
 ```javascript
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers")
-const { toIndex, Rollup, path, DB } = require("zkjson")
+const { toIndex, path, DB } = require("zkjson")
 const { resolve } = require("path")
 const { expect } = require("chai")
 

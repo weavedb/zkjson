@@ -1,5 +1,5 @@
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers")
-const { toIndex, Rollup, path, DB } = require("../../sdk")
+const { toIndex, path, DB } = require("../../sdk")
 const { resolve } = require("path")
 const { expect } = require("chai")
 
