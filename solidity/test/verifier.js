@@ -6,7 +6,7 @@ async function deploy() {
   const [owner, otherAccount] = await ethers.getSigners()
   const VerifierDB = await ethers.getContractFactory("Groth16VerifierDB")
   const verifierDB = await VerifierDB.deploy()
-  const Verifier = await ethers.getContractFactory("Groth16Verifier")
+  const Verifier = await ethers.getContractFactory("Groth16VerifierRU")
   const verifier = await Verifier.deploy()
   const ZKDB = await ethers.getContractFactory("ZKDB")
   const zkdb = await ZKDB.deploy(
@@ -35,7 +35,7 @@ describe("zkDB", function () {
       level_col: 8,
     })
     await db.init()
-    col_id = await db.addCollection("colA")
+    col_id = await db.addCollection()
   })
 
   it("Should verify rollup transactions", async function () {
@@ -52,7 +52,7 @@ describe("zkDB", function () {
       [col_id, "docA", json],
     ]
     const _db = new ZKDB(db, zkdb, 5, 5, 256, 100, 10, 8)
-    await _db.insert(txs, db, zkdb)
+    await _db.insert(txs)
 
     const float = await _db.query(col_id, "docA", json, "d")
     expect(float[2] / 10 ** float[1]).to.eql(1.1)

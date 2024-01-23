@@ -2,7 +2,6 @@
 
 pragma solidity >=0.7.0 <0.9.0;
 import "hardhat/console.sol";
-import "./ZKJson.sol";
 import "./ZKQuery.sol";
 
 interface VerifierRU {
@@ -12,7 +11,7 @@ interface VerifierRU {
 
 contract ZKRollup is ZKQuery {
   address public verifierRU;
-  address public comitter;
+  address public committer;
   uint public root;
   
   function _verifyRU(uint[] calldata zkp) internal view returns (bool) {
@@ -29,29 +28,27 @@ contract ZKRollup is ZKQuery {
     return true;
   }
   
-  function _validateQueryRU(uint[] memory path, uint[] calldata zkp, uint size) internal view returns(uint[] memory){
+  function _validateQueryRU(uint[] memory path, uint[] calldata zkp, uint size_path, uint size_val) internal view returns(uint[] memory){
     require(zkp[19] == root, "root mismatch");
-    require(zkp[size * 2 + 10] == path[0], "wrong collection");
-    require(zkp[size * 2 + 11] == path[1], "wrong doc");
+    require(zkp[size_path + size_val + 10] == path[0], "wrong collection");
+    require(zkp[size_path + size_val + 11] == path[1], "wrong doc");
     require(zkp[8] == 1, "value doesn't exist");
-    require(path.length <= size + 2, "path too long");
+    require(path.length <= size_path + size_val, "path too long");
     for(uint i = 9; i < 9 + path.length - 2; i++) require(path[i - 7] == zkp[i], "wrong path");
-    uint[] memory value = new uint[](size);
-    for(uint i = 9 + size; i < 9 + size * 2; i++) value[i - (9 + size)] = zkp[i];
+    uint[] memory value = new uint[](size_val);
+    for(uint i = 9 + size_path; i < 9 + size_path + size_val; i++) value[i - (9 + size_path)] = zkp[i];
     return toArr(value);
   }
 
   function commit (uint[] calldata zkp) public returns (uint) {
     require (zkp[9] == root, "wrong merkle root");
-    require(msg.sender == comitter, "sender is not comitter");
+    require(msg.sender == committer, "sender is not committer");
     root = zkp[8];
     verifyRU(zkp);
     return root;
-    
   }
 
   function verifyRU(uint[] calldata zkp) public view returns (bool) {
     return _verifyRU(zkp);
   }
-
 }

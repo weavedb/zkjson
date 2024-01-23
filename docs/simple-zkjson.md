@@ -2,13 +2,7 @@
 
 *zkJSON is still under active development, and neither the circuits nor the contracts have been auditted. Please use it for only experimental purposes.*
 
-### Quick Start
-
-- [Installation](#install)
-- [Simple zkJSON](#simple-zkjson)
-- [zkDB Rollup](#zkdb-rollup)
-
-#### Installation
+### Install `zkjson` Package
 
 Make sure you have [Circom](https://docs.circom.io/getting-started/installation/) and [Hardhat](https://hardhat.org/hardhat-runner/docs/getting-started#installation) installed globally.
 
@@ -18,21 +12,19 @@ cd zkjson
 yarn
 ```
 
-#### Simple zkJSON
-
-##### Generate Powers of Tau
+### Generate Powers of Tau
 
 ```bash
 yarn ceremony --power 14
 ```
 
-##### Compile Circuit
+### Compile Circuit
 
 ```bash
 yarn compile --power 14 --circuit json
 ```
 
-##### Create Solidity Project with Hardhat
+### Create Solidity Project with Hardhat
 
 ```bash
 cd ..
@@ -42,7 +34,7 @@ npx hardhat init
 yarn add zkjson
 ```
 
-##### Copy Verifier Contract
+### Copy Verifier Contract
 
 ```bash
 cp ../zkjson/circom/build/circuit/json/verifier.sol contracts/verifier_json.sol
@@ -62,7 +54,7 @@ to
 contract Groth16VerifierJSON {
 ```
 
-##### Write Solidity Contract
+### Write Solidity Contract
 
 `myapp/contracts/MyApp.sol`
 
@@ -149,7 +141,7 @@ contract MyApp is ZKQuery {
 }
 ```
 
-##### Write Test
+### Write Tests
 
 `myapp/test/MyApp.js`
 

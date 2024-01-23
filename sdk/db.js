@@ -1,4 +1,5 @@
 const newMemEmptyTrie = require("./circomlibjs").newMemEmptyTrie
+const snarkjs = require("snarkjs")
 const { range } = require("ramda")
 const {
   pad,
@@ -7,7 +8,7 @@ const {
   val2str,
   id2str,
   encode,
-  str2id,
+  toIndex,
 } = require("./encoder")
 const Collection = require("./collection")
 
@@ -19,7 +20,15 @@ class DB {
     size_json = 256,
     size_txs = 10,
     level_col = 8,
+    wasm,
+    zkey,
+    wasmRU,
+    zkeyRU,
   }) {
+    this.wasm = wasm
+    this.zkey = zkey
+    this.wasmRU = wasmRU
+    this.zkeyRU = zkeyRU
     this.level_col = level_col
     this.size = size_val
     this.size_path = size_path
@@ -47,7 +56,63 @@ class DB {
     siblings = siblings.map(s => s.toString())
     return { isOld0, oldRoot, oldKey, oldValue, siblings, newRoot }
   }
+  _getVal(j, p) {
+    if (p.length === 0) {
+      return j
+    } else {
+      const sp = p[0].split("[")
+      for (let v of sp) {
+        if (/]$/.test(v)) {
+          j = j[v.replace(/]$/, "") * 1]
+        } else {
+          j = j[v]
+        }
+      }
+      return this._getVal(j, p.slice(1))
+    }
+  }
+  getVal(j, p) {
+    if (p === "") return j
+    return this._getVal(j, p.split("."))
+  }
 
+  async genProof({ json, col_id, path, id }) {
+    const inputs = await this.getInputs({
+      id,
+      col_id,
+      json,
+      path,
+      val: this.getVal(json, path),
+    })
+    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+      inputs,
+      this.wasm,
+      this.zkey
+    )
+    return [
+      ...proof.pi_a.slice(0, 2),
+      ...proof.pi_b[0].slice(0, 2).reverse(),
+      ...proof.pi_b[1].slice(0, 2).reverse(),
+      ...proof.pi_c.slice(0, 2),
+      ...publicSignals,
+    ]
+  }
+
+  async genRollupProof(txs) {
+    const inputs = await this.getRollupInputs({ queries: txs })
+    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+      inputs,
+      this.wasmRU,
+      this.zkeyRU
+    )
+    return [
+      ...proof.pi_a.slice(0, 2),
+      ...proof.pi_b[0].slice(0, 2).reverse(),
+      ...proof.pi_b[1].slice(0, 2).reverse(),
+      ...proof.pi_c.slice(0, 2),
+      ...publicSignals,
+    ]
+  }
   async getRollupInputs({ queries }) {
     let write, _json
     let oldRoot = []
@@ -79,6 +144,7 @@ class DB {
         siblings.push(range(0, this.level).map(() => "0"))
         isOld0.push("0")
         oldRoot_db.push(newRoot_db[i - 1])
+        newRoot_db.push(newRoot_db[i - 1])
         oldKey_db.push("0")
         oldValue_db.push("0")
         siblings_db.push(range(0, this.level_col).map(() => "0"))
@@ -92,9 +158,9 @@ class DB {
       const icol = this.parse(res, tree, this.level)
       const idb = this.parse(res2, this.tree, this.level_col)
       _res = idb
-      const _newKey = str2id(v[1])
+      const _newKey = toIndex(v[1])
       json.push(pad(val2str(encode(_json)), this.size_json))
-      const _newKey_db = v[0]
+      const _newKey_db = v[0].toString()
       fnc.push(update ? [0, 1] : [1, 0])
       newRoot.push(idb.newRoot)
       oldRoot.push(icol.oldRoot)
@@ -140,8 +206,8 @@ class DB {
     } = await this.insert(col_id, id, json)
     const icol = this.parse(res, tree, this.level)
     const idb = this.parse(res2, this.tree, this.level_col)
-    const newKey = str2id(id)
-    const newKey_db = col_id
+    const newKey = toIndex(id)
+    const newKey_db = col_id.toString()
     return {
       fnc: update ? [0, 1] : [1, 0],
       oldRoot: icol.oldRoot,
@@ -179,7 +245,7 @@ class DB {
       json: col_inputs.json,
       root: col_inputs.root,
       siblings: col_inputs.siblings,
-      key: str2id(id),
+      key: toIndex(id),
       col_key,
       col_siblings,
       col_root,
@@ -244,7 +310,7 @@ class DB {
     return await _col.get(_key)
   }
   async getCol(_key) {
-    const id = str2id(_key)
+    const id = toIndex(_key)
     return await this.tree.find(id)
   }
 }
