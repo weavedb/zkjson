@@ -3,23 +3,23 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "hardhat/console.sol";
-import "./ZKRollup.sol";
+import "../ZKRollup.sol";
 
 interface VerifierDB {
   function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[14] calldata _pubSignals) view external returns (bool);
 }
 
-contract ZKDB is ZKRollup {
-  uint constant public SIZE_PATH = 5;
-  uint constant public SIZE_VAL = 5;
+contract SimpleRU is ZKRollup {
+  uint constant SIZE_PATH = 5;
+  uint constant SIZE_VAL = 5;
   address public verifierDB;
-  
+
   constructor (address _verifierRU, address _verifierDB, address _committer){
     verifierRU = _verifierRU;
     verifierDB = _verifierDB;
     committer = _committer;
   }
-
+  
   function verify(uint[] calldata zkp) private view returns (bool) {
     uint[SIZE_PATH + SIZE_VAL + 4] memory sigs;
     (
@@ -31,11 +31,11 @@ contract ZKDB is ZKRollup {
     for(uint i = 0; i < sigs.length; i++) sigs[i] = _sigs[i];
     require(VerifierDB(verifierDB).verifyProof(_pA, _pB, _pC, sigs), "invalid proof");
     return true;
-  }  
+  }
 
-  function validateQuery(uint[] memory path, uint[] calldata zkp) public view returns(uint[] memory){
+  function validateQuery(uint[] memory path, uint[] calldata zkp) private view returns(uint[] memory){
     verify(zkp);
-    return _validateQueryRU(path, zkp, SIZE_PATH, SIZE_VAL);
+    return _validateQueryRU(path, zkp, SIZE_PATH, SIZE_VAL);    
   }
 
   function qInt (uint[] memory path, uint[] calldata zkp) public view returns (int) {
@@ -67,5 +67,4 @@ contract ZKDB is ZKRollup {
     uint[] memory value = validateQuery(path, zkp);
     return _qNull(value);
   }
-
 }

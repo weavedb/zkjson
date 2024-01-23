@@ -256,8 +256,9 @@ What's surprising here is that the entire JSON is compressed into just 3 integer
 Now we can build a circuit to handle these digits and prove the value of a selected path without revealing the entire JSON. It's easy to explain the encoding, but harder to write the actual encoder/decoder and a circuit to properly process this encoding. But fortunately, we already did write them!
 
 - [zkJSON Circuit](https://github.com/weavedb/zkjson/blob/master/circom/json/json.circom)
-- [A simple zkJSON demo](https://zkjson-zeta.vercel.app/)
-- [Arweave | Ethereum demo](https://zkjson-arweave.vercel.app)
+- [Simple zkJSON Tutorial](./docs/simple-zkjson.md)
+- [Simple zkJSON Demo](https://zkjson-zeta.vercel.app/)
+- [Arweave | Ethereum Demo](https://zkjson-arweave.vercel.app)
 
 You can use `zkjson` node package to encode and decode JSON.
 
@@ -405,6 +406,7 @@ You could also write a function to get an array of numbers or a specific data st
 <div align="center"><img src="./assets/query.png" /></div>
 
 - [ZKDB Solidity Contract](https://github.com/weavedb/zkjson/blob/master/solidity/contracts/ZKDB.sol)
+- [zkDB Rollup Tutorial](./docs/zkdb-rollup.md)
 
 ### Going Further
 
@@ -459,6 +461,8 @@ WeaveChain will also be a PoS network to manage rollup nodes and [IBC](https://c
 
 ### Links
 
-- [zkJSON Docs](./docs)
-- [zkJSON Tutorial](./docs/tutorial.md)
-- [WeaveDB](https://linktr.ee/weavedb)
+- [Simple zkJSON Tutorial](./docs/simple-zkjson.md)
+- [zkDB Rollup Tutorial](./docs/zkdb-rollup.md)
+- [Simple zkJSON Demo](https://zkjson-zeta.vercel.app/)
+- [Arweave | Ethereum Demo](https://zkjson-arweave.vercel.app)
+- [WeaveDB Links](https://linktr.ee/weavedb)

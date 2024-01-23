@@ -7,7 +7,7 @@ async function deploy() {
   const [owner, user] = await ethers.getSigners()
   const VerifierDB = await ethers.getContractFactory("Groth16VerifierDB")
   const verifierDB = await VerifierDB.deploy()
-  const Verifier = await ethers.getContractFactory("Groth16Verifier")
+  const Verifier = await ethers.getContractFactory("Groth16VerifierRU")
   const verifier = await Verifier.deploy()
   const ZKDB = await ethers.getContractFactory("ZKDB")
   const zkdb = await ZKDB.deploy(

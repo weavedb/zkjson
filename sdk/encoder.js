@@ -453,6 +453,9 @@ const fromSignal = str2val
 const toIndex = str2id
 const fromIndex = id2str
 
+const path = p => toSignal(encodePath(p))
+const val = v => toSignal(encodeVal(v))
+
 module.exports = {
   encode,
   decode,
@@ -471,4 +474,6 @@ module.exports = {
   fromSignal,
   toIndex,
   fromIndex,
+  path,
+  val,
 }
