@@ -374,12 +374,12 @@ Finally, we can deploy the previous zkDB query circout verifier as a Solidity co
 
 ```solidity
 interface IZKQuery {
-  function qNull (uint[] memory path, uint[] calldata zkp) external view returns (bool);
-  function qBool (uint[] memory path, uint[] calldata zkp) external view returns (bool);
-  function qInt (uint[] memory path, uint[] calldata zkp) external view returns (int);
-  function qFloat (uint[] memory path, uint[] calldata zkp) external view returns (uint[3] memory);
-  function qString (uint[] memory path, uint[] calldata zkp) external view returns (string memory);
-  function qRaw (uint[] memory path, uint[] calldata zkp) external view returns (uint[] memory);
+  function qNull (uint[] memory path, uint[] calldata zkp) external pure returns (bool);
+  function qBool (uint[] memory path, uint[] calldata zkp) external pure returns (bool);
+  function qInt (uint[] memory path, uint[] calldata zkp) external pure returns (int);
+  function qFloat (uint[] memory path, uint[] calldata zkp) external pure returns (uint[3] memory);
+  function qString (uint[] memory path, uint[] calldata zkp) external pure returns (string memory);
+  function qRaw (uint[] memory path, uint[] calldata zkp) external pure returns (uint[] memory);
 }
 ```
 
@@ -391,11 +391,11 @@ interface IZKQuery {
 
 ```solidity
 interface IQuery {
-  function getNull (uint[] memory path, uint[] memory raw) external view returns (bool);
-  function getBool (uint[] memory path, uint[] memory raw) external view returns (bool);
-  function getInt (uint[] memory path, uint[]  memory raw) external view returns (int);
-  function getFloat (uint[] memory path, uint[] memory raw) external view returns (uint[3] memory);
-  function getString (uint[] memory path, uint[] memory raw) external view returns (string memory);
+  function getNull (uint[] memory path, uint[] memory raw) external pure returns (bool);
+  function getBool (uint[] memory path, uint[] memory raw) external pure returns (bool);
+  function getInt (uint[] memory path, uint[]  memory raw) external pure returns (int);
+  function getFloat (uint[] memory path, uint[] memory raw) external pure returns (uint[3] memory);
+  function getString (uint[] memory path, uint[] memory raw) external pure returns (string memory);
 }
 ```
 
