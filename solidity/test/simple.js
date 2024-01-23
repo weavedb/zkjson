@@ -31,7 +31,14 @@ describe("MyApp", function () {
         "../../circom/build/circuits/json/index_0001.zkey"
       ),
     })
-    const json = { num: 1, float: 1.23, str: "string", bool: true, null: null }
+    const json = {
+      num: 1,
+      float: 1.23,
+      str: "string",
+      bool: true,
+      null: null,
+      array: [1, 2, 3],
+    }
 
     // query number
     const zkp = await doc.genProof({ json, path: "num" })
@@ -60,5 +67,17 @@ describe("MyApp", function () {
         f.toNumber()
       )
     ).to.eql([1, 2, 123])
+
+    // query array and get number
+    const zkp6 = await doc.genProof({ json, path: "array" })
+    expect(
+      (
+        await myapp.qCustom(
+          toSignal(encodePath("array")),
+          toSignal(encodePath("[1]")),
+          zkp6
+        )
+      ).toNumber()
+    ).to.eql(2)
   })
 })

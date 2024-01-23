@@ -74,4 +74,10 @@ contract SimpleJSON is ZKQuery {
     uint[] memory value = validateQuery(path, zkp);
     return _qNull(value);
   }
+
+  function qCustom (uint[] memory path, uint[] memory path2, uint[] calldata zkp) public view returns (int) {
+    uint[] memory value = validateQuery(path, zkp);
+    return getInt(path2, value);
+  }
+  
 }

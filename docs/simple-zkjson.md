@@ -1,4 +1,4 @@
-## zkJSON Tutorial
+## Simple zkJSON Tutorial
 
 *zkJSON is still under active development, and neither the circuits nor the contracts have been auditted. Please use it for only experimental purposes.*
 
@@ -9,6 +9,8 @@
 - [zkDB Rollup](#zkdb-rollup)
 
 #### Installation
+
+Make sure you have [Circom](https://docs.circom.io/getting-started/installation/) and [Hardhat](https://hardhat.org/hardhat-runner/docs/getting-started#installation) installed globally.
 
 ```bash
 git clone https://github.com/weavedb/zkjson.git
@@ -76,8 +78,8 @@ interface VerifierJSON {
 }
 
 contract MyApp is ZKQuery {
-  uint constant public SIZE_PATH = 5;
-  uint constant public SIZE_VAL = 5;
+  uint constant SIZE_PATH = 5;
+  uint constant SIZE_VAL = 5;
   address public verifierJSON;
   
   constructor (address _verifierJSON){
@@ -139,6 +141,11 @@ contract MyApp is ZKQuery {
     uint[] memory value = validateQuery(path, zkp);
     return _qNull(value);
   }
+  
+  function qCustom (uint[] memory path, uint[] memory path2, uint[] calldata zkp) public view returns (int) {
+    uint[] memory value = validateQuery(path, zkp);
+    return getInt(path2, value);
+  }
 }
 ```
 
@@ -173,15 +180,22 @@ describe("MyApp", function () {
     const doc = new Doc({
       wasm: resolve(
         __dirname,
-        "../../zkjson/circom/circom/build/circuits/json/index_js/index.wasm"
+        "../../zkjson/circom/build/circuits/json/index_js/index.wasm"
       ),
       zkey: resolve(
         __dirname,
         "../../zkjson/circom/build/circuits/json/index_0001.zkey"
       ),
     })
-
-    const json = { num: 1, float: 1.23, str: "string", bool: true, null: null }
+	
+    const json = {
+      num: 1,
+      float: 1.23,
+      str: "string",
+      bool: true,
+      null: null,
+      array: [1, 2, 3],
+    }
 
     // query number
     const zkp = await doc.genProof({ json, path: "num" })
@@ -210,6 +224,18 @@ describe("MyApp", function () {
         f.toNumber()
       )
     ).to.eql([1, 2, 123])
+	
+    // query array and get number
+    const zkp6 = await doc.genProof({ json, path: "array" })
+    expect(
+      (
+        await myapp.qCustom(
+          toSignal(encodePath("array")),
+          toSignal(encodePath("[1]")),
+          zkp6
+        )
+      ).toNumber()
+    ).to.eql(2)
   })
 })
 ```
