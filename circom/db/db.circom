@@ -3,9 +3,9 @@ include "../../node_modules/circomlib/circuits/smt/smtverifier.circom";
 include "../collection/collection.circom";
 include "../../node_modules/circomlib/circuits/poseidon.circom";
 
-template DB (level_col, level, size_json, size) {  
-    signal input path[size];
-    signal input val[size];
+template DB (level_col, level, size_json, size_path, size_val) {  
+    signal input path[size_path];
+    signal input val[size_val];
     signal input json[size_json];
     signal input siblings[level];
     signal input col_siblings[level_col];
@@ -28,7 +28,7 @@ template DB (level_col, level, size_json, size) {
     smtVerifier.key <== col_key;
     smtVerifier.value <== hash.out;   
 
-    component _coll = Collection(level, size_json, size);
+    component _coll = Collection(level, size_json, size_path, size_val);
     _coll.path <== path;
     _coll.val <== val;
     _coll.siblings <== siblings;

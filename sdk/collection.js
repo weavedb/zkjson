@@ -3,11 +3,16 @@ const { pad, str2val, val2str, id2str, encode, str2id } = require("./encoder")
 const Doc = require("./doc")
 
 class Collection {
-  constructor({ size = 5, size_json = 16, level = 100 }) {
-    this.size = size
+  constructor({ size_val = 5, size_path = 5, size_json = 16, level = 100 }) {
+    this.size_val = size_val
+    this.size_path = size_path
     this.size_json = size_json
     this.level = level
-    this.doc = new Doc({ size: this.size, size_json: this.size_json })
+    this.doc = new Doc({
+      size_val: this.size_val,
+      size_path: this.size_path,
+      size_json: this.size_json,
+    })
   }
   async getInputs({ id, json, path, val }) {
     const doc_inputs = await this.doc.getInputs({ json, path, val })

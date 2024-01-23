@@ -13,14 +13,16 @@ const Collection = require("./collection")
 
 class DB {
   constructor({
-    size = 5,
-    level = 40,
+    size_val = 5,
+    size_path = 5,
+    level = 100,
     size_json = 256,
     size_txs = 10,
     level_col = 8,
   }) {
     this.level_col = level_col
-    this.size = size
+    this.size = size_val
+    this.size_path = size_path
     this.level = level
     this.size_json = size_json
     this.size_txs = size_txs
@@ -189,7 +191,8 @@ class DB {
     const col = await this.tree.find(id)
     if (col.found) throw Error("collection exists")
     const _col = new Collection({
-      size: this.size,
+      size_val: this.size_val,
+      size_path: this.size_path,
       level: this.level,
       size_json: this.size_json,
     })

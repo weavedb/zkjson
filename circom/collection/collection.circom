@@ -3,9 +3,9 @@ pragma circom 2.1.5;
 include "../../node_modules/circomlib/circuits/smt/smtverifier.circom";
 include "../json/json.circom";
 
-template Collection (level, size_json, size) {  
-    signal input path[size];
-    signal input val[size];
+template Collection (level, size_json, size_path, size_val) {  
+    signal input path[size_path];
+    signal input val[size_val];
     signal input siblings[level];
     signal input root;
     signal input key;
@@ -14,7 +14,7 @@ template Collection (level, size_json, size) {
 
     component smtVerifier = SMTVerifier(level);
 
-    component _json = JSON(size_json, size);
+    component _json = JSON(size_json, size_path, size_val);
     _json.json <== json;
     _json.path <== path;
     _json.val <== val;

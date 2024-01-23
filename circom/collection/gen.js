@@ -3,8 +3,18 @@ const _path = "a"
 const _val = _json[_path]
 const { Collection } = require("../../sdk")
 
-const gen = async () => {
-  const col = new Collection({ size: 5, size_json: 256, level: 100 })
+const gen = async ({
+  size_val = 5,
+  size_path = 5,
+  size_json = 256,
+  level = 40,
+}) => {
+  const col = new Collection({
+    size_val,
+    size_path,
+    size_json,
+    level,
+  })
   await col.init()
   await col.insert("docA", _json)
   await col.insert("docB", { b: 2 })
