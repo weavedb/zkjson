@@ -315,22 +315,22 @@ contract ZKQuery {
     return (_pA, _pB, _pC, sigs);
   }
 
-  function getInt (uint[] memory path, uint[] memory raw) public pure returns (int) {
+  function getInt (uint[] memory path, uint[] memory raw) internal pure returns (int) {
     uint[] memory value = getVal(path, raw);
     return _qInt(value);
   }
 
-  function getString (uint[] memory path, uint[] memory raw) public pure returns (string memory) {
+  function getString (uint[] memory path, uint[] memory raw) internal pure returns (string memory) {
     uint[] memory value = getVal(path, raw);
     _qString(value);
   }
 
-  function getBool (uint[] memory path, uint[] memory raw) public pure returns (bool) {
+  function getBool (uint[] memory path, uint[] memory raw) internal pure returns (bool) {
     uint[] memory value = getVal(path, raw);
     _qBool(value);
   }
 
-  function getNull (uint[] memory path, uint[] memory raw) public pure returns (bool) {
+  function getNull (uint[] memory path, uint[] memory raw) internal pure returns (bool) {
     uint[] memory value = getVal(path, raw);
     _qNull(value);
   }

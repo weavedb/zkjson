@@ -1,4 +1,4 @@
-# zkJSON Litepaper v0.1
+# zkJSON Litepaper v1.0
 
 ```
      _        _  _____  ____  _   _   _      _ _                                   
@@ -390,7 +390,7 @@ interface IZKQuery {
 `qRaw` returns the raw encoded value for non-primitive data types (array and object), and you can further query the raw value with the `getX` functions. Pass the raw value returned from `qRaw` with the path to query, instead of `zkp` proof.
 
 ```solidity
-interface IZKDB {
+interface IQuery {
   function getNull (uint[] memory path, uint[] memory raw) external view returns (bool);
   function getBool (uint[] memory path, uint[] memory raw) external view returns (bool);
   function getInt (uint[] memory path, uint[]  memory raw) external view returns (int);

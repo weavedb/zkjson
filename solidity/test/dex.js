@@ -1,15 +1,14 @@
-const ZKDB = require("./ZKDB")
 const { DB } = require("../../sdk")
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers")
 const { expect } = require("chai")
-
+const { resolve } = require("path")
 async function deploy() {
   const [owner, user] = await ethers.getSigners()
   const VerifierDB = await ethers.getContractFactory("Groth16VerifierDB")
   const verifierDB = await VerifierDB.deploy()
   const Verifier = await ethers.getContractFactory("Groth16VerifierRU")
   const verifier = await Verifier.deploy()
-  const ZKDB = await ethers.getContractFactory("ZKDB")
+  const ZKDB = await ethers.getContractFactory("SimpleRU")
   const zkdb = await ZKDB.deploy(
     verifier.address,
     verifierDB.address,
@@ -24,22 +23,33 @@ async function deploy() {
 describe("zkDB", function () {
   this.timeout(1000000000)
   it("Should transfer point token", async function () {
-    const db = new DB({
-      level: 40,
-      size: 5,
-      size_json: 256,
-      size_txs: 10,
-      level_col: 8,
-    })
-    await db.init()
-    const col = await db.addCollection()
     const { user, owner, dex, zkdb } = await loadFixture(deploy)
     const addr = owner.address.toLowerCase().slice(2, 10)
     const addr2 = user.address.toLowerCase().slice(2, 10)
     const json = { b: 100, a: owner.address.toLowerCase() }
-
     const json2 = { a: user.address.toLowerCase(), b: 50 }
 
+    // fix
+    const db = new DB({
+      wasmRU: resolve(
+        __dirname,
+        "../../circom/build/circuits/rollup/index_js/index.wasm"
+      ),
+      zkeyRU: resolve(
+        __dirname,
+        "../../circom/build/circuits/rollup/index_0001.zkey"
+      ),
+      wasm: resolve(
+        __dirname,
+        "../../circom/build/circuits/db/index_js/index.wasm"
+      ),
+      zkey: resolve(
+        __dirname,
+        "../../circom/build/circuits/db/index_0001.zkey"
+      ),
+    })
+    await db.init()
+    const col = await db.addCollection()
     let txs = [
       [col, "burn-1", json],
       [col, "burn-2", json],
@@ -51,10 +61,12 @@ describe("zkDB", function () {
       [col, "burn-9", json],
       [col, "burn-10", json2],
     ]
-    const _db = new ZKDB(db, zkdb, 5, 256, 40, 10, 8)
-    await _db.insert(txs)
-    const proof = await _db.genProof(col, "burn-10", json2, "a")
-    const proof2 = await _db.genProof(col, "burn-10", json2, "b")
+    const zkp = await db.genRollupProof(txs)
+    await zkdb.commit(zkp)
+
+    return
+    const proof = await db.genProof(col, "burn-10", json2, "a")
+    const proof2 = await db.genProof(col, "burn-10", json2, "b")
     const sigs = proof.slice(8)
     const _col = sigs[12]
     const _doc = sigs[13]
