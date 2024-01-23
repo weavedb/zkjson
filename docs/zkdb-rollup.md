@@ -227,5 +227,5 @@ describe("MyRollup", function () {
 Then run the tests.
 
 ```bash
-yarn hardhat test test/MyApp.js
+yarn hardhat test test/MyRollup.js
 ```
