@@ -1,9 +1,14 @@
 const { spawn } = require("node:child_process")
 const { existsSync, mkdirSync } = require("fs")
 const { resolve } = require("path")
+const { v4: uuidv4 } = require("uuid")
 
-let { power, entropy, name } = require("yargs")(process.argv.slice(2)).options({
-  entropy: { type: "string", demandOption: true },
+let {
+  power,
+  entropy = uuidv4(),
+  name,
+} = require("yargs")(process.argv.slice(2)).options({
+  entropy: { type: "string" },
   power: { type: "number", demandOption: true },
   name: { type: "string" },
 }).argv

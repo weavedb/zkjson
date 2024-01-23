@@ -352,7 +352,7 @@ Now we can write a circuit to prove a collection root hash, then we can write an
 
 #### zkRollup
 
-How do we make zkDB secure and queriable from other blockchains? We can write a circuit to prove the merkle tree hash transitions and deploy a Solidity contract to verify that proofs onchain. Fortunately, Circom auto-generates a Solidity verifier for us, so we can use that function in our verifier contract. We need to keep track of the current database root merkle hash as a Solidity contract state.
+How do we make zkDB secure and queriable from other blockchains? We can write a circuit to prove the merkle tree hash transitions and deploy a Solidity contract to verify those proofs onchain. Fortunately, Circom auto-generates a Solidity verifier for us, so we can use that function in our verifier contract. We need to keep track of the current database root merkle hash as a Solidity contract state.
 
 ```solidity
 interface IZKDB {
@@ -455,3 +455,10 @@ WeaveChain will be a CosmosSDK based DePIN blockchain and a marketplace to match
 - WeaveWallet - Biometric wallet with [PolygonID](https://polygonid.com/) (DID / VC / ZKP) utilizing [Passkeys](https://passkeys.dev/) and ICP [VETKeys](https://internetcomputer.org/blog/features/vetkey-primer)
 
 WeaveChain will also be a PoS network to manage rollup nodes and [IBC](https://cosmos.network/ibc/) compatible to communicate between different chains.
+
+
+### Links
+
+- [zkJSON Docs](./docs)
+- [zkJSON Tutorial](./docs/tutorial.md)
+- [WeaveDB](https://linktr.ee/weavedb)
