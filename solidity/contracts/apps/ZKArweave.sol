@@ -13,7 +13,8 @@ interface VerifierJSON {
 contract ZKArweave is ZKJson {
   address public verifier;
   address public validator;
-  uint constant public SIZE = 5;
+  uint constant SIZE_PATH = 5;
+  uint constant SIZE_VAL = 5;
   
   constructor (address _verifier, address _validator){
     verifier = _verifier;
@@ -37,7 +38,7 @@ contract ZKArweave is ZKJson {
   function validateQuery(string memory txid, uint[] memory path, uint[] calldata zkp, bytes memory sig) public view returns(uint[] memory){
     verify(zkp);
     verifyMessage(txid, zkp[9], sig);
-    return _validateQueryJSON(path, zkp, SIZE);
+    return _validateQueryJSON(path, zkp, SIZE_PATH, SIZE_VAL);
   }
 
   function qInt (string memory txid, uint[] memory path, uint[] calldata zkp, bytes memory sig) public view returns (int) {

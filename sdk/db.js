@@ -1,15 +1,7 @@
 const newMemEmptyTrie = require("./circomlibjs").newMemEmptyTrie
 const snarkjs = require("snarkjs")
 const { range } = require("ramda")
-const {
-  pad,
-  toSignal,
-  str2val,
-  val2str,
-  id2str,
-  encode,
-  toIndex,
-} = require("./encoder")
+const { pad, toSignal, encode, toIndex } = require("./encoder")
 const Collection = require("./collection")
 
 class DB {
@@ -113,6 +105,40 @@ class DB {
       ...publicSignals,
     ]
   }
+
+  async query(col_id, id, path, json) {
+    const val = tar[path]
+    const inputs = await this.genProof({ col_id, id, json, path })
+    const sigs = inputs.slice(8)
+    const params = [[sigs[12], sigs[13], ...sigs.slice(1, 6)], inputs]
+    let type =
+      val === null
+        ? 0
+        : typeof val === "string"
+        ? 3
+        : typeof val === "boolean"
+        ? 1
+        : typeof val === "number"
+        ? Number.isInteger(val)
+          ? 2
+          : 2.5
+        : 4
+    switch (type) {
+      case 0:
+        return await this.zkdb.qNull(...params)
+      case 1:
+        return await this.zkdb.qBool(...params)
+      case 2:
+        return (await this.zkdb.qInt(...params)).toString() * 1
+      case 2.5:
+        return (await this.zkdb.qFloat(...params)).map(n => n.toString() * 1)
+      case 3:
+        return await this.zkdb.qString(...params)
+      case 4:
+        return (await this.zkdb.qRaw(...params)).map(n => n.toString() * 1)
+    }
+  }
+
   async getRollupInputs({ queries }) {
     let write, _json
     let oldRoot = []
@@ -159,7 +185,7 @@ class DB {
       const idb = this.parse(res2, this.tree, this.level_col)
       _res = idb
       const _newKey = toIndex(v[1])
-      json.push(pad(val2str(encode(_json)), this.size_json))
+      json.push(pad(toSignal(encode(_json)), this.size_json))
       const _newKey_db = v[0].toString()
       fnc.push(update ? [0, 1] : [1, 0])
       newRoot.push(idb.newRoot)

@@ -63,16 +63,15 @@ contract Groth16VerifierJSON {
 
 pragma solidity >=0.7.0 <0.9.0;
 
-import "../node_modules/zkjson/contracts/ZKQuery.sol";
+import "../node_modules/zkjson/contracts/ZKJson.sol";
 
 interface VerifierJSON {
   function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[12] calldata _pubSignals) view external returns (bool);
 }
 
-contract MyApp is ZKQuery {
+contract MyApp is ZKJSON {
   uint constant SIZE_PATH = 5;
   uint constant SIZE_VAL = 5;
-  address public verifierJSON;
   
   constructor (address _verifierJSON){
     verifierJSON = _verifierJSON;
@@ -93,15 +92,7 @@ contract MyApp is ZKQuery {
 
   function validateQuery(uint[] memory path, uint[] calldata zkp) private view returns(uint[] memory){
     verify(zkp);
-    require(zkp[8] == 1, "value doesn't exist");
-    for(uint i = 10; i < 10 + SIZE_PATH; i++){
-      require((path.length <= i - 10 && zkp[i] == 0) || path[i - 10] == zkp[i], "wrong path");
-    }
-    uint[] memory value = new uint[](SIZE_VAL);
-    for(uint i = 10 + SIZE_PATH; i < 10 + SIZE_PATH + SIZE_VAL; i++){
-      value[i - (10 + SIZE_VAL)] = zkp[i];
-    }
-    return toArr(value);
+	return _validateQueryRU(path, zkp, SIZE_PATH, SIZE_VAL);    
   }
 
   function qInt (uint[] memory path, uint[] calldata zkp) public view returns (int) {

@@ -19,7 +19,7 @@ describe("MyApp", function () {
     myapp = dep.myapp
   })
 
-  it("Should verify rollup transactions", async function () {
+  it("should verify JSON", async function () {
     const doc = new Doc({
       wasm: resolve(
         __dirname,

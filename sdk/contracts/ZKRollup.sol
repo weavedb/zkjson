@@ -51,4 +51,5 @@ contract ZKRollup is ZKQuery {
   function verifyRU(uint[] calldata zkp) private view returns (bool) {
     return _verifyRU(zkp);
   }
+
 }
