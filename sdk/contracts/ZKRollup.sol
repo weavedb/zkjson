@@ -14,7 +14,7 @@ contract ZKRollup is ZKQuery {
   address public committer;
   uint public root;
   
-  function _verifyRU(uint[] calldata zkp) internal view returns (bool) {
+  function _verifyRU(uint[] calldata zkp) private view returns (bool) {
     uint[2] memory _pA;
     uint[2][2] memory _pB;
     uint[2] memory _pC;
@@ -48,7 +48,7 @@ contract ZKRollup is ZKQuery {
     return root;
   }
 
-  function verifyRU(uint[] calldata zkp) public view returns (bool) {
+  function verifyRU(uint[] calldata zkp) private view returns (bool) {
     return _verifyRU(zkp);
   }
 }

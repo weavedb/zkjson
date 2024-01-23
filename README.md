@@ -356,10 +356,10 @@ Now we can write a circuit to prove a collection root hash, then we can write an
 How do we make zkDB secure and queriable from other blockchains? We can write a circuit to prove the merkle tree hash transitions and deploy a Solidity contract to verify those proofs onchain. Fortunately, Circom auto-generates a Solidity verifier for us, so we can use that function in our verifier contract. We need to keep track of the current database root merkle hash as a Solidity contract state.
 
 ```solidity
-interface IZKDB {
-  address public comitter;
+interface IZKRollup {
+  address public committer;
   uint public root;
-  function commit (uint[19] calldata zkp) external returns (uint);
+  function commit (uint[] calldata zkp) external returns (uint);
 }
 ```
 
@@ -373,7 +373,7 @@ interface IZKDB {
 Finally, we can deploy the previous zkDB query circout verifier as a Solidity contract too, and make it possible to securely query any paths with the right proof. When querying, the Solidity contract must check the DB root hash to verify the queried value against the current database state.
 
 ```solidity
-interface IZKDB {
+interface IZKQuery {
   function qNull (uint[] memory path, uint[] calldata zkp) external view returns (bool);
   function qBool (uint[] memory path, uint[] calldata zkp) external view returns (bool);
   function qInt (uint[] memory path, uint[] calldata zkp) external view returns (int);
