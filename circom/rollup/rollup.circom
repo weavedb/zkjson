@@ -1,7 +1,7 @@
 pragma circom 2.1.5;
 include "../query/query.circom";
 
-template Rollup (tx_size, level_col, level, size_json, size) {
+template Rollup (tx_size, level_col, level, size_json) {
     signal input fnc[tx_size][2];
     signal input siblings[tx_size][level];
     signal input json[tx_size][size_json];
@@ -21,7 +21,7 @@ template Rollup (tx_size, level_col, level, size_json, size) {
     signal output new_root;
     component query[tx_size];
     for(var i = 0;i < tx_size;i++){
-        query[i] = Query(level_col, level, size_json, size);
+        query[i] = Query(level_col, level, size_json);
         query[i].fnc <== fnc[i];
         query[i].siblings <== siblings[i];
         query[i].json <== json[i];

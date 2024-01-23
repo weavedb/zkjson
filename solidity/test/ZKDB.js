@@ -28,10 +28,20 @@ const getInputs = (res, tree, level) => {
 }
 
 module.exports = class ZKDB {
-  constructor(db, zkdb, size, size_json, level, size_txs, level_col) {
+  constructor(
+    db,
+    zkdb,
+    size_path,
+    size_val,
+    size_json,
+    level,
+    size_txs,
+    level_col
+  ) {
     this.db = db
     this.zkdb = zkdb
-    this.size = size
+    this.size_path = size_path
+    this.size_val = size_val
     this.size_json = size_json
     this.level = level
     this.level_col = level_col
@@ -60,7 +70,7 @@ module.exports = class ZKDB {
     const key = str2id(doc)
 
     const _json = pad(toSignal(encode(tar)), this.size_json)
-    const _path = pad(toSignal(encodePath(path)), this.size)
+    const _path = pad(toSignal(encodePath(path)), this.size_path)
     const _val = pad(toSignal(encodeVal(val)), this.size)
     const _write = {
       json: _json,

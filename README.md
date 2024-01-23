@@ -334,6 +334,8 @@ You can use `zkjson` to convert the string to an SMT index.
  const str = fromIndex(index) // "zkJSON"
 ```
 
+Practically a 100-level SMT allows `15` character IDs and `1,267,650,600,228,229,401,496,703,205,376` documents in a collection. It should be sufficient for most applications if the IDs are designed wisely.
+
 One way to have a longer ID length with the same depth is to restrict the allowed characters to less than 31 since `31 * 31 = 961`. In this case 3 digits can represent 2 characters instead of 4 digits representing 2 characters. But we won't cover it here.
 
 - [Collection Circuit](https://github.com/weavedb/zkjson/blob/master/circom/collection/collection.circom)

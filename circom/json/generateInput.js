@@ -5,7 +5,8 @@ const gen = require("./gen")
 
 let {
   input = resolve(__dirname, "input.json"),
-  size = 5,
+  size_val = 5,
+  size_path = 5,
   size_json = 256,
 } = require("yargs")(process.argv.slice(2)).options({
   size: { type: "number" },
@@ -13,7 +14,7 @@ let {
 }).argv
 
 const main = async () => {
-  const { inputs } = await gen({ size_json, size })
+  const { inputs } = await gen({ size_json, size_val, size_path })
   writeFileSync(input, JSON.stringify(inputs))
 }
 main()

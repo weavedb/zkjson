@@ -6,13 +6,20 @@ let {
   power,
   entropy = uuidv4(),
   circuit,
-  size = 5,
+  size_val = 5,
+  size_path = 5,
   size_json = 256,
-  level = 40,
+  level = 100,
   level_col = 8,
   size_txs = 10,
   name,
 } = require("yargs")(process.argv.slice(2)).options({
+  size: { type: "number" },
+  size_json: { type: "number" },
+  size_path: { type: "number" },
+  level: { type: "number" },
+  level_col: { type: "number" },
+  size_txs: { type: "number" },
   name: { type: "string" },
   entropy: { type: "string" },
   power: { type: "number", demandOption: true },
@@ -45,32 +52,38 @@ const main = async () => {
     script = `pragma circom 2.1.5;
 include "../../../json/json.circom";
 
-component main {public [path, val]} = JSON(${size_json}, ${size});`
+component main {public [path, val]} = JSON(${size_json}, ${size_path}, ${size_val});`
   } else if (circuit === "collection") {
     script = `pragma circom 2.1.5;
 include "../../../collection/collection.circom";
 
-component main {public [key, path, val]} = Collection(${level}, ${size_json}, ${size});`
+ocomponent main {public [key, path, val]} = Collection(${level}, ${size_json}, ${size_path}, ${size_val});`
   } else if (circuit === "db") {
     script = `pragma circom 2.1.5;
 include "../../../db/db.circom";
 
-component main {public [col_key, key, path, val, col_root]} = DB(${level_col}, ${level}, ${size_json}, ${size});`
+component main {public [col_key, key, path, val, col_root]} = DB(${level_col}, ${level}, ${size_json}, ${size_path}, ${size_val});`
   } else if (circuit === "query") {
     script = `pragma circom 2.1.5;
 include "../../../query/query.circom";
 
-component main {public [oldRoot]} = Query(${level_col}, ${level}, ${size_json}, ${size});`
+component main {public [oldRoot]} = Query(${level_col}, ${level}, ${size_json});`
   } else if (circuit === "rollup") {
     script = `pragma circom 2.1.5;
 include "../../../rollup/rollup.circom";
 
-component main {public [oldRoot]} = Rollup(${size_txs}, ${level_col}, ${level}, ${size_json}, ${size});`
+component main {public [oldRoot]} = Rollup(${size_txs}, ${level_col}, ${level}, ${size_json});`
   }
   writeFileSync(index, script)
 
   const gen = require(`../${circuit}/gen`)
-  const { inputs } = await gen({ size_json, size, level, size_txs, level_col })
+  const { inputs } = await gen({
+    size_json,
+    size_val,
+    level,
+    size_txs,
+    level_col,
+  })
   writeFileSync(input, JSON.stringify(inputs))
 
   const compile = resolve(__dirname, "./compile.sh")

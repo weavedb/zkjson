@@ -7,7 +7,6 @@ import "./ZKRollup.sol";
 
 interface VerifierDB {
   function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[14] calldata _pubSignals) view external returns (bool);
-
 }
 
 contract ZKDB is ZKRollup {

@@ -2,7 +2,7 @@ pragma circom 2.1.5;
 include "../../node_modules/circomlib/circuits/smt/smtprocessor.circom";
 include "../../node_modules/circomlib/circuits/poseidon.circom";
 
-template Query (level_col, level, size_json, size) {
+template Query (level_col, level, size_json) {
     signal input siblings[level];
     signal input json[size_json];
     signal input newRoot;
