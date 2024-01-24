@@ -1,6 +1,6 @@
 ## Solidity Contracts
 
-### ZKQuery.sol
+### ZKQuery.soltwi
 
 ```solidity
 interface ZKQuery {
@@ -51,7 +51,11 @@ interface ZKRollup {
 
 ### Examples
 
-`ZKJson` and `ZKRollup` inherit `ZKQuery`. You need to either inherit `ZKJson` or `ZKRollup` to build your own ZKDB-enabled contract.
+`ZKJson` and `ZKRollup` inherit `ZKQuery`. You need to either inherit `ZKJson` or `ZKRollup` to build your own ZKDB-enabled contract. You can install `zkjson` node package and use the contract located at `node_modules/zkjson/contracts` in your Solidity contract. To install the package,
+
+```bash
+yarn add zkjson
+```
 
 #### Simple zkJSON
 
