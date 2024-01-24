@@ -1,6 +1,6 @@
 ## Solidity Contracts
 
-### ZKQuery
+### ZKQuery.sol
 
 ```solidity
 interface ZKQuery {
@@ -21,28 +21,28 @@ interface ZKQuery {
 }
 ```
 
-### ZKJson
+### ZKJson.sol
 
 ```solidity
 interface ZKJSON {
   function _validateQueryJSON(
     uint[] memory path,
-	uint[] calldata zkp,
-	uint size_path,
-	uint size_val
+    uint[] calldata zkp,
+    uint size_path,
+    uint size_val
   ) internal pure returns (uint[] memory);
 }
 ```
 
-### ZKRollup
+### ZKRollup.sol
 
 ```solidity
 interface ZKRollup {
   function _validateQueryRU(
     uint[] memory path,
-	uint[] calldata zkp,
-	uint size_path,
-	uint size_val
+    uint[] calldata zkp,
+    uint size_path,
+    uint size_val
   ) internal view returns (uint[] memory);
 
   function commit (uint[] calldata zkp) public returns (uint);
