@@ -1,6 +1,6 @@
 ## ZK Circuits
 
-There are 5 main circuits, and each circuit is built on top of the previous one.
+There are 5 main circuits, and each circuit is built on top of the prceeding one.
 
 ### Circuits
 
@@ -43,7 +43,7 @@ Query proves a JSON data insert or update by a single write query.
 
 Rollup proves batch data transitions.
 
-- `size_tx` : max number of queries in a batch : default `10`
+- `tx_size` : max number of queries in a batch : default `10`
 - `level_col` : DB SMT level : default `8`
 - `level` : collection SMT level : default `100`
 - `size_json` : JSON size : default `256`
@@ -81,7 +81,7 @@ yarn compile --power 14 --circuit json --size_json 256 --size_path 5 --size_val 
 To compile the `Rollup` circuit,
 
 ```bash
-yarn compile --power 20 --circuit rollup --size_tx 10 --level_col 8 --level 100 --size_json 256
+yarn compile --power 20 --circuit rollup --tx_size 10 --level_col 8 --level 100 --size_json 256
 ```
 
 All the generated files are stored at `build/circuits` including a Solidity verifier contract.
@@ -112,7 +112,7 @@ For DB, `level_col` determines how many collections the DB can contain. The coll
 
 ### Default Parameters and Required POT
 
-| Circuit | POT | size_json | size_path | size_val | level | level_col | size_tx |
+| Circuit | POT | size_json | size_path | size_val | level | level_col | tx_size |
 |---|---|---|---|---|---|---|---|
 | **JSON** | 14 | 256 | 5 | 5 |   |   |   |
 | **Collection** | 15 | 256 | 5 | 5 | 100 |   |   |
