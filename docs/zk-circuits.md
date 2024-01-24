@@ -119,3 +119,5 @@ For DB, `level_col` determines how many collections the DB can contain. The coll
 | **DB** | 17 | 256 | 5 | 5 | 100 | 8 |   |
 | **Query** | 19 | 256 |  |   | 100 | 8 |   |
 | **Rollup** | 20 | 256 |  |   | 100 | 8 | 10 |
+
+**Currently the SDK only works with `size_json=256` due to some hash logic. Keep it 256 for now please.**
