@@ -459,10 +459,25 @@ WeaveChain will be a CosmosSDK based DePIN blockchain and a marketplace to match
 WeaveChain will also be a PoS network to manage rollup nodes and [IBC](https://cosmos.network/ibc/) compatible to communicate between different chains.
 
 
-### Links
+### Resources
 
-- [Simple zkJSON Tutorial](./docs/simple-zkjson.md)
-- [zkDB Rollup Tutorial](./docs/zkdb-rollup.md)
+#### Tutorials
+
+- [Tutorial: Simple zkJSON](./docs/simple-zkjson.md)
+- [Tutorial: zkDB Rollup](./docs/zkdb-rollup.md)
+
+#### API Reference
+
+- [ZK Circuits](./docs/zk-circuits.md)
+- [Solidity Contracts](./docs/solidity-contracts.md)
+- [zkJSON SDK](./docs/zkjson-sdk.md)
+
+#### Demos
+
 - [Simple zkJSON Demo](https://zkjson-zeta.vercel.app/)
 - [Arweave | Ethereum Demo](https://zkjson-arweave.vercel.app)
+
+#### Other Links
+
+- [zkJSON Docs](./docs)
 - [WeaveDB Links](https://linktr.ee/weavedb)

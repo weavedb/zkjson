@@ -43,7 +43,7 @@ Query proves a JSON data insert or update by a single write query.
 
 Rollup proves batch data transitions.
 
-- `tx_size` : max number of queries in a batch : default `10`
+- `size_tx` : max number of queries in a batch : default `10`
 - `level_col` : DB SMT level : default `8`
 - `level` : collection SMT level : default `100`
 - `size_json` : JSON size : default `256`
@@ -57,6 +57,8 @@ To run a ceremony,
 ```bash
 yarn ceremony --power 14
 ```
+
+Generated files are located at `build/pot`.
 
 You can also specify `entropy` and `name` for the ceremony. Refer to [the Circom docs](https://docs.circom.io/getting-started/proving-circuits/) for what they mean.
 
@@ -79,8 +81,10 @@ yarn compile --power 14 --circuit json --size_json 256 --size_path 5 --size_val 
 To compile the `Rollup` circuit,
 
 ```bash
-yarn compile --power 20 --circuit rollup --tx_size 10 --level_col 8 --level 100 --size_json 256
+yarn compile --power 20 --circuit rollup --size_tx 10 --level_col 8 --level 100 --size_json 256
 ```
+
+All the generated files are stored at `build/circuits` including a Solidity verifier contract.
 
 ### Concept of Some Parameters
 
@@ -102,4 +106,16 @@ The default `json_size` is set `256`, which is 256 * 76 digits and should be suf
 Number of Characters = \frac{\log_{10}(2^{\text{Level}})}{2}
 ```
 
+`level=100` can allow 15 characters in document ID. This is significant because document IDs are often used in access control rules of NoSQL databases (with WeaveDB, for instance).
+
 For DB, `level_col` determines how many collections the DB can contain. The collection IDs use the direct index numbers and are not converted to an alphanumeric representation, so `level_col=8` (2 ** 8 = 256) collections should be sufficient for most applications. But you are free to set a different value.
+
+### Default Parameters and Required POT
+
+| Circuit | POT | size_json | size_path | size_val | level | level_col | size_tx |
+|---|---|---|---|---|---|---|---|
+| **JSON** | 14 | 256 | 5 | 5 |   |   |   |
+| **Collection** | 15 | 256 | 5 | 5 | 100 |   |   |
+| **DB** | 17 | 256 | 5 | 5 | 100 | 8 |   |
+| **Query** | 19 | 256 |  |   | 100 | 8 |   |
+| **Rollup** | 20 | 256 |  |   | 100 | 8 | 10 |

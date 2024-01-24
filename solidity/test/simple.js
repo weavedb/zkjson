@@ -2,6 +2,7 @@ const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers")
 const { path, Doc } = require("../../sdk")
 const { resolve } = require("path")
 const { expect } = require("chai")
+
 async function deploy() {
   const Verifier = await ethers.getContractFactory("Groth16VerifierJSON")
   const verifier = await Verifier.deploy()
