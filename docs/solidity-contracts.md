@@ -1,6 +1,6 @@
 ## Solidity Contracts
 
-### ZKQuery.soltwi
+### ZKQuery.sol
 
 ```solidity
 interface ZKQuery {

@@ -63,13 +63,31 @@ export default function Home() {
             </Box>
             <Box mt={4}>
               <Flex>
-                <Box as="label" mb={1}>
-                  Arweave TxID
-                </Box>
+                <Flex w="100%">
+                  <Box as="label" mb={1}>
+                    Arweave TxID
+                  </Box>
+                  <Box flex={1} />
+                  <Box
+                    mr={2}
+                    as="a"
+                    href="https://viewblock.io/arweave"
+                    target="_blank"
+                    sx={{
+                      textDecoration: "underline",
+                      color: "#5037C6",
+                      cursor: "pointer",
+                      ":hover": { opacity: 0.75 },
+                    }}
+                  >
+                    Find One on Explorer
+                  </Box>
+                </Flex>
                 <Box flex={1} />
                 {json === "" ? null : (
                   <Box
-                    mr={4}
+                    w="80px"
+                    mx={2}
                     sx={{
                       textDecoration: "underline",
                       color: "#5037C6",
