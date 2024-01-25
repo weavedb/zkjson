@@ -1,13 +1,14 @@
 import Head from "next/head"
 import Link from "next/link"
 import { Contract, providers } from "ethers"
-import { Select, Box, Flex, Input, Textarea } from "@chakra-ui/react"
+import { useToast, Select, Box, Flex, Input, Textarea } from "@chakra-ui/react"
 import { useState, useEffect } from "react"
 import { map, append, concat } from "ramda"
 const snarkjs = require("snarkjs")
 import { Doc } from "zkjson"
 const abi = require("../lib/ZKArweave.json").abi
 const contractAddr = process.env.NEXT_PUBLIC_CONTRACT_ADDR
+import { CopyToClipboard } from "react-copy-to-clipboard"
 
 export default function Home() {
   const [signals, setSignals] = useState(null)
@@ -24,6 +25,7 @@ export default function Home() {
   const [params, setParams] = useState(null)
   const [signature, setSignature] = useState("")
   const [generating, setGenerating] = useState(false)
+  const toast = useToast()
   let valid = false
   try {
     let _j = null
@@ -559,9 +561,44 @@ export default function Home() {
                       function on PolygonScan
                     </Box>
                     <Box mt={2}>
-                      <Box mx={2} mb={1}>
-                        txid (string) - Arweave TxId
-                      </Box>
+                      <Flex>
+                        <Box mx={2} mb={1}>
+                          txid (string) - Arweave TxId
+                        </Box>
+                        <Box flex={1} />
+                        <CopyToClipboard
+                          text={params.params[0]}
+                          onCopy={() => {
+                            toast({
+                              duration: 1000,
+                              position: "top-right",
+                              render: () => (
+                                <Flex
+                                  justify="center"
+                                  bg="#5037C6"
+                                  color="white"
+                                  p={2}
+                                  m={1}
+                                  sx={{ borderRadius: "3px" }}
+                                >
+                                  txid copied!
+                                </Flex>
+                              ),
+                            })
+                          }}
+                        >
+                          <Box
+                            mr={4}
+                            sx={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                              ":hover": { opacity: 0.75 },
+                            }}
+                          >
+                            Copy
+                          </Box>
+                        </CopyToClipboard>
+                      </Flex>
                       <Box
                         mx={2}
                         p={2}
@@ -574,9 +611,44 @@ export default function Home() {
                       </Box>
                     </Box>
                     <Box mt={2}>
-                      <Box mx={2} mb={1}>
-                        path (uint256[5]) - encoded path to value
-                      </Box>
+                      <Flex>
+                        <Box mx={2} mb={1}>
+                          path (uint256[5]) - encoded path to value
+                        </Box>
+                        <Box flex={1} />
+                        <CopyToClipboard
+                          text={`[${params.params[1].join(",")}]`}
+                          onCopy={() => {
+                            toast({
+                              duration: 1000,
+                              position: "top-right",
+                              render: () => (
+                                <Flex
+                                  justify="center"
+                                  bg="#5037C6"
+                                  color="white"
+                                  p={2}
+                                  m={1}
+                                  sx={{ borderRadius: "3px" }}
+                                >
+                                  path copied!
+                                </Flex>
+                              ),
+                            })
+                          }}
+                        >
+                          <Box
+                            mr={4}
+                            sx={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                              ":hover": { opacity: 0.75 },
+                            }}
+                          >
+                            Copy
+                          </Box>
+                        </CopyToClipboard>
+                      </Flex>
                       <Box
                         mx={2}
                         p={2}
@@ -589,9 +661,46 @@ export default function Home() {
                       </Box>
                     </Box>
                     <Box mt={2}>
-                      <Box mx={2} mb={1}>
-                        zkp (uint256[20]) - zk proof and public signals
-                      </Box>
+                      <Flex>
+                        <Box mx={2} mb={1}>
+                          zkp (uint256[20]) - zk proof and public signals
+                        </Box>
+                        <Box flex={1} />
+                        <CopyToClipboard
+                          text={`[${params.params[2]
+                            .map(v => `${v}`)
+                            .join(",")}]`}
+                          onCopy={() => {
+                            toast({
+                              duration: 1000,
+                              position: "top-right",
+                              render: () => (
+                                <Flex
+                                  justify="center"
+                                  bg="#5037C6"
+                                  color="white"
+                                  p={2}
+                                  m={1}
+                                  sx={{ borderRadius: "3px" }}
+                                >
+                                  zkp copied!
+                                </Flex>
+                              ),
+                            })
+                          }}
+                        >
+                          <Box
+                            mr={4}
+                            sx={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                              ":hover": { opacity: 0.75 },
+                            }}
+                          >
+                            Copy
+                          </Box>
+                        </CopyToClipboard>
+                      </Flex>
                       <Box
                         mx={2}
                         p={2}
@@ -600,13 +709,48 @@ export default function Home() {
                           borderRadius: "3px",
                         }}
                       >
-                        [{params.params[2].map(v => `"${v}"`).join(",")}]
+                        [{params.params[2].map(v => `${v}`).join(",")}]
                       </Box>
                     </Box>
                     <Box mt={2}>
-                      <Box mx={2} mb={1}>
-                        sig (bytes) - validator signature
-                      </Box>
+                      <Flex>
+                        <Box mx={2} mb={1}>
+                          sig (bytes) - validator signature
+                        </Box>
+                        <Box flex={1} />
+                        <CopyToClipboard
+                          text={params.params[3]}
+                          onCopy={() => {
+                            toast({
+                              duration: 1000,
+                              position: "top-right",
+                              render: () => (
+                                <Flex
+                                  justify="center"
+                                  bg="#5037C6"
+                                  color="white"
+                                  p={2}
+                                  m={1}
+                                  sx={{ borderRadius: "3px" }}
+                                >
+                                  sig copied!
+                                </Flex>
+                              ),
+                            })
+                          }}
+                        >
+                          <Box
+                            mr={4}
+                            sx={{
+                              textDecoration: "underline",
+                              cursor: "pointer",
+                              ":hover": { opacity: 0.75 },
+                            }}
+                          >
+                            Copy
+                          </Box>
+                        </CopyToClipboard>
+                      </Flex>
                       <Box
                         mx={2}
                         p={2}
@@ -634,7 +778,7 @@ export default function Home() {
                         }}
                         as="a"
                         target="_blank"
-                        href="https://mumbai.polygonscan.com/address/0xa64f57728878dC399ab96e3e2380a661B2703990#readContract"
+                        href={`https://mumbai.polygonscan.com/address/${contractAddr}#readContract`}
                       >
                         Got To PolygonScan
                       </Flex>
