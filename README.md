@@ -370,7 +370,7 @@ interface IZKRollup {
 
 #### zkQuery
 
-Finally, we can deploy the previous zkDB query circout verifier as a Solidity contract too, and make it possible to securely query any paths with the right proof. When querying, the Solidity contract must check the DB root hash to verify the queried value against the current database state.
+Finally, we can deploy the previous zkDB query circuit verifier as a Solidity contract too, and make it possible to securely query any paths with the right proof. When querying, the Solidity contract must check the DB root hash to verify the queried value against the current database state.
 
 ```solidity
 interface IZKQuery {
