@@ -3,16 +3,16 @@ import Link from "next/link"
 import { Select, Box, Flex, Input, Textarea } from "@chakra-ui/react"
 import { useState, useEffect } from "react"
 import { map } from "ramda"
-const snarkjs = require("snarkjs")
 import {
-  flattenPath,
-  decodePath,
-  _encode,
-  encodePath,
-  encodeVal,
   encode,
+  encodeVal,
+  encodePath,
+  decodePath,
   pad,
-} from "../lib/encoder"
+  toSignal,
+} from "zkjson"
+const snarkjs = require("snarkjs")
+import { flattenPath, _encode } from "../lib/encoder"
 export default function Home() {
   const [signals, setSignals] = useState(null)
   const [proof, setProof] = useState(null)
@@ -236,8 +236,8 @@ export default function Home() {
                     try {
                       eval("_json = " + json)
                     } catch (e) {}
-                    _json = pad(encode(_json), 1000)
-                    const _path = pad(encodePath(path), 100)
+                    _json = pad(toSignal(encode(_json)), 256)
+                    const _path = pad(toSignal(encodePath(path)), 5)
                     let _val =
                       type === "number"
                         ? num * 1
@@ -246,7 +246,7 @@ export default function Home() {
                         : type === "boolean"
                         ? bool
                         : null
-                    const _val2 = pad(encodeVal(_val), 100)
+                    const _val2 = pad(toSignal(encodeVal(_val)), 5)
                     const { proof, publicSignals } =
                       await snarkjs.groth16.fullProve(
                         { json: _json, path: _path, val: _val2 },
