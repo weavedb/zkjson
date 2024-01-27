@@ -203,19 +203,6 @@ contract ZKQuery {
     return true;
   }
 
-  function _parseZKP(uint[] calldata zkp) internal pure returns (uint[2] memory, uint[2][2] memory, uint[2] memory, uint[] memory) {
-    uint[2] memory _pA;
-    uint[2][2] memory _pB;
-    uint[2] memory _pC;
-    uint[] memory sigs = new uint[](zkp.length - 8);
-    for(uint i = 0; i < 2; i++) _pA[i] = zkp[i];
-    for(uint i = 2; i < 4; i++) _pB[0][i - 2] = zkp[i];
-    for(uint i = 4; i < 6; i++) _pB[1][i - 4] = zkp[i];
-    for(uint i = 6; i < 8; i++) _pC[i - 6] = zkp[i];
-    for(uint i = 8; i < zkp.length; i++) sigs[i - 8] = zkp[i];
-    return (_pA, _pB, _pC, sigs);
-  }
-
   function getInt (uint[] memory path, uint[] memory raw) internal pure returns (int) {
     uint[] memory value = getVal(path, raw);
     return _qInt(value);
