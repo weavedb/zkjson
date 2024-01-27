@@ -55,7 +55,7 @@ contract ZKQuery {
   
   function getPath(uint i, uint[] memory _json) private pure returns(uint[] memory, uint){
     uint[] memory _path;
-    assembly{
+    assembly {
       let json := add(_json, 0x20)
       let len := mload(add(json, mul(i, 0x20)))
       i := add(i, 1)
@@ -134,105 +134,72 @@ contract ZKQuery {
     return val;
   }
   
-  function getLen(uint[] memory json) private pure returns(uint, uint){
-    uint ji = 0;
-    uint prev = 0;
-    uint jlen = 0;
-    for(uint j = 0; j < json.length; j++){
-      if(json[j] > 0){
-	jlen = j + 1;
-	uint p = digits(json[j]);
-	uint x = json[j];
-	uint on = 0;
-	uint cur = 0;
-	uint len = 0;
-	uint num = 0;
-	uint is9 = 0;
-	while(p > 0){
-	  uint n = x / 10 ** (p - 1);
-	  if(on == 0 && n > 0){
-	    on = 1;
-	    if(n == 9){
-	      len = 8;
-	      is9 = 0;
-	    }else{
-	      len = n;
-	    }
-	    cur = 0;
-	  }else if(on == 1){
-	    num += n * 10 ** (len - cur - 1);
-	    cur++;
-	    if(cur == len){
-	      prev *= 10 ** len;
-	      if(is9 == 1){
-		prev += num;
-	      }else{
-		num += prev;
-		prev = 0;
-		ji++;
-	      }
-	      cur = 0;
-	      on = 0;
-	      len = 0;
-	      num = 0;
-	      is9 = 0;
-	    }
-	  }
-	  x -= 10 ** (p - 1) * n;
-	  p--;
-	}
-      }
-    }
-    return (ji, jlen);
-  }
   
   function toArr(uint[] memory json) internal pure returns(uint[] memory){
-    (uint _len, uint _jlen) = getLen(json);
-    uint[]  memory _json = new uint[](_len);
-    uint ji = 0;
-    uint prev = 0;
-    for(uint j = 0; j < _jlen; j++){
-      uint p = digits(json[j]);
-      uint x = json[j];
-      uint on = 0;
-      uint cur = 0;
-      uint len = 0;
-      uint num = 0;
-      uint is9 = 0;
-      while(p > 0){
-	uint n = x / 10 ** (p - 1);
-	if(on == 0 && n > 0){
-	  on = 1;
-	  if(n == 9){
-	    len = 8;
-	    is9 = 0;
-	  }else{
-	    len = n;
-	  }
-	  cur = 0;
-	}else if(on == 1){
-	  num += n * 10 ** (len - cur - 1);
-	  cur++;
-	  if(cur == len){
-	    prev *= 10 ** len;
-	    if(is9 == 1){
-	      prev += num;
-	    }else{
-	      num += prev;
-	      prev = 0;
-	      _json[ji] = num;
-	      ji++;
-	    }
-	    cur = 0;
-	    on = 0;
-	    len = 0;
-	    num = 0;
-	    is9 = 0;
+    uint[]  memory _json;
+    assembly {
+      let ji := 0x0
+      let prev := 0
+      let start := add(json, 0x20)
+      _json := msize()
+      mstore(_json, mload(json))
+      let _json0 := add(_json, 0x20)
+      for { let i := 0 } lt(i, mload(json)) { i := add(i, 1) } {
+	let v := mload(add(start, mul(i, 0x20)))
+	if gt(v,0) {  
+	  let p := 0
+	  let x := v
+	  let on := 0
+	  let cur := 0
+	  let len := 0
+	  let num := 0
+	  let is9 := 0
+          for { } gt(v, 0) { } {
+	    v := div(v, 10)
+            p := add(p, 1)
+          }
+	  for { } gt(p, 0) { } {
+	    let n := div(x, exp(10, sub(p, 1)))
+	    let _on := on  
+            if and(iszero(_on), gt(n, 0)) {
+              on := 1
+              if eq(n, 9) {
+                len := 8
+                is9 := 0
+              }
+	      if iszero(eq(n, 9)) {
+                len := n
+              }
+              cur := 0
+            }
+	    if eq(_on, 1) {
+	      num := add(num, mul(n, exp(10, sub(sub(len, cur), 1))))
+              cur := add(cur, 1)
+              if eq(cur, len) {
+                prev := mul(prev, exp(10, len))
+                if eq(is9, 1) {
+                  prev := add(prev, num)
+                }
+	        if iszero(eq(is9, 1)) {
+                  num := add(num, prev)
+                  prev := 0
+		  mstore(add(_json0, ji), num)
+                  ji := add(ji, 0x20)
+                }
+                cur := 0
+                on := 0
+                len := 0
+                num := 0
+                is9 := 0
+              }
+            }
+	    x := sub(x, mul(exp(10, sub(p, 1)), n))
+	    p := sub(p, 1)
 	  }
 	}
-	x -= 10 ** (p - 1) * n;
-	p--;
       }
+      mstore(_json, div(ji, 0x20))
+      mstore(0x40, add(_json, add(0x20, ji)))
     }
     return _json;
   }
