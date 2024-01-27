@@ -15,57 +15,43 @@ contract SimpleJSON is ZKJson {
   constructor (address _verifierJSON){
     verifierJSON = _verifierJSON;
   }
-  
-  function verify(uint[] calldata zkp) private view returns (bool) {
-    uint[SIZE_PATH + SIZE_VAL + 2] memory sigs;
-    (
-       uint[2] memory _pA,
-       uint[2][2] memory _pB,
-       uint[2] memory _pC,
-       uint[] memory _sigs
-    ) = _parseZKP(zkp);
-    for(uint i = 0; i < sigs.length; i++) sigs[i] = _sigs[i];
-    
-    require(VerifierJSON(verifierJSON).verifyProof(_pA, _pB, _pC, sigs), "invalid proof");
-    return true;
-  }
 
-  function validateQuery(uint[] memory path, uint[] calldata zkp) private view returns(uint[] memory){
-    verify(zkp);
+  function validateQuery(uint[] memory path, uint[] memory zkp) private view returns(uint[] memory){
+    verify(zkp, VerifierJSON.verifyProof.selector, verifierJSON);
     return _validateQueryJSON(path, zkp, SIZE_PATH, SIZE_VAL);
   }
 
-  function qInt (uint[] memory path, uint[] calldata zkp) public view returns (int) {
+  function qInt (uint[] memory path, uint[] memory zkp) public view returns (int) {
     uint[] memory value = validateQuery(path, zkp);
     return _qInt(value);
   }
 
-  function qFloat (uint[] memory path, uint[] calldata zkp) public view returns (uint[3] memory) {
+  function qFloat (uint[] memory path, uint[] memory zkp) public view returns (uint[3] memory) {
     uint[] memory value = validateQuery(path, zkp);
     return _qFloat(value);
   }
 
-  function qRaw (uint[] memory path, uint[] calldata zkp) public view returns (uint[] memory) {
+  function qRaw (uint[] memory path, uint[] memory zkp) public view returns (uint[] memory) {
     uint[] memory value = validateQuery(path, zkp);
     return _qRaw(value);
   }
   
-  function qString (uint[] memory path, uint[] calldata zkp) public view returns (string memory) {
+  function qString (uint[] memory path, uint[] memory zkp) public view returns (string memory) {
     uint[] memory value = validateQuery(path, zkp);
     return _qString(value);
   }
 
-  function qBool (uint[] memory path, uint[] calldata zkp) public view returns (bool) {
+  function qBool (uint[] memory path, uint[] memory zkp) public view returns (bool) {
     uint[] memory value = validateQuery(path, zkp);
     return _qBool(value);
   }
   
-  function qNull (uint[] memory path, uint[] calldata zkp) public view returns (bool) {
+  function qNull (uint[] memory path, uint[] memory zkp) public view returns (bool) {
     uint[] memory value = validateQuery(path, zkp);
     return _qNull(value);
   }
 
-  function qCustom (uint[] memory path, uint[] memory path2, uint[] calldata zkp) public view returns (int) {
+  function qCustom (uint[] memory path, uint[] memory path2, uint[] memory zkp) public view returns (int) {
     uint[] memory value = validateQuery(path, zkp);
     return getInt(path2, value);
   }

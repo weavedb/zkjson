@@ -19,7 +19,7 @@
 */
 
 pragma solidity >=0.7.0 <0.9.0;
-
+import "hardhat/console.sol";
 contract Groth16VerifierJSON {
     // Scalar field size
     uint256 constant r    = 21888242871839275222246405745257275088548364400416034343698204186575808495617;

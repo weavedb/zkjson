@@ -4,9 +4,9 @@ pragma solidity >=0.7.0 <0.9.0;
 
 interface IZKDB {
   
-  function qInt (uint[] memory path, uint[] calldata zkp) external view returns (int);
+  function qInt (uint[] memory path, uint[] memory zkp) external view returns (int);
   
-  function qString ( uint[] memory path, uint[] calldata zkp) external view returns (string memory);
+  function qString ( uint[] memory path, uint[] memory zkp) external view returns (string memory);
   
 }
   
@@ -48,7 +48,7 @@ contract DEX {
     else return bytes1(uint8(b) + 0x57);
   }
   
-  function mint(uint col, uint doc, uint[] calldata zkp, uint[] calldata zkp2) public returns (address){
+  function mint(uint col, uint doc, uint[] memory zkp, uint[] memory zkp2) public returns (address){
     require(done[doc] == false, "already minted");
     done[doc] = true;
     uint[] memory path = new uint[](3);
