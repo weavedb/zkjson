@@ -4,55 +4,6 @@ pragma solidity >=0.7.0 <0.9.0;
 import "hardhat/console.sol";
 contract ZKQuery {
 
-  function digits (uint x) private pure returns(uint) {
-    uint p = 0;
-    while(x > 0){
-      x /= 10;
-      p++;
-    }
-    return p;
-  }
-
-  function getValLen(uint[] memory path, uint[] memory _json) private pure returns(uint, uint){
-    require (_json[0] == 4, "not raw value");
-    uint i = 1;
-    uint start;
-    uint[] memory path2 = toArr(path);
-    uint vallen;
-    while(i < _json.length){
-      start = i;
-      (uint[] memory _path, uint i2) = getPath(i, _json);
-      i = i2;
-      uint _type = _json[i];
-      i++;
-      uint vlen = 1;
-      if(_type == 1){
-	vlen++;
-	i++;
-      }else if (_type == 2){
-	vlen += 3;
-	i += 3;
-      }else if(_type == 3){
-	uint slen = _json[i];
-	vlen += slen + 1;
-	i += slen + 1;
-      }
-      uint path_match = 1;
-      if(_path.length != path2.length){
-	path_match = 0;
-      }else{
-	for(uint i4 = 0; i4 < path2.length; i4++){
-	  if(_path[i4] != path2[i4]) path_match = 0;
-	}
-      }
-      if(path_match == 1){
-	vallen = vlen;
-	break;
-      }
-    }
-    return (vallen, start);
-  }
-  
   function getPath(uint i, uint[] memory _json) private pure returns(uint[] memory, uint){
     uint[] memory _path;
     assembly {
@@ -86,38 +37,47 @@ contract ZKQuery {
     }
     return (_path, i);
   }
+
+  function _getVal(uint i, uint[] memory _json) private pure returns(uint[] memory, uint){
+    uint[] memory _val;
+    assembly {
+      let json := add(_json, 0x20)
+      _val := msize()
+      mstore(_val, sub(mload(_json), i))
+      let _val0 := add(_val, 0x20)
+      let _type := mload(add(json, mul(i, 0x20)))
+      i := add(i, 1)
+      let vlen := 0x20
+      mstore(_val0, _type)
+      let len := 0	
+      if eq(_type, 1) {
+	len := 1
+      }
+      if eq(_type, 2) {
+	len := 3
+      }
+      if eq(_type, 3) {
+	len := add(mload(add(json, mul(i, 0x20))), 1)
+      }
+      for { let i2 := 0 } lt(i2, len) { i2 := add(i2, 1) } {
+	mstore(add(_val0, vlen), mload(add(json, mul(i, 0x20))))	  
+	vlen := add(vlen, 0x20)
+        i := add(i, 1)
+      }
+      mstore(_val, div(vlen, 0x20))
+      mstore(0x40, add(_val, add(0x20, vlen)))
+    }
+    return (_val, i);
+  }
   
   function getVal(uint[] memory path, uint[] memory _json) private pure returns(uint[] memory){
     require (_json[0] == 4, "not raw value");
-    (uint vallen, uint i) = getValLen(path, _json);
-    uint[] memory val = new uint[](vallen);
     uint[] memory path2 = toArr(path);
+    uint i = 1;
     while(i < _json.length){
       (uint[] memory _path, uint i2) = getPath(i, _json);
-      i = i2;
-      uint _type = _json[i];
-      i++;
-      uint[] memory _val = new uint[](vallen);
-      _val[0] = _type;
-      if(_type == 1){
-	_val[1] = _json[i];
-	i++;
-      }else if (_type == 2){
-	_val[1] = _json[i];
-	i++;
-	_val[2] = _json[i];
-	i++;
-	_val[3] = _json[i];
-	i++;
-      }else if(_type == 3){
-	uint slen = _json[i];
-	_val[1] = slen;
-	i++;
-	for(uint i3 = 0;i3 < slen; i3++){
-	  _val[i3 + 2] = _json[i];
-	  i++;
-	}
-      }
+      (uint[] memory _val2, uint i3) = _getVal(i2, _json);
+      i = i3;
       uint path_match = 1;
       if(_path.length != path2.length){
 	path_match = 0;
@@ -126,14 +86,11 @@ contract ZKQuery {
 	  if(_path[i4] != path2[i4]) path_match = 0;
 	}
       }
-      if(path_match == 1){
-	val = _val;
-	break;
-      }
+      if(path_match == 1) return _val2;
+      
     }
-    return val;
+    require(false, "value not found");
   }
-  
   
   function toArr(uint[] memory json) internal pure returns(uint[] memory){
     uint[]  memory _json;
