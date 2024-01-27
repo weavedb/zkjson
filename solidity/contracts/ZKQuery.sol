@@ -1,14 +1,14 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity >=0.7.0 <0.9.0;
-
+import "hardhat/console.sol";
 contract ZKQuery {
 
   function digits (uint x) private pure returns(uint) {
     uint p = 0;
     while(x > 0){
-        x /= 10;
-        p++;
+      x /= 10;
+      p++;
     }
     return p;
   }
@@ -21,27 +21,8 @@ contract ZKQuery {
     uint vallen;
     while(i < _json.length){
       start = i;
-      uint pathlen = getPathLen(i, _json);
-      uint[] memory _path = new uint[](pathlen);
-      uint len = _json[i];
-      i++;
-      _path[0] = len;
-      uint pi = 1;
-      for(uint i2=0;i2 < len; i2++){
-	uint plen = _json[i];
-	_path[pi] = plen;
-	pi++;
-	i++;
-	uint plen2 = plen;
-	if(plen == 0){
-	  plen2 = _json[i] == 0 ? 2 : 1;
-	}
-	for(uint i3 = 0; i3 < plen2; i3++){
-	  _path[pi] = _json[i];
-	  pi++;
-	  i++;
-	}
-      }
+      (uint[] memory _path, uint i2) = getPath(i, _json);
+      i = i2;
       uint _type = _json[i];
       i++;
       uint vlen = 1;
@@ -57,7 +38,7 @@ contract ZKQuery {
 	i += slen + 1;
       }
       uint path_match = 1;
-      if(pathlen != path2.length){
+      if(_path.length != path2.length){
 	path_match = 0;
       }else{
 	for(uint i4 = 0; i4 < path2.length; i4++){
@@ -72,20 +53,38 @@ contract ZKQuery {
     return (vallen, start);
   }
   
-  function getPathLen(uint i, uint[] memory _json) private pure returns(uint){
-    uint len = _json[i];
-    i++;
-    uint pi = 1;
-    for(uint i2=0;i2 < len; i2++){
-      uint plen = _json[i];
-      pi++;
-      i++;
-      uint plen2 = plen;
-      if(plen == 0) plen2 = _json[i] == 0 ? 2 : 1;
-      pi += plen2;
-      i += plen2;
+  function getPath(uint i, uint[] memory _json) private pure returns(uint[] memory, uint){
+    uint[] memory _path;
+    assembly{
+      let json := add(_json, 0x20)
+      let len := mload(add(json, mul(i, 0x20)))
+      i := add(i, 1)
+      _path := msize()
+      mstore(_path, sub(mload(_json), i))
+      let _path0 := add(_path, 0x20)
+      mstore(_path0, len)
+      let pi := 0x20
+      for { let i2 := 0 } lt(i2, len) { i2 := add(i2, 1) } {
+	let plen := mload(add(json, mul(i, 0x20)))
+        mstore(add(_path0, pi), plen)
+	pi := add(pi, 0x20)
+	i := add(i, 1)
+	let plen2 := 1
+	if iszero(plen) {
+          if iszero(mload(add(json, mul(i, 0x20)))){
+	    plen2 := 2
+          }
+        }
+	for { let i3 := 0 } lt(i3, plen2) { i3 := add(i3, 1) } {
+	  mstore(add(_path0, pi), mload(add(json, mul(i, 0x20))))
+	  pi := add(pi, 0x20)
+	  i := add(i, 1)
+	}
+      }
+      mstore(_path, div(pi, 0x20))
+      mstore(0x40, add(_path, add(0x20, pi)))
     }
-    return pi;
+    return (_path, i);
   }
   
   function getVal(uint[] memory path, uint[] memory _json) private pure returns(uint[] memory){
@@ -94,28 +93,8 @@ contract ZKQuery {
     uint[] memory val = new uint[](vallen);
     uint[] memory path2 = toArr(path);
     while(i < _json.length){
-      uint pathlen = getPathLen(i, _json);
-      uint[] memory _path = new uint[](pathlen);
-      uint len = _json[i];
-      i++;
-      _path[0] = len;
-      uint pi = 1;
-      for(uint i2=0;i2 < len; i2++){
-	uint plen = _json[i];
-	_path[pi] = plen;
-	pi++;
-	i++;
-	uint plen2 = plen;
-	if(plen == 0){
-	  plen2 = _json[i] == 0 ? 2 : 1;
-	}
-	for(uint i3 = 0; i3 < plen2; i3++){
-	  _path[pi] = _json[i];
-	  pi++;
-	  i++;
-	}
-      }
-
+      (uint[] memory _path, uint i2) = getPath(i, _json);
+      i = i2;
       uint _type = _json[i];
       i++;
       uint[] memory _val = new uint[](vallen);
@@ -140,7 +119,7 @@ contract ZKQuery {
 	}
       }
       uint path_match = 1;
-      if(pathlen != path2.length){
+      if(_path.length != path2.length){
 	path_match = 0;
       }else{
 	for(uint i4 = 0; i4 < path2.length; i4++){
