@@ -798,7 +798,7 @@ export default function Home() {
                         target="_blank"
                         href={`https://mumbai.polygonscan.com/address/${contractAddr}#readContract`}
                       >
-                        Got To PolygonScan
+                        Go To PolygonScan
                       </Flex>
                     </Flex>
                   </Box>
