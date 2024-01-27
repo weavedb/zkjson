@@ -251,7 +251,7 @@ So to convert the encoded array to a circuit signal, it becomes
 ]
 ```
 
-What's surprising here is that the entire JSON is compressed into just 3 integers in the end. It's just `uint[3]` in Solidity. This indeed is extreme efficiency! The zkJSON circuit by default allows up to 256 integers (256 * 76 digits), which can contain a huge JSON data size, and Solidity handles it efficiently with a dynamic array `uint[]`. What's even better is that the only bits passed to Solidity is the tiny bits of the value at the queried path, and not the entire JSON bits. So if you are querying the value at the path `a`, `1111297`(path: "a") and `12111011`(value: 1) are the only digits passed to Solidity as public signals of zkp.
+What's surprising here is that the entire JSON is compressed into just 3 integers in the end. It's just `uint[3]` in Solidity. This indeed is extreme efficiency! The zkJSON circuit by default allows up to 256 integers (256 * 76 digits), which can contain a huge JSON data size, and Solidity handles it efficiently with a dynamic array `uint[]`, which is optimized with [Yul](https://docs.soliditylang.org/en/latest/yul.html) assembly language. What's even better is that the only bits passed to Solidity is the tiny bits of the value at the queried path, and not the entire JSON bits. So if you are querying the value at the path `a`, `1111297`(path: "a") and `12111011`(value: 1) are the only digits passed to Solidity as public signals of zkp.
 
 Now we can build a circuit to handle these digits and prove the value of a selected path without revealing the entire JSON. It's easy to explain the encoding, but harder to write the actual encoder/decoder and a circuit to properly process this encoding. But fortunately, we already did write them!
 
@@ -359,7 +359,7 @@ How do we make zkDB secure and queriable from other blockchains? We can write a 
 interface IZKRollup {
   address public committer;
   uint public root;
-  function commit (uint[] calldata zkp) external returns (uint);
+  function commit (uint[] memory zkp) external returns (uint);
 }
 ```
 
@@ -374,12 +374,12 @@ Finally, we can deploy the previous zkDB query circuit verifier as a Solidity co
 
 ```solidity
 interface IZKQuery {
-  function qNull (uint[] memory path, uint[] calldata zkp) external pure returns (bool);
-  function qBool (uint[] memory path, uint[] calldata zkp) external pure returns (bool);
-  function qInt (uint[] memory path, uint[] calldata zkp) external pure returns (int);
-  function qFloat (uint[] memory path, uint[] calldata zkp) external pure returns (uint[3] memory);
-  function qString (uint[] memory path, uint[] calldata zkp) external pure returns (string memory);
-  function qRaw (uint[] memory path, uint[] calldata zkp) external pure returns (uint[] memory);
+  function qNull (uint[] memory path, uint[] memory zkp) external pure returns (bool);
+  function qBool (uint[] memory path, uint[] memory zkp) external pure returns (bool);
+  function qInt (uint[] memory path, uint[] memory zkp) external pure returns (int);
+  function qFloat (uint[] memory path, uint[] memory zkp) external pure returns (uint[3] memory);
+  function qString (uint[] memory path, uint[] memory zkp) external pure returns (string memory);
+  function qRaw (uint[] memory path, uint[] memory zkp) external pure returns (uint[] memory);
 }
 ```
 
@@ -390,7 +390,7 @@ interface IZKQuery {
 `qRaw` returns the raw encoded value for non-primitive data types (array and object), and you can further query the raw value with the `getX` functions. Pass the raw value returned from `qRaw` with the path to query, instead of `zkp` proof.
 
 ```solidity
-interface IQuery {
+interface IZKQuery {
   function getNull (uint[] memory path, uint[] memory raw) external pure returns (bool);
   function getBool (uint[] memory path, uint[] memory raw) external pure returns (bool);
   function getInt (uint[] memory path, uint[]  memory raw) external pure returns (int);

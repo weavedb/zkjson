@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 
 pragma solidity >=0.7.0 <0.9.0;
-import "hardhat/console.sol";
+
 contract ZKQuery {
 
   function getPath(uint i, uint[] memory _json) private pure returns(uint[] memory, uint){
@@ -87,7 +87,6 @@ contract ZKQuery {
 	}
       }
       if(path_match == 1) return _val2;
-      
     }
     require(false, "value not found");
   }
@@ -236,5 +235,36 @@ contract ZKQuery {
     uint[] memory value = getVal(path, raw);
     _qNull(value);
   }
-  
+  function verify(uint[] memory zkp, bytes4 selector, address addr) internal view returns (bool) {
+    uint size;
+    assembly {
+      size := extcodesize(addr)
+    }
+    require(size > 0, "contract doesn't exist");
+    bool valid;
+    assembly{
+      let callData := mload(0x40)
+      let zlen := mload(zkp)
+      let clen := add(0x4, mul(0x20, zlen))
+      mstore(callData, clen)
+      mstore(add(callData, 0x20), selector)
+      for { let i := 1 } lt(i, add(1, zlen)) { i := add(i, 1) } {
+	mstore(add(callData, add(0x4, mul(i, 0x20))), mload(add(zkp, mul(i, 0x20))))
+      }
+      let success := staticcall(
+        gas(),            
+        addr,
+	add(callData, 0x20), 
+	clen,   
+	callData,         
+	0x20          
+      )
+      if iszero(success) {
+        revert(0, 0)
+      }
+      valid := mload(callData)
+    }
+    require(valid, "invalid proof");
+    return true;
+  }
 }

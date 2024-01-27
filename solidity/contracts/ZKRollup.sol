@@ -13,21 +13,7 @@ contract ZKRollup is ZKQuery {
   address public committer;
   uint public root;
   
-  function _verifyRU(uint[] calldata zkp) private view returns (bool) {
-    uint[2] memory _pA;
-    uint[2][2] memory _pB;
-    uint[2] memory _pC;
-    uint[11] memory sigs;
-    for(uint i = 0; i < 2; i++) _pA[i] = zkp[i];
-    for(uint i = 2; i < 4; i++) _pB[0][i - 2] = zkp[i];
-    for(uint i = 4; i < 6; i++) _pB[1][i - 4] = zkp[i];
-    for(uint i = 6; i < 8; i++) _pC[i - 6] = zkp[i];
-    for(uint i = 8; i < 19; i++) sigs[i - 8] = zkp[i];
-    require(VerifierRU(verifierRU).verifyProof(_pA, _pB, _pC, sigs), "invalid proof");
-    return true;
-  }
-  
-  function _validateQueryRU(uint[] memory path, uint[] calldata zkp, uint size_path, uint size_val) internal view returns(uint[] memory){
+  function _validateQueryRU(uint[] memory path, uint[] memory zkp, uint size_path, uint size_val) internal view returns(uint[] memory){
     require(zkp[19] == root, "root mismatch");
     require(zkp[size_path + size_val + 10] == path[0], "wrong collection");
     require(zkp[size_path + size_val + 11] == path[1], "wrong doc");
@@ -39,7 +25,7 @@ contract ZKRollup is ZKQuery {
     return toArr(value);
   }
 
-  function commit (uint[] calldata zkp) public returns (uint) {
+  function commit (uint[] memory zkp) public returns (uint) {
     require (zkp[9] == root, "wrong merkle root");
     require(msg.sender == committer, "sender is not committer");
     root = zkp[8];
@@ -47,8 +33,8 @@ contract ZKRollup is ZKQuery {
     return root;
   }
 
-  function verifyRU(uint[] calldata zkp) private view returns (bool) {
-    return _verifyRU(zkp);
+  function verifyRU(uint[] memory zkp) private view returns (bool) {
+    return verify(zkp,VerifierRU.verifyProof.selector, verifierRU);
   }
 
 }
