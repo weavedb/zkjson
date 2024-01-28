@@ -299,11 +299,11 @@ A document-based NoSQL database would have collections, and each collection in t
 
 ##### Collection
 
-We can use a sparse merkle tree ([SMT](https://docs.iden3.io/getting-started/mt/)) to represent all the document data in a collection with a root hash. SMT is perfect because curcuits cannot handle dynamic tree sizes and SMT can represent a large number of documents efficiently, and any data membership or non-nmembership can be proven efficiently with a zk proof without the actual merkle proof. This is what enables efficient direct queries to offchain databases from within EVM smart contracts.
+We can use a sparse merkle tree ([SMT](https://docs.iden3.io/getting-started/mt/)) to represent all the document data in a collection with a root hash. SMT is perfect because curcuits cannot handle dynamic tree sizes and SMT can represent a large number of documents efficiently, and any data membership or non-membership can be proven efficiently with a zk proof without the actual merkle proof. This is what enables efficient direct queries to offchain databases from within EVM smart contracts.
 
 <div align="center"><img src="./assets/collection.png" /></div>
 
-Each leaf node will be the [poseidon hash](https://www.poseidon-hash.info/) of zkJSON encoding of the data. To hash 256 * 76 digits, 16 poseidon hashes are hased together into another poseidon hash. This allows a fairly large JSON size to be proven.
+Each leaf node will be the [poseidon hash](https://www.poseidon-hash.info/) of zkJSON encoding of the data. To hash 256 * 76 digits, 16 poseidon hashes are hashed together into another poseidon hash. This allows a fairly large JSON size to be proven.
 
 And each leaf node has an index number, so we need to somehow convert the document IDs to numbers without collisions. How many leaf nodes a SMT has depends on the pre-defined depth of the tree. For example, a 32-level SMT can have `2 ** 32 = 4294967296` leaf nodes. The level must be pre-defined at the circuit compile time, so we need to find the right conversion and balance.
 
@@ -343,7 +343,7 @@ One way to have a longer ID length with the same depth is to restrict the allowe
 
 ##### Database
 
-For the database, we can take the exact same approach with the collections. We can use an SMT to represent multiple collection states in a DB with one root hash, and each leaf node will be the merkle root of a collection, which in turn represents the entire documents in the collection. We could give each collection an ID with the same ID-to-index conversion as the documents, however, collection IDs are not as essential as document IDs since document IDs are usually a part of access control rules, but collection IDs are not. We can use an incremental count for collection IDs and no well-strucrtured DB has so many collections as documents. Let's say `2 ** 8 = 256`, so an 8 level SMT can give us 256 collections and it should be more than enough for most applications. If you need alphanumeric IDs for collections, you could map them with numeric indexes offchain (e.g. `0 = FirstCollection`, `1 = AnotherCollection`, `2 = YetAnotherCollection`...). Note that this is different from the deterministic `toIndex / fromIndex` conversion. In this way we can use a smaller tree and keep the circuit small.
+For the database, we can take the exact same approach with the collections. We can use an SMT to represent multiple collection states in a DB with one root hash, and each leaf node will be the merkle root of a collection, which in turn represents the entire documents in the collection. We could give each collection an ID with the same ID-to-index conversion as the documents, however, collection IDs are not as essential as document IDs since document IDs are usually a part of access control rules, but collection IDs are not. We can use an incremental count for collection IDs and no well-structured DB has so many collections as documents. Let's say `2 ** 8 = 256`, so an 8 level SMT can give us 256 collections and it should be more than enough for most applications. If you need alphanumeric IDs for collections, you could map them with numeric indexes offchain (e.g. `0 = FirstCollection`, `1 = AnotherCollection`, `2 = YetAnotherCollection`...). Note that this is different from the deterministic `toIndex / fromIndex` conversion. In this way we can use a smaller tree and keep the circuit small.
 
 <div align="center"><img src="./assets/db.png" /></div>
 
