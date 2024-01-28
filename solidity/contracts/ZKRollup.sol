@@ -29,12 +29,7 @@ contract ZKRollup is ZKQuery {
     require (zkp[9] == root, "wrong merkle root");
     require(msg.sender == committer, "sender is not committer");
     root = zkp[8];
-    verifyRU(zkp);
+    verify(zkp,VerifierRU.verifyProof.selector, verifierRU);
     return root;
   }
-
-  function verifyRU(uint[] memory zkp) private view returns (bool) {
-    return verify(zkp,VerifierRU.verifyProof.selector, verifierRU);
-  }
-
 }
