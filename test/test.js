@@ -1,6 +1,6 @@
 const {
-  str2val,
-  val2str,
+  toSignal,
+  fromSignal,
   pad,
   encode,
   decode,
@@ -8,6 +8,8 @@ const {
   decodePath,
   encodeVal,
   decodeVal,
+  encodeQuery,
+  decodeQuery,
 } = require("../sdk")
 const { expect } = require("chai")
 
@@ -46,8 +48,25 @@ describe("zkJSON", () => {
     for (const j of jsons) {
       const encoded = encode(j)
       //console.log(encoded)
-      expect(str2val(val2str(encoded))).to.eql(encoded)
+      expect(fromSignal(toSignal(encoded))).to.eql(encoded)
       expect(decode(encoded)).to.eql(j)
+    }
+  })
+  it("should encode/decode query", () => {
+    let vals = [
+      ["$eq", 3],
+      ["$ne", 3],
+      ["$gt", 3],
+      ["$gte", 3],
+      ["$lt", 3],
+      ["$lte", 3],
+      ["$in", [1, 2, 3]],
+      ["$nin", [1, 2, 3]],
+    ]
+    for (const v of vals) {
+      const encoded = encodeQuery(v)
+      //console.log(encoded)
+      expect(decodeQuery(encoded)).to.eql(v)
     }
   })
 })
