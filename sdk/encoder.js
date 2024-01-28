@@ -1,4 +1,17 @@
-const { splitEvery, flatten } = require("ramda")
+const { isNil, includes, splitEvery, flatten } = require("ramda")
+const ops = {
+  $eq: 10,
+  $ne: 11,
+  $gt: 12,
+  $gte: 13,
+  $lt: 14,
+  $lte: 15,
+  $in: 16,
+  $nin: 17,
+}
+const opMap = {}
+for (let k in ops) opMap[ops[k]] = k
+
 const base64Map = {
   A: "00",
   B: "01",
@@ -456,6 +469,19 @@ const fromIndex = id2str
 const path = p => toSignal(encodePath(p))
 const val = v => toSignal(encodeVal(v))
 
+function encodeQuery(v) {
+  if (!Array.isArray(v)) throw Error("query must be an array")
+  const op = v[0]
+  if (isNil(ops[op])) throw Error(`query not supported: ${op}`)
+  return [ops[op], ...encodeVal(v.slice(1))]
+}
+
+function decodeQuery(v) {
+  const op = opMap[v[0]]
+  if (isNil(op)) throw Error("op doens't exist")
+  return [op, ...decodeVal(v.slice(1))]
+}
+
 module.exports = {
   encode,
   decode,
@@ -476,4 +502,6 @@ module.exports = {
   fromIndex,
   path,
   val,
+  encodeQuery,
+  decodeQuery,
 }
