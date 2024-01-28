@@ -1,12 +1,12 @@
 ## ZK Circuits
 
-There are 5 main circuits, and each circuit is built on top of the prceeding one.
+There are 5 main circuits, and each circuit is built on top of the preceding one.
 
 ### Circuits
 
 #### JSON.circom
 
-The base building block to prove JSON with an efficient encording.
+The base building block to prove JSON with an efficient encoding.
 
 - `size_json` : JSON size : default `256`
 - `size_path` : path size : default `5`
@@ -50,7 +50,7 @@ Rollup proves batch data transitions.
 
 ### Powers of Tau
 
-The first thing you need to do is to se up a powers of tau by a ceremony. As the power goes up the generation time and the wasm file size increases exponentially, and what power required for each circuit depends on the parameters above. So you need to find the right balance with the parameters of each circuit for your application. For instance, `power 20` required for the default `Rollup` circuit settings takes hours with a normal consumer computer.
+The first thing you need to do is to set up a powers of tau by a ceremony. As the power goes up the generation time and the wasm file size increases exponentially, and what power required for each circuit depends on the parameters above. So you need to find the right balance with the parameters of each circuit for your application. For instance, `power 20` required for the default `Rollup` circuit settings takes hours with a normal consumer computer.
 
 To run a ceremony,
 
@@ -92,7 +92,7 @@ All the generated files are stored at `build/circuits` including a Solidity veri
 
 #### size
 
-The base unit of `size` is `uint`. Circom by default uses the module of `21888242871839275222246405745257275088548364400416034343698204186575808495617` (77 digits) and Solidity's bsse storage block is `uint256` and allows 78 digits. So zkJSON efficiently encodes JSON and packs it into blocks of 76 digits, which is one `uint`.
+The base unit of `size` is `uint`. Circom by default uses the module of `21888242871839275222246405745257275088548364400416034343698204186575808495617` (77 digits) and Solidity's base storage block is `uint256` and allows 78 digits. So zkJSON efficiently encodes JSON and packs it into blocks of 76 digits, which is one `uint`.
 
 `path_size=5` means, 5 * 76 digits are allowed for the query path when encoded, and it will be represented within `uint[5]` in Solidity. on the Solidity side, however, zkJSON uses dynamic arrays `uint[]`, so it will be more space-efficient than the max set size. But the zk-circuits cannot prove data sizes more than the set size.
 
