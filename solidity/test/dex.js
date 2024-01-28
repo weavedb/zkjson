@@ -16,7 +16,6 @@ async function deploy() {
   )
   const DEX = await ethers.getContractFactory("DEX")
   const dex = await DEX.deploy(zkdb.address)
-
   return { dex, verifierDB, verifier, owner, user, zkdb }
 }
 
@@ -29,7 +28,6 @@ describe("zkDB", function () {
     const json = { b: 100, a: owner.address.toLowerCase() }
     const json2 = { a: user.address.toLowerCase(), b: 50 }
 
-    // fix
     const db = new DB({
       wasmRU: resolve(
         __dirname,
@@ -52,21 +50,23 @@ describe("zkDB", function () {
     const col = await db.addCollection()
     let txs = [
       [col, "burn-1", json],
-      [col, "burn-2", json],
-      [col, "burn-3", json],
-      [col, "burn-4", json],
-      [col, "burn-6", json],
-      [col, "burn-7", json],
-      [col, "burn-8", json],
-      [col, "burn-9", json],
       [col, "burn-10", json2],
     ]
     const zkp = await db.genRollupProof(txs)
     await zkdb.commit(zkp)
 
-    return
-    const proof = await db.genProof(col, "burn-10", json2, "a")
-    const proof2 = await db.genProof(col, "burn-10", json2, "b")
+    const proof = await db.genProof({
+      col_id: col,
+      id: "burn-10",
+      json: json2,
+      path: "a",
+    })
+    const proof2 = await db.genProof({
+      col_id: col,
+      id: "burn-10",
+      json: json2,
+      path: "b",
+    })
     const sigs = proof.slice(8)
     const _col = sigs[12]
     const _doc = sigs[13]
