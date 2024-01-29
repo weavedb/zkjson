@@ -11,7 +11,7 @@ template JSON (size_json, size_path, size_val) {
     signal output hash;
     signal ex;
     var arr_size = 10000;
-    var _exists = 0;
+    var _exists = 0;  
     var _json[arr_size] = toArr(size_json, json, 0);
     var path2[arr_size] = toArr(size_path, path, 1);
     var val2[arr_size] = toArr(size_val, val, 0);
@@ -79,11 +79,86 @@ template JSON (size_json, size_path, size_val) {
             }
         }
         if(path_match == 1){
+            var plus = val2[0] >= 10 ? 1 : 0;
             var _val_match = 1;
-            for(var i5 = 0; i5  < size_val * 77; i5++){
-                if(_val[i5] != val2[i5]) _val_match = 0;
+            var op = val2[0];
+            if(op >= 12 && op <= 15){
+                var rev = op == 14 || op == 15;
+                var eq = op == 13 || op == 15;
+                var matched = 0;
+                if(val2[1] != _val[0] || (val2[1] != 2 && val2[1] != 3 && val2[1] != 1)) _val_match = 0;
+                if(val2[1] == 2 && _val_match == 1){
+                    var sign = 2;
+                    if(val2[2] == 0 && _val[1] == 0) sign = 0;
+                    if(val2[2] == 1 && _val[1] == 1) sign = 1;
+                    if(val2[3] == 0 && _val[4] == 0 && eq) matched = 1;
+                    if(matched == 0 && _val_match == 1){
+                        var mul2 = 1;
+                        var mul = 1;
+                        if(val2[3] > _val[2]) mul = 10 ** (val2[3] - _val[2]);
+                        if(val2[3] < _val[2]) mul2 = 10 ** (_val[2] - val2[3]);
+                        if(rev == 0){
+                            if(val2[2] == 1 && _val[1] == 0) _val_match = 0;
+                            if(val2[3] == 0 && _val[4] == 0 && eq) matched = 1;
+                            if(_val_match == 1){
+                                if(sign == 1){
+                                    if((eq == 0 && val2[4] * mul2 >= _val[3] * mul) || (eq == 1 && val2[4] * mul2 > _val[3] * mul)) _val_match = 0;
+                                }else if(sign == 0){
+                                    if((eq == 0 && val2[4] * mul2 <= _val[3] * mul) || (eq == 1 && val2[4] * mul2 < _val[3] * mul)) _val_match = 0;
+                                }
+                            }
+                        }else{
+                            if(val2[2] == 0 && _val[1] == 1) _val_match = 0;
+                            if(_val_match == 1){
+                                if(sign == 1){
+                                    if((eq == 0 && val2[4] * mul2 <= _val[3] * mul) || (eq == 1 && val2[4] * mul2 < _val[3] * mul)) _val_match = 0;
+                                }else if(sign == 0){
+                                    if((eq == 0 && val2[4] * mul2 >= _val[3] * mul) || (eq == 1 && val2[4] * mul2 > _val[3] * mul)) _val_match = 0;
+                                }
+                            }                  
+                        }
+                    }
+                } else if(val2[1] == 3 && _val_match == 1){
+                    var str_size = val2[2] > _val[1] ? _val[1] : val2[2];
+                    if(op == 12 || op == 13){
+                        for(var i3 = 0; i3 < str_size; i3++){
+                            if(val2[i3+3] > _val[i3+2]) _val_match = 0;
+                        }
+                        if(_val_match == 1){
+                            if(val2[2] > str_size) _val_match = 0;
+                            if (val2[2] == _val[1] && val2[0] == 12) _val_match = 0;
+                        }
+                    } else if(op == 14 || op == 15){
+                        for(var i3 = 0; i3 < str_size; i3++){
+                            if(val2[i3+3] < _val[i3+2]) _val_match = 0;
+                        }
+                        if(_val_match == 1){
+                            if(_val[3] > str_size) _val_match = 0;
+                            if (val2[2] == _val[1] && val2[0] == 14) _val_match = 0;
+                        }
+                    }
+                } else if(val2[1] == 1 && _val_match == 1){
+                    if(eq == 0 && val2[2] == _val[1]) _val_match = 0;
+                    if(eq == 1 && val2[2] != _val[1]) _val_match = 0;
+                    if(eq == 1 && val2[2] == _val[1]) matched = 1;
+                    if(_val_match == 1 && matched == 0){
+                        if(op == 12 || op == 13){
+                            if(val2[2] > _val[1]) _val_match = 0;
+                        } else if(op == 14 || op == 15){
+                            if(val2[2] < _val[1]) _val_match = 0;
+                        }
+                    }
+                }
+            } else {
+              for(var i5 = 0; i5  < size_val * 77 - plus; i5++){
+                if(_val[i5] != val2[i5 + plus]) _val_match = 0;
+              }
             }
-            if(_val_match == 1) val_match = 1;
+            if(_val_match == 1){
+                if(val2[0] != 11) val_match = 1;
+            }else {
+                if(val2[0] == 11) val_match = 1;
+            }
         }else if(path_partial_match == 1){
           var path_diff = 0;
           for(var i5 = path2[1]; i5 < _path[0];i5++) path_diff++;
