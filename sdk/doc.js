@@ -1,6 +1,14 @@
 const snarkjs = require("snarkjs")
 const { resolve } = require("path")
-const { pad, toSignal, encode, encodePath, encodeVal } = require("./encoder")
+const { isNil } = require("ramda")
+const {
+  encodeQuery,
+  pad,
+  toSignal,
+  encode,
+  encodePath,
+  encodeVal,
+} = require("./encoder")
 
 module.exports = class Doc {
   constructor({ size_val = 5, size_path = 5, size_json = 256, wasm, zkey }) {
@@ -10,11 +18,13 @@ module.exports = class Doc {
     this.wasm = wasm
     this.zkey = zkey
   }
-  async getInputs({ json, path }) {
+  async getInputs({ query, json, path }) {
     return {
       json: pad(toSignal(encode(json)), this.size_json),
       path: pad(toSignal(encodePath(path)), this.size_path),
-      val: pad(toSignal(encodeVal(this.getVal(json, path))), this.size_val),
+      val: isNil(query)
+        ? pad(toSignal(encodeVal(this.getVal(json, path))), this.size_val)
+        : pad(toSignal(encodeQuery(query)), this.size_val),
     }
   }
   _getVal(j, p) {

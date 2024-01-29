@@ -473,7 +473,7 @@ function encodeQuery(v) {
   if (!Array.isArray(v)) throw Error("query must be an array")
   const op = v[0]
   if (isNil(ops[op])) throw Error(`query not supported: ${op}`)
-  return [ops[op], ...encodeVal(v.slice(1))]
+  return [ops[op], ...encodeVal(v[1])]
 }
 
 function decodeQuery(v) {

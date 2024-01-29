@@ -3,6 +3,7 @@ const { join } = require("path")
 const wasm_tester = require("circom_tester").wasm
 const { fromSignal, Doc } = require("../../sdk")
 const gen = require("./gen")
+const gen2 = require("./gen2")
 
 describe("JSON circuit", function () {
   let circuit
@@ -14,7 +15,7 @@ describe("JSON circuit", function () {
   })
 
   it("should insert docs", async () => {
-    const { inputs } = await gen({})
+    const { inputs } = await gen2({})
     const w = await circuit.calculateWitness(inputs, true)
     await circuit.checkConstraints(w)
     await circuit.assertOut(w, { exist: 1 })
