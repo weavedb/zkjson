@@ -1,6 +1,6 @@
 ## Simple zkJSON Tutorial
 
-*zkJSON is still under active development, and neither the circuits nor the contracts have been auditted. Please use it for only experimental purposes.*
+*zkJSON is still under active development, and neither the circuits nor the contracts have been audited. Please use it for only experimental purposes.*
 
 ### Install `zkjson` Package
 
