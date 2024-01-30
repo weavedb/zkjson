@@ -11,7 +11,6 @@ template JSON (size_json, size_path, size_val) {
     signal output hash;
     signal ex;
     var arr_size = 10000;
-    var _exists = 0;  
     var _json[arr_size] = toArr(size_json, json, 0);
     var path2[arr_size] = toArr(size_path, path, 1);
     var val2[arr_size] = toArr(size_val, val, 0);
@@ -19,6 +18,10 @@ template JSON (size_json, size_path, size_val) {
     partial[0] = 4;
     var pi2 = 1;
     var i = 0;
+    var elms[50];
+    var contains[50];
+    var op = val2[0];
+    var _exists = op == 21 ? 1 : 0;
     while(i < arr_size){ 
         var vi = 0;
         var _path[size_path * 77];
@@ -80,7 +83,6 @@ template JSON (size_json, size_path, size_val) {
         }
         var plus = val2[0] >= 10 ? 1 : 0;
         var _val_match = 1;
-        var op = val2[0];
         if(path_match == 1){
             if(op >= 12 && op <= 15){
                 var rev = op == 14 || op == 15;
@@ -221,15 +223,16 @@ template JSON (size_json, size_path, size_val) {
             }else {
                 if(val2[0] == 11) val_match = 1;
             }
-        }else if(path_partial_match == 1 && _exists == 0){
-            if(op == 19){
+        }else if(path_partial_match == 1 && ((op == 21 && _exists == 1) || (op != 21 && _exists == 0))){
+            if(op == 19 || op == 20 || op == 21){
                 if(val2[1] != 4) _val_match = 0;
-                    var plen2 = val2[2];
+                    var plen3 = val2[2];
                     var i5 = 3;
                     var included = 0;
-                    while(plen2 > 0){
+                    var eindex = 0;
+                    while(plen3 > 0){
                         if(val2[i5] != 0  || val2[i5 + 1] != 0){
-                            plen2 = 0;
+                            plen3 = 0;
                         }else{
                             i5 += 3;
                             var type2 = val2[i5];
@@ -239,12 +242,16 @@ template JSON (size_json, size_path, size_val) {
                             var _val_match2 = 1;
                             var matched2 = 0;
                             if(type2 == 0){
-                                plen2 = val2[i5];
+                                elms[eindex] = 1;
+                                eindex += 1;                                
+                                plen3 = val2[i5];
                                 i5 += 1;                                
                             }else if(type2 == 1){
                                 _val3[1] = val2[i5];
                                 i5++; 
-                                plen2 = val2[i5];
+                                elms[eindex] = 1;                                
+                                eindex += 1;                                
+                                plen3 = val2[i5];
                                 i5 += 1;
                             }else if(type2 == 2){
                                 _val3[1] = val2[i5];
@@ -253,7 +260,9 @@ template JSON (size_json, size_path, size_val) {
                                 i5++;
                                 _val3[3] = val2[i5];
                                 i5++;
-                                plen2 = val2[i5];
+                                elms[eindex] = 1;                                
+                                eindex += 1;                                
+                                plen3 = val2[i5];
                                 i5 += 1;
                             } else if (type2 == 3){
                                 var slen2 =  val2[i5];
@@ -263,23 +272,43 @@ template JSON (size_json, size_path, size_val) {
                                     _val3[i6 + 2] = val2[i5];
                                     i5++;
                                 }
-                                plen2 = val2[i5];
+                                elms[eindex] = 1;                                
+                                eindex += 1;
+                                plen3 = val2[i5];
                                 i5 += 1;
                             } else {
                                 _val_match2 = 0;
-                                plen2 = 0;
+                                plen3 = 0;
                                 matched2 = 1;
                             }
                             if(_val_match2 == 1 && matched2 == 0){
+                                var matched3 = 1;
                                 for(var i5 = 0; i5  < 50; i5++){
-                                    if(_val3[i5] != _val[i5]) _val_match2 = 0;
+                                    if(_val3[i5] != _val[i5]){
+                                         _val_match2 = 0;
+                                         matched3 = 0;
+                                    }
+                                }
+                                if(matched3 == 1){
+                                     contains[eindex - 1] = 1;
                                 }
                             }
                             if(_val_match2) included = 1;
-                    }               
-                    if(included) _exists = 1;
-
-                }
+                        }               
+                    }
+                    if(included){
+                        if(op == 19){
+                            _exists = 1;
+                        }else if(op == 20){
+                            var all = 1;
+                            for(var i5 = 0; i5 < 50; i5++){
+                                if(elms[i5] == 1 && contains[i5] == 0) all = 0;
+                            }
+                            if(all == 1) _exists = 1;
+                        }else if(op == 21){
+                            _exists = 0;                      
+                        }
+                    }
             }else if(op == 18){
                 var _pval_match = 1;
                 for(var i5 = 0; i5  < size_val * 77 - plus; i5++){
