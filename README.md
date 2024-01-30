@@ -380,6 +380,7 @@ interface IZKQuery {
   function qFloat (uint[] memory path, uint[] memory zkp) external pure returns (uint[3] memory);
   function qString (uint[] memory path, uint[] memory zkp) external pure returns (string memory);
   function qRaw (uint[] memory path, uint[] memory zkp) external pure returns (uint[] memory);
+  function qCond (uint[] memory path, uint[] memory cond, uint[] memory zkp) external pure returns (bool);
 }
 ```
 
@@ -399,13 +400,45 @@ interface IZKQuery {
 }
 ```
 
-We will write circuits for more complex queries using some conditions such as `$where` / `$gt` / `$gte` / `$lt` / `$lte` / `$in` / `$nin` and so on.
+##### Conditional Operators
+
+`qCond` queries a field with a conditional operator and returns `true` if the condition is met.
+
+- with boolean, number, string : `$gt` `$gte` `$lt` `$lte`
+
+- with any types : `$eq` `$ne` `$in` `$nin`
+
+- with array : `$contains` `$contains_any` `$contains_all` `$contains_none`
+
+```javascript
+const { encodeQuery } = require("zkjson")
+
+const json = { num: 5, arr: [ 1, 2, 3 ]}
+
+// for num field
+const num_gt = encodeQuery([ "$gt", 4 ])
+const num_gte = encodeQuery([ "$gte", 5 ])
+const num_lt = encodeQuery([ "$lt", 6 ])
+const num_lte = encodeQuery([ "$lte", 5 ])
+const num_eq = encodeQuery([ "$eq", 5 ])
+const num_ne = encodeQuery([ "$ne", 7 ])
+const num_in = encodeQuery([ "$in", [ 4, 5, 6 ]])
+const num_nin = encodeQuery([ "$nin", [ 1, 2, 3 ]])
+
+// for arr field
+const arr_contains = encodeQuery([ "$contains", 3 ])
+const arr_contains_any = encodeQuery([ "$contains", [ 3, 4, 5 ]])
+const arr_contains_all = encodeQuery([ "$contains_all", [ 2, 3 ]])
+const arr_contains_none = encodeQuery([ "$contains_none", [ 4, 5, 6 ]])
+```
+
+##### Other Structures
 
 You could also write a function to get an array of numbers or a specific data structure, but it's up to your applications what data types to extract, so we will leave it up to you.
 
 <div align="center"><img src="./assets/query.png" /></div>
 
-- [ZKDB Solidity Contract](https://github.com/weavedb/zkjson/blob/master/solidity/contracts/ZKDB.sol)
+- [Simple zkJSON Tutorial](./docs/simple-zkjson.md)
 - [zkDB Rollup Tutorial](./docs/zkdb-rollup.md)
 
 ### Going Further
