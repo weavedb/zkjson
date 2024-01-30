@@ -78,10 +78,10 @@ template JSON (size_json, size_path, size_val) {
                 if(path2[0] > i4 && i4 != 0) path_partial_match = 0;
             }
         }
+        var plus = val2[0] >= 10 ? 1 : 0;
+        var _val_match = 1;
+        var op = val2[0];
         if(path_match == 1){
-            var plus = val2[0] >= 10 ? 1 : 0;
-            var _val_match = 1;
-            var op = val2[0];
             if(op >= 12 && op <= 15){
                 var rev = op == 14 || op == 15;
                 var eq = op == 13 || op == 15;
@@ -221,23 +221,89 @@ template JSON (size_json, size_path, size_val) {
             }else {
                 if(val2[0] == 11) val_match = 1;
             }
-        }else if(path_partial_match == 1){
-          var path_diff = 0;
-          for(var i5 = path2[1]; i5 < _path[0];i5++) path_diff++;
-          partial[pi2] = path_diff;
-          pi2++;
-          for(var i5 = path2[0]; i5  < pi; i5++){
-             partial[pi2] = _path[i5];
-             pi2++;
-          }
-          for(var i5 = 0; i5  < vi; i5++){
-             partial[pi2] = _val[i5];
-             pi2++;
-          }
+        }else if(path_partial_match == 1 && _exists == 0){
+            if(op == 19){
+                if(val2[1] != 4) _val_match = 0;
+                    var plen2 = val2[2];
+                    var i5 = 3;
+                    var included = 0;
+                    while(plen2 > 0){
+                        if(val2[i5] != 0  || val2[i5 + 1] != 0){
+                            plen2 = 0;
+                        }else{
+                            i5 += 3;
+                            var type2 = val2[i5];
+                            var _val3[50];
+                            _val3[0] = type2;
+                            i5++;
+                            var _val_match2 = 1;
+                            var matched2 = 0;
+                            if(type2 == 0){
+                                plen2 = val2[i5];
+                                i5 += 1;                                
+                            }else if(type2 == 1){
+                                _val3[1] = val2[i5];
+                                i5++; 
+                                plen2 = val2[i5];
+                                i5 += 1;
+                            }else if(type2 == 2){
+                                _val3[1] = val2[i5];
+                                i5++;
+                                _val3[2] = val2[i5];
+                                i5++;
+                                _val3[3] = val2[i5];
+                                i5++;
+                                plen2 = val2[i5];
+                                i5 += 1;
+                            } else if (type2 == 3){
+                                var slen2 =  val2[i5];
+                                _val3[1] = slen2;
+                                i5++;
+                                for(var i6 = 0;i6 < slen2; i6++){
+                                    _val3[i6 + 2] = val2[i5];
+                                    i5++;
+                                }
+                                plen2 = val2[i5];
+                                i5 += 1;
+                            } else {
+                                _val_match2 = 0;
+                                plen2 = 0;
+                                matched2 = 1;
+                            }
+                            if(_val_match2 == 1 && matched2 == 0){
+                                for(var i5 = 0; i5  < 50; i5++){
+                                    if(_val3[i5] != _val[i5]) _val_match2 = 0;
+                                }
+                            }
+                            if(_val_match2) included = 1;
+                    }               
+                    if(included) _exists = 1;
+
+                }
+            }else if(op == 18){
+                var _pval_match = 1;
+                for(var i5 = 0; i5  < size_val * 77 - plus; i5++){
+                    if(_val[i5] != val2[i5 + plus]) _pval_match = 0;
+                }
+                if(_pval_match == 1) _exists = 1;
+            } else {
+                var path_diff = 0;
+                for(var i5 = path2[1]; i5 < _path[0];i5++) path_diff++;
+                partial[pi2] = path_diff;
+                pi2++;
+                for(var i5 = path2[0]; i5  < pi; i5++){
+                    partial[pi2] = _path[i5];
+                    pi2++;
+                }
+                for(var i5 = 0; i5  < vi; i5++){
+                    partial[pi2] = _val[i5];
+                    pi2++;
+                }
+            }
         }
         if(path_match == 1 && val_match == 1) _exists = 1;
     }
-     if(pi2 > 0){
+     if(pi2 > 1){
         var val_match = 1;
         for(var i5 = 0; i5  < size_val * 77; i5++){
             if(partial[i5] != val2[i5]) val_match = 0;
