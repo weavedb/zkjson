@@ -8,6 +8,10 @@ const ops = {
   $lte: 15,
   $in: 16,
   $nin: 17,
+  $contains: 18,
+  $contains_any: 19,
+  $contains_all: 20,
+  $contains_none: 21,
 }
 const opMap = {}
 for (let k in ops) opMap[ops[k]] = k
