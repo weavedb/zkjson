@@ -122,21 +122,24 @@ template JSON (size_json, size_path, size_val) {
                     }
                 } else if(val2[1] == 3 && _val_match == 1){
                     var str_size = val2[2] > _val[1] ? _val[1] : val2[2];
+                    var eql = 1;
                     if(op == 12 || op == 13){
                         for(var i3 = 0; i3 < str_size; i3++){
                             if(val2[i3+3] > _val[i3+2]) _val_match = 0;
+                            if(val2[i3+3] != _val[i3+2]) eql = 0;
                         }
                         if(_val_match == 1){
                             if(val2[2] > str_size) _val_match = 0;
-                            if (val2[2] == _val[1] && val2[0] == 12) _val_match = 0;
+                            if (eql && val2[2] == _val[1] && val2[0] == 12) _val_match = 0;
                         }
                     } else if(op == 14 || op == 15){
                         for(var i3 = 0; i3 < str_size; i3++){
                             if(val2[i3+3] < _val[i3+2]) _val_match = 0;
+                            if(val2[i3+3] != _val[i3+2]) eql = 0;
                         }
                         if(_val_match == 1){
-                            if(_val[3] > str_size) _val_match = 0;
-                            if (val2[2] == _val[1] && val2[0] == 14) _val_match = 0;
+                            if(_val[1] > str_size) _val_match = 0;
+                            if (eql && val2[2] == _val[1] && val2[0] == 14) _val_match = 0;
                         }
                     }
                 } else if(val2[1] == 1 && _val_match == 1){
