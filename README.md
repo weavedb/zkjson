@@ -427,7 +427,7 @@ const num_nin = encodeQuery([ "$nin", [ 1, 2, 3 ]])
 
 // for arr field
 const arr_contains = encodeQuery([ "$contains", 3 ])
-const arr_contains_any = encodeQuery([ "$contains", [ 3, 4, 5 ]])
+const arr_contains_any = encodeQuery([ "$contains_any", [ 3, 4, 5 ]])
 const arr_contains_all = encodeQuery([ "$contains_all", [ 2, 3 ]])
 const arr_contains_none = encodeQuery([ "$contains_none", [ 4, 5, 6 ]])
 ```
