@@ -472,6 +472,7 @@ const fromIndex = id2str
 
 const path = p => toSignal(encodePath(p))
 const val = v => toSignal(encodeVal(v))
+const query = v => toSignal(encodeQuery(v))
 
 function encodeQuery(v) {
   if (!Array.isArray(v)) throw Error("query must be an array")
@@ -506,6 +507,7 @@ module.exports = {
   fromIndex,
   path,
   val,
+  query,
   encodeQuery,
   decodeQuery,
 }
