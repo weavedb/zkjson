@@ -48,6 +48,20 @@ const decodedVal = decodeVal(encodedVal) // 1
 const signalVal2 = val(_val) // [ "12111011" ]
 ```
 
+Encode / Decode conditional queries
+
+```javascript
+const { toSignal, fromSignal, encodeQuery, decodeQuery, query } = require("zkjson")
+
+const _query = [ "$gt", 1 ]
+const encodedQuery = encodeQuery(_query) // [ 12, 2, 1, 0, 1 ]
+const signalQuery = toSignal(encodedQuery) // [ "21212111011" ]
+const encodedQuery2 = fromSignal(signalQuery) // [ 12, 2, 1, 0, 1 ]
+const decodedQuery = decodeQuery(encodedQuery) // [ "$gt", 1 ]
+
+const signalQuery2 = query(_query) // [ "21212111011" ]
+```
+
 ### Document ID <> Index Conversion
 
 ```javascript
@@ -129,6 +143,13 @@ describe("MyApp", function () {
     expect(
       (await myapp.qCustom(path("array"), path("[1]"), zkp6)).toNumber()
     ).to.eql(2)
+	
+    // conditional operator
+    const zkp7 = await doc.genProof({ json, path: "num", query: ["$gt", 0] })
+    expect(await myapp.qCond(path("num"), zkp7.slice(15, 21), zkp7)).to.eql(
+      true
+    )
+
   })
 })
 ```
