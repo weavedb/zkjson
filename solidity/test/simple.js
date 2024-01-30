@@ -67,5 +67,11 @@ describe("MyApp", function () {
     expect(
       (await myapp.qCustom(path("array"), path("[1]"), zkp6)).toNumber()
     ).to.eql(2)
+
+    // conditional operator
+    const zkp7 = await doc.genProof({ json, path: "num", query: ["$gt", 0] })
+    expect(await myapp.qCond(path("num"), zkp7.slice(15, 21), zkp7)).to.eql(
+      true
+    )
   })
 })
