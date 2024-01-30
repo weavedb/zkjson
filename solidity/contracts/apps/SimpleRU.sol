@@ -54,6 +54,11 @@ contract SimpleRU is ZKRollup {
     return _qNull(value);
   }
 
+  function qCond (uint[] memory path, uint[] memory cond, uint[] memory zkp) public view returns (bool) {
+    uint[] memory value = validateQuery(path, zkp);
+    return _qCond(value, cond);
+  }
+
   function qCustom (uint[] memory path, uint[] memory path2, uint[] memory zkp) public view returns (int) {
     uint[] memory value = validateQuery(path, zkp);
     return getInt(path2, value);

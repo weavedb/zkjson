@@ -3,6 +3,7 @@
 pragma solidity >=0.7.0 <0.9.0;
 
 import "../ZKJson.sol";
+import "hardhat/console.sol";
 
 interface VerifierJSON {
   function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[12] calldata _pubSignals) view external returns (bool);
@@ -49,6 +50,11 @@ contract SimpleJSON is ZKJson {
   function qNull (uint[] memory path, uint[] memory zkp) public view returns (bool) {
     uint[] memory value = validateQuery(path, zkp);
     return _qNull(value);
+  }
+  
+  function qCond (uint[] memory path, uint[] memory cond, uint[] memory zkp) public view returns (bool) {
+    uint[] memory value = validateQuery(path, zkp);
+    return _qCond(value, cond);
   }
 
   function qCustom (uint[] memory path, uint[] memory path2, uint[] memory zkp) public view returns (int) {

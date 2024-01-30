@@ -203,6 +203,13 @@ contract ZKQuery {
     return true;
   }
 
+  function _qCond (uint[] memory value, uint[] memory cond) internal pure returns (bool) {
+    uint[] memory _cond = toArr(cond);
+    require(value.length == _cond.length, "wrong query");
+    for(uint i = 0; i < value.length; i++)  require(_cond[i] == value[i], "wrong query");
+    return true;
+  }
+  
   function getInt (uint[] memory path, uint[] memory raw) internal pure returns (int) {
     uint[] memory value = getVal(path, raw);
     return _qInt(value);
@@ -222,6 +229,7 @@ contract ZKQuery {
     uint[] memory value = getVal(path, raw);
     _qNull(value);
   }
+  
   function verify(uint[] memory zkp, bytes4 selector, address addr) internal view returns (bool) {
     uint size;
     assembly {

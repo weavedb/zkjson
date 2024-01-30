@@ -125,6 +125,11 @@ contract SimpleJSON is ZKJson {
     return _qNull(value);
   }
 
+  function qCond (uint[] memory path, uint[] memory cond, uint[] memory zkp) public view returns (bool) {
+    uint[] memory value = validateQuery(path, zkp);
+    return _qCond(value, cond);
+  }
+
   function qCustom (uint[] memory path, uint[] memory path2, uint[] memory zkp) public view returns (int) {
     uint[] memory value = validateQuery(path, zkp);
     return getInt(path2, value);
@@ -197,7 +202,12 @@ contract SimpleRU is ZKRollup {
     uint[] memory value = validateQuery(path, zkp);
     return _qBool(value);
   }
-  
+
+  function qCond (uint[] memory path, uint[] memory cond, uint[] memory zkp) public view returns (bool) {
+    uint[] memory value = validateQuery(path, zkp);
+    return _qCond(value, cond);
+  }
+
   function qNull (uint[] memory path, uint[] memory zkp) public view returns (bool) {
     uint[] memory value = validateQuery(path, zkp);
     return _qNull(value);
