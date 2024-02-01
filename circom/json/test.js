@@ -20,6 +20,8 @@ const cases = [
   ["num", ["$gte", 5]],
   ["num", ["$lte", 5]],
   ["num", ["$ne", 6]],
+  ["num", ["$in", [5, 6]]],
+  ["num", ["$nin", [6, 7]]],
 
   ["num", ["$eq", 4], true],
   ["num", ["$gt", 5], true],
@@ -27,6 +29,8 @@ const cases = [
   ["num", ["$gte", 6], true],
   ["num", ["$lte", 4], true],
   ["num", ["$ne", 5], true],
+  ["num", ["$in", [6, 7]], true],
+  ["num", ["$nin", [5, 6, 7]], true],
 
   ["str", ["$eq", "str"]],
   ["str", ["$gt", "sta"]],
@@ -73,6 +77,11 @@ describe("JSON circuit", function () {
   })
 
   it("should insert docs", async () => {
+    const { inputs } = await gen({})
+    const w = await circuit.calculateWitness(inputs, true)
+    await circuit.checkConstraints(w)
+    await circuit.assertOut(w, { exist: 1 })
+
     for (let v of cases) {
       console.log(v)
       const { inputs } = await gen2({ json, path: v[0], query: v[1] })
@@ -82,7 +91,10 @@ describe("JSON circuit", function () {
         await circuit.assertOut(w, { exist: 1 })
         if (v[2]) throw Error("should throw error")
       } catch (e) {
-        if (!v[2]) throw Error("should not throw error")
+        if (!v[2]) {
+          console.log(e)
+          throw Error("should not throw error")
+        }
       }
     }
   })
