@@ -11,18 +11,20 @@ template JSON (size_json, size_path, size_val) {
     signal output hash;
     signal ex;
 
-    var arr_val_size = size_val * 77;
     var _json_[6] = [0, size_json, 0,0,0,0];
     var path_len = getLen(size_path, path);
-    var partial[arr_val_size];
-    partial[0] = 4;
-    var pi2 = 1;
-    var elms[arr_val_size];
-    var contains[arr_val_size];
+    var pi3 = 0;
+    var pi4 = 0;
+    var partial_path[6];
+    var partial_val[6];
+    var path_diff = 0;
+    var elms[100];
+    var contains[100];
     var _val_[6] = [0, size_val, 0,0,0,0];
     _val_ = g(val, _val_);
     var op = _val_[0];
     var _exists = op == 21 ? 1 : 0;
+    
     while(_json_[5] == 0){ 
         var vi = 0;
         _json_ = g(json, _json_);
@@ -50,32 +52,26 @@ template JSON (size_json, size_path, size_val) {
         }
         _json_ = g(json, _json_);
         var type = _json_[0];
-        var _val[arr_val_size];
-        _val[0] = type;
+        var _val_start[6] = _json_;
         if(type == 1){
             _json_ = g(json, _json_);
-            _val[1] = _json_[0];
             vi = 2;
         }else if(type == 2){
             _json_ = g(json, _json_);
-            _val[1] = _json_[0];
             _json_ = g(json, _json_);
-            _val[2] = _json_[0];
             _json_ = g(json, _json_);
-            _val[3] = _json_[0];
             vi = 4;
         } else if (type == 3){
             _json_ = g(json, _json_);
             var slen =  _json_[0];
-            _val[1] = slen;
             for(var i3 = 0;i3 < slen; i3++){
                 _json_ = g(json, _json_);
-                _val[i3 + 2] = _json_[0];
             }
-            vi = slen + 1;
+            vi = slen + 2;
         } else {
             vi = 1;
         }
+
         var path_match = 1;
         var val_match = 0;
         var path_partial_match = 1;
@@ -101,39 +97,49 @@ template JSON (size_json, size_path, size_val) {
                 var matched = 0;
                 var _val2_[6] = _val_;
                 _val2_ = g(val, _val2_);
-                if(_val2_[0] != _val[0] || (_val2_[0] != 2 && _val2_[0] != 3 && _val2_[0] != 1)) _val_match = 0;
+                var _val3_[6] = _val_start; // _val[0]
+
+                if(_val2_[0] != _val3_[0] || (_val2_[0] != 2 && _val2_[0] != 3 && _val2_[0] != 1)) _val_match = 0;
                 if(_val2_[0] == 2 && _val_match == 1){
                     var sign = 2;
                     _val2_ = g(val, _val2_);
                     var val2_2 = _val2_[0];
-                    if(_val2_[0] == 0 && _val[1] == 0) sign = 0;
-                    if(_val2_[0] == 1 && _val[1] == 1) sign = 1;
+                    _val3_ = g(json,_val3_); // _val[1]
+                    var val3_1 = _val3_[0];
+                    if(_val2_[0] == 0 && val3_1 == 0) sign = 0;
+                    if(_val2_[0] == 1 && val3_1 == 1) sign = 1;
                     _val2_ = g(val, _val2_);
-                    if(_val2_[0] == 0 && _val[4] == 0 && eq) matched = 1;
+                    _val3_ = g(json,_val3_); // _val[2]
+                    var val3_2 = _val3_[0];                    
+                    _val3_ = g(json,_val3_); // _val[3]
+                    var val3_3 = _val3_[0];                                        
+                     _val3_ = g(json,_val3_); // _val[4]
+                    if(_val2_[0] == 0 && _val3_[0] == 0 && eq) matched = 1;
+                    // on going...
                     if(matched == 0 && _val_match == 1){
                         var mul2 = 1;
                         var mul = 1;
-                        if(_val2_[0] > _val[2]) mul = 10 ** (_val2_[0] - _val[2]);
-                        if(_val2_[0] < _val[2]) mul2 = 10 ** (_val[2] - _val2_[0]);
+                        if(_val2_[0] > val3_2) mul = 10 ** (_val2_[0] - val3_2);
+                        if(_val2_[0] < val3_2) mul2 = 10 ** (val3_2 - _val2_[0]);
                         if(rev == 0){
-                            if(val2_2 == 1 && _val[1] == 0) _val_match = 0;
-                            if(_val2_[0] == 0 && _val[4] == 0 && eq) matched = 1;
+                            if(val2_2 == 1 && val3_1 == 0) _val_match = 0;
+                            if(_val2_[0] == 0 && _val3_[0] == 0 && eq) matched = 1;
                             if(_val_match == 1){
                                 _val2_ = g(val, _val2_);
                                 if(sign == 1){
-                                    if((eq == 0 && _val2_[0] * mul2 >= _val[3] * mul) || (eq == 1 && _val2_[0] * mul2 > _val[3] * mul)) _val_match = 0;
+                                    if((eq == 0 && _val2_[0] * mul2 >= val3_3 * mul) || (eq == 1 && _val2_[0] * mul2 > val3_3 * mul)) _val_match = 0;
                                 }else if(sign == 0){
-                                    if((eq == 0 && _val2_[0] * mul2 <= _val[3] * mul) || (eq == 1 && _val2_[0] * mul2 < _val[3] * mul)) _val_match = 0;
+                                    if((eq == 0 && _val2_[0] * mul2 <= val3_3 * mul) || (eq == 1 && _val2_[0] * mul2 < val3_3 * mul)) _val_match = 0;
                                 }
                             }
                         }else{
-                            if(val2_2 == 0 && _val[1] == 1) _val_match = 0;
+                            if(val2_2 == 0 && val3_1 == 1) _val_match = 0;
                             if(_val_match == 1){
                                 _val2_ = g(val, _val2_);
                                 if(sign == 1){
-                                    if((eq == 0 && _val2_[0] * mul2 <= _val[3] * mul) || (eq == 1 && _val2_[0] * mul2 < _val[3] * mul)) _val_match = 0;
+                                    if((eq == 0 && _val2_[0] * mul2 <= val3_3 * mul) || (eq == 1 && _val2_[0] * mul2 < val3_3 * mul)) _val_match = 0;
                                 }else if(sign == 0){
-                                    if((eq == 0 && _val2_[0] * mul2 >= _val[3] * mul) || (eq == 1 && _val2_[0] * mul2 > _val[3] * mul)) _val_match = 0;
+                                    if((eq == 0 && _val2_[0] * mul2 >= val3_3 * mul) || (eq == 1 && _val2_[0] * mul2 > val3_3 * mul)) _val_match = 0;
                                 }
                             }                  
                         }
@@ -141,39 +147,44 @@ template JSON (size_json, size_path, size_val) {
                 } else if(_val2_[0] == 3 && _val_match == 1){
                     _val2_ = g(val, _val2_);
                     var val2_2 = _val2_[0];
-                    var str_size = _val2_[0] > _val[1] ? _val[1] : _val2_[0];
+                    _val3_ = g(json,_val3_); // _val[1]
+                    var val3_1 = _val3_[0];
+                    var str_size = _val2_[0] > _val3_[0] ? _val3_[0] : _val2_[0];
                     var eql = 1;
                     if(op == 12 || op == 13){
                         for(var i3 = 0; i3 < str_size; i3++){
                             _val2_ = g(val, _val2_);
-                            if(_val2_[0] > _val[i3+2]) _val_match = 0;
-                            if(_val2_[0] != _val[i3+2]) eql = 0;
+                            _val3_ = g(json,_val3_); // _val[i3+2]
+                            if(_val2_[0] > _val3_[0]) _val_match = 0;
+                            if(_val2_[0] != _val3_[0]) eql = 0;
                         }
                         if(_val_match == 1){
                             if(val2_2 > str_size) _val_match = 0;
-                            if (eql && val2_2 == _val[1] && op == 12) _val_match = 0;
+                            if (eql && val2_2 == val3_1 && op == 12) _val_match = 0;
                         }
                     } else if(op == 14 || op == 15){
                         for(var i3 = 0; i3 < str_size; i3++){
                             _val2_ = g(val, _val2_);
-                            if(_val2_[0] < _val[i3+2]) _val_match = 0;
-                            if(_val2_[0] != _val[i3+2]) eql = 0;
+                            _val3_ = g(json,_val3_); // _val[i3+2]
+                            if(_val2_[0] < _val3_[0]) _val_match = 0;
+                            if(_val2_[0] != _val3_[0]) eql = 0;
                         }
                         if(_val_match == 1){
-                            if(_val[1] > str_size) _val_match = 0;
-                            if (eql && val2_2 == _val[1] && op == 14) _val_match = 0;
+                            if(val3_1 > str_size) _val_match = 0;
+                            if (eql && val2_2 == val3_1 && op == 14) _val_match = 0;
                         }
                     }
                 } else if(_val2_[0] == 1 && _val_match == 1){
                     _val2_ = g(val, _val2_);
-                    if(eq == 0 && _val2_[0] == _val[1]) _val_match = 0;
-                    if(eq == 1 && _val2_[0] != _val[1]) _val_match = 0;
-                    if(eq == 1 && _val2_[0] == _val[1]) matched = 1;
+                    _val3_ = g(json,_val3_); // _val[1]
+                    if(eq == 0 && _val2_[0] == _val3_[0]) _val_match = 0;
+                    if(eq == 1 && _val2_[0] != _val3_[0]) _val_match = 0;
+                    if(eq == 1 && _val2_[0] == _val3_[0]) matched = 1;
                     if(_val_match == 1 && matched == 0){
                         if(op == 12 || op == 13){
-                            if(_val2_[0] > _val[1]) _val_match = 0;
+                            if(_val2_[0] > _val3_[0]) _val_match = 0;
                         } else if(op == 14 || op == 15){
-                            if(_val2_[0] < _val[1]) _val_match = 0;
+                            if(_val2_[0] < _val3_[0]) _val_match = 0;
                         }
                     }
                 }
@@ -194,47 +205,51 @@ template JSON (size_json, size_path, size_val) {
                             _val2_ = g(val, _val2_);
                             _val2_ = g(val, _val2_);
                             _val2_ = g(val, _val2_);
-
                             var type2 = _val2_[0];
-                            var _val3[arr_val_size];
-                            _val3[0] = type2;
+                            var _val4_[6] = _val2_;
+                            var vi4 = 0;
                             var _val_match2 = 1;
                             var matched2 = 0;
                             if(type2 == 0){
                                 _val2_ = g(val, _val2_);
                                 plen2 = _val2_[0];
+                                vi4 = 1;
                             }else if(type2 == 1){
                                 _val2_ = g(val, _val2_);
-                                _val3[1] = _val2_[0];
                                 _val2_ = g(val, _val2_);
                                 plen2 = _val2_[0];
+                                vi4 = 2;
                             }else if(type2 == 2){
                                 _val2_ = g(val, _val2_);
-                                _val3[1] = _val2_[0];
                                 _val2_ = g(val, _val2_);
-                                _val3[2] = _val2_[0];
                                 _val2_ = g(val, _val2_);
-                                _val3[3] = _val2_[0];
                                 _val2_ = g(val, _val2_);
                                 plen2 = _val2_[0];
+                                vi4 = 4;
                             } else if (type2 == 3){
                                 _val2_ = g(val, _val2_);
                                 var slen2 =  _val2_[0];
-                                _val3[1] = slen2;
                                 for(var i6 = 0;i6 < slen2; i6++){
                                     _val2_ = g(val, _val2_);
-                                    _val3[i6 + 2] = _val2_[0];
                                 }
                                 _val2_ = g(val, _val2_);
                                 plen2 = _val2_[0];
+                                vi4 = slen2 + 2;
                             } else {
                                 _val_match2 = 0;
                                 plen2 = 0;
                                 matched2 = 1;
                             }
                             if(_val_match2 == 1 && matched2 == 0){
-                                for(var i5 = 0; i5  < arr_val_size; i5++){
-                                    if(_val3[i5] != _val[i5]) _val_match2 = 0;
+                                var _val3_[6] = _val_start;
+                                var i5 = 0;
+                                while(vi > i5 || vi4 > i5){
+                                    var v3 = vi > i5 ? _val3_[0] : 0;
+                                    var v4 = vi4 > i5 ? _val4_[0] : 0;
+                                    if(v4 != v3) _val_match2 = 0;
+                                    _val3_ = g(json, _val3_);
+                                    _val4_ = g(val, _val4_);
+                                    i5++;
                                 }
                             }
                             if(_val_match2 == 1){
@@ -248,9 +263,14 @@ template JSON (size_json, size_path, size_val) {
             } else {
                 var _val_[6] = [0, size_val, 0,0,0,0];
                 if(plus == 1) _val_ = g(val, _val_);
-                for(var i5 = 0; i5  < arr_val_size - plus; i5++){
+                var _val3_[6] = _val_start;
+                var i5 = 0;
+                while(vi > i5 || _val_[5] == 0){
                     _val_ = g(val, _val_);
-                    if(_val[i5] != _val_[0]) _val_match = 0;
+                    var v3 = vi > i5 ? _val3_[0] : 0;
+                    if(v3 != _val_[0]) _val_match = 0;
+                    _val3_ = g(json, _val3_);
+                    i5++;
                 }
             }
             if(_val_match == 1){
@@ -277,45 +297,43 @@ template JSON (size_json, size_path, size_val) {
                         _val2_ = g(val,_val2_);
                         _val2_ = g(val,_val2_);
                         var type2 = _val2_[0];
-                        var _val3[arr_val_size];
-                        _val3[0] = type2;
+                        var _val4_[6] = _val2_;
                         var _val_match2 = 1;
                         var matched2 = 0;
+                        var vi4 = 0;
                         if(type2 == 0){
                             elms[eindex] = 1;
                             eindex += 1;
                             _val2_ = g(val,_val2_);
                             plen3 = _val2_[0];
+                            vi4 = 1;
                         }else if(type2 == 1){
                             _val2_ = g(val,_val2_);
-                            _val3[1] = _val2_[0];
                             elms[eindex] = 1;                                
                             eindex += 1;           
                             _val2_ = g(val,_val2_);                     
                             plen3 = _val2_[0];
+                            vi4 = 2;
                         }else if(type2 == 2){
                             _val2_ = g(val,_val2_);
-                            _val3[1] = _val2_[0];
                             _val2_ = g(val,_val2_);
-                            _val3[2] = _val2_[0];
                             _val2_ = g(val,_val2_);
-                            _val3[3] = _val2_[0];
                             elms[eindex] = 1;                                
                             eindex += 1;           
                             _val2_ = g(val,_val2_);                     
                             plen3 = _val2_[0];
+                            vi4 = 4;
                         } else if (type2 == 3){
                             _val2_ = g(val,_val2_);
                             var slen2 =  _val2_[0];
-                            _val3[1] = slen2;
                             for(var i6 = 0;i6 < slen2; i6++){
                                 _val2_ = g(val,_val2_);
-                                _val3[i6 + 2] = _val2_[0];
                             }
                             elms[eindex] = 1;                                
                             eindex += 1;
                             _val2_ = g(val,_val2_);
                             plen3 = _val2_[0];
+                            vi4 = slen2 + 2;
                         } else {
                             _val_match2 = 0;
                             plen3 = 0;
@@ -323,11 +341,18 @@ template JSON (size_json, size_path, size_val) {
                         }
                         if(_val_match2 == 1 && matched2 == 0){
                             var matched3 = 1;
-                            for(var i5 = 0; i5  < arr_val_size; i5++){
-                                if(_val3[i5] != _val[i5]){
+                            var _val3_[6] = _val_start; // _val[0]
+                            var i5 = 0;
+                            while(_val3_[5] == 0 || _val4_[5] == 0){
+                                var v3 = vi > i5 ? _val3_[0] : 0;
+                                var v4 = vi4 > i5 ? _val4_[0] : 0;
+                                if(v4 != v3){
                                      _val_match2 = 0;
                                      matched3 = 0;
                                 }
+                                _val3_ = g(json, _val3_);
+                                _val4_ = g(val, _val4_);
+                                i5++;
                             }
                             if(matched3 == 1){
                                  contains[eindex - 1] = 1;
@@ -341,7 +366,7 @@ template JSON (size_json, size_path, size_val) {
                         _exists = 1;
                     }else if(op == 20){
                         var all = 1;
-                        for(var i5 = 0; i5 < arr_val_size; i5++){
+                        for(var i5 = 0; i5 < 100; i5++){
                             if(elms[i5] == 1 && contains[i5] == 0) all = 0;
                         }
                         if(all == 1) _exists = 1;
@@ -353,42 +378,59 @@ template JSON (size_json, size_path, size_val) {
                 var _pval_match = 1;
                 var _val2_[6] = [0, size_val, 0,0,0,0];
                 if(plus == 1) _val2_ = g(val, _val2_);
-                for(var i5 = 0; i5  < arr_val_size - plus; i5++){
+                var _val3_[6] = _val_start; // _val[0]
+                var i5 = 0;
+                while(vi > i5 || _val2_[5] == 0){    
                     _val2_ = g(val, _val2_);
-                    if(_val[i5] != _val2_[0]) _pval_match = 0;
+                    var v3 = vi > i5 ? _val3_[0] : 0;
+                    if(v3 != _val2_[0]) _pval_match = 0;
+                    _val3_ = g(json, _val3_);
+                    i5++;
                 }
                 if(_pval_match == 1) _exists = 1;
             } else {
-                var path_diff = 0;
                 var _path2_[6] = [0, size_path, 0,0,0,0];
                 _path2_ = g(path, _path2_);
                 var _path3_[6] = _path_start;
-                for(var i5 = _path2_[0]; i5 < _path3_[0];i5++) path_diff++;
-                partial[pi2] = path_diff;
-                pi2++;
-                for(var i5 = 0; i5  < path_len; i5++){
-                    _path3_ = g(json, _path3_);     
-                }
+                path_diff = _path3_[0] - _path2_[0];
+
+
+                for(var i5 = 0; i5  < path_len; i5++) _path3_ = g(json, _path3_);     
+                partial_path = _path3_;
+
                 for(var i5 = path_len; i5  < pi; i5++){
                     var p3 = pi > i5 ? _path3_[0] : 0;
-                    partial[pi2] = p3;
                     _path3_ = g(json, _path3_);
-                    pi2++;
+                    pi3++;
                 }
+
+                var _val3_[6] = _val_start;
+                partial_val = _val3_;
                 for(var i5 = 0; i5  < vi; i5++){
-                    partial[pi2] = _val[i5];
-                    pi2++;
+                    _val3_ = g(json, _val3_);
+                    pi4++;
                 }
             }
         }
         if(path_match == 1 && val_match == 1) _exists = 1;
     }
-     if(pi2 > 1){
+     if(path_diff > 0){
         var val_match = 1;
         var _val2_[6] = [0, size_val, 0,0,0,0];
-        for(var i5 = 0; i5  < arr_val_size; i5++){
+        var i5 = 0;
+        while(_val2_[5] == 0 || i5 < 2 + pi3 + pi4){
             _val2_ = g(val, _val2_);
-            if(partial[i5] != _val2_[0]) val_match = 0;
+            var pval = i5 == 0 ? 4 : 0;
+            if(i5 == 1) pval = path_diff;
+            if(i5 > 1 && i5 < 2 + pi3){
+                pval = partial_path[0];
+                partial_path = g(json, partial_path);
+            }else if(i5 >= 2 + pi3 && i5 < 2 + pi3 + pi4){
+                pval = partial_val[0];
+                partial_val = g(json, partial_val);
+            }
+            if(pval != _val2_[0]) val_match = 0;
+            i5++;
         }
         if(val_match == 1) _exists = 1;
     }
