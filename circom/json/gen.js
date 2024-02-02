@@ -5,7 +5,7 @@ const gen = async ({ size_val = 5, size_path = 5, size_json = 256 }) => {
   return {
     inputs: await doc.getInputs({
       json: { a: 1.234, b: 5.5, c: [1, 2, [3, 4, { a: 3 }]] },
-      path: "c[2][2].a",
+      path: "c[2][2]",
     }),
   }
 }

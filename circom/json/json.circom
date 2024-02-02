@@ -12,7 +12,6 @@ template JSON (size_json, size_path, size_val) {
     signal ex;
 
     var arr_val_size = size_val * 77;
-    var arr_path_size = size_path * 77;
     var _json_[6] = [0, size_json, 0,0,0,0];
     var path_len = getLen(size_path, path);
     var partial[arr_val_size];
@@ -26,30 +25,25 @@ template JSON (size_json, size_path, size_val) {
     var _exists = op == 21 ? 1 : 0;
     while(_json_[5] == 0){ 
         var vi = 0;
-        var _path[arr_path_size];
         _json_ = g(json, _json_);
+        var _path_start[6] = _json_;
         var len = _json_[0];
-        _path[0] = len;
         var pi = 1;
         for(var i2 = 0; i2 < len; i2++){
             _json_ = g(json, _json_);
             var plen = _json_[0];
-            _path[pi] = plen;
             pi++;
             var plen2 = plen;
             if(plen == 0){
                 _json_ = g(json, _json_);
-                _path[pi] = _json_[0];
                 pi++;
                 if(_json_[0] == 0){
                     _json_ = g(json, _json_);
-                    _path[pi] = _json_[0];
                     pi++;                    
                 }
             }else{
                 for(var i3 = 0; i3 < plen2; i3++){
                     _json_ = g(json, _json_);
-                    _path[pi] = _json_[0];
                     pi++;
                 }
             }
@@ -86,12 +80,17 @@ template JSON (size_json, size_path, size_val) {
         var val_match = 0;
         var path_partial_match = 1;
         var _path2_[6] = [0, size_path, 0,0,0,0];
-         for(var i4 = 0; i4  < arr_path_size - 1; i4++){
+        var _path3_[6] = _path_start;
+        var i4 = 0;
+        while(i4 < pi || _path2_[5] == 0){
             _path2_ = g(path, _path2_);
-            if(_path[i4] != _path2_[0]){
+            var p3 = pi > i4 ? _path3_[0] : 0;
+            if(p3 != _path2_[0]){
                 path_match = 0;
                 if(path_len > i4 && i4 != 0) path_partial_match = 0;
             }
+            _path3_ = g(json, _path3_);
+            i4++;
         }
         var plus = op >= 10 ? 1 : 0;
         var _val_match = 1;
@@ -363,11 +362,17 @@ template JSON (size_json, size_path, size_val) {
                 var path_diff = 0;
                 var _path2_[6] = [0, size_path, 0,0,0,0];
                 _path2_ = g(path, _path2_);
-                for(var i5 = _path2_[0]; i5 < _path[0];i5++) path_diff++;
+                var _path3_[6] = _path_start;
+                for(var i5 = _path2_[0]; i5 < _path3_[0];i5++) path_diff++;
                 partial[pi2] = path_diff;
                 pi2++;
+                for(var i5 = 0; i5  < path_len; i5++){
+                    _path3_ = g(json, _path3_);     
+                }
                 for(var i5 = path_len; i5  < pi; i5++){
-                    partial[pi2] = _path[i5];
+                    var p3 = pi > i5 ? _path3_[0] : 0;
+                    partial[pi2] = p3;
+                    _path3_ = g(json, _path3_);
                     pi2++;
                 }
                 for(var i5 = 0; i5  < vi; i5++){
