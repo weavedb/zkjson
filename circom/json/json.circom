@@ -12,7 +12,6 @@ template JSON (size_json, size_path, size_val) {
     signal ex;
 
     var _json_[9] = [0, size_json, 0,0,0,0,0,0,0];
-    var path_len = getLen(size_path, path);
  
     var contains[101];
 
@@ -32,7 +31,7 @@ template JSON (size_json, size_path, size_val) {
         _json_ = getVal(json, _json_);
         var vi = _json_[6];
 
-        var match[2] = checkPathMatch(json, path, _path_start, size_path, path_len, pi);
+        var match[2] = checkPathMatch(json, path, _path_start, size_path, pi);
         var path_match = match[0];
         var path_partial_match = match[1];
 
@@ -57,9 +56,8 @@ template JSON (size_json, size_path, size_val) {
                 _exists = contains[100];
             }else if(op == 18){
                 _exists = checkContains(_exists, size_val, val, _val_start, vi, json, plus);
- 
-            } else {
-                _exists = checkPartialMatch(_exists, size_path, size_val, path, _path_start, pi, path_len, val, _val_start, vi, json);
+             } else {
+                _exists = checkPartialMatch(_exists, size_path, size_val, path, _path_start, pi, val, _val_start, vi, json);
             }
         }
      }

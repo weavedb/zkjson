@@ -183,7 +183,8 @@ function getLen(size_json, json){
     return ji;
 }
 
-function checkPartialMatch(_exists, size_path, size_val, path, _path_start, pi, path_len, val, _val_start, vi, json){
+function checkPartialMatch(_exists, size_path, size_val, path, _path_start, pi, val, _val_start, vi, json){
+    var path_len = getLen(size_path, path);
     var pi3 = 0;
     var pi4 = 0;
     var partial_path[9];
@@ -194,7 +195,6 @@ function checkPartialMatch(_exists, size_path, size_val, path, _path_start, pi, 
     _path2_ = g(path, _path2_);
     var _path3_[9] = _path_start;
     path_diff = _path3_[0] - _path2_[0];
-
 
     for(var i5 = 0; i5  < path_len; i5++) _path3_ = g(json, _path3_);     
     partial_path = _path3_;
@@ -285,7 +285,7 @@ function getVal(json, _json_){
     return _json_;
 }
 
-function checkPathMatch(json, path, _path_start, size_path, path_len, pi){
+function checkPathMatch(json, path, _path_start, size_path, pi){
     var path_match = 1;
     var path_partial_match = 1;
     var _path2_[9] = [0, size_path, 0,0,0,0,0,0,0];
@@ -296,7 +296,7 @@ function checkPathMatch(json, path, _path_start, size_path, path_len, pi){
         var p3 = pi > i4 ? _path3_[0] : 0;
         if(p3 != _path2_[0]){
             path_match = 0;
-            if(path_len > i4 && i4 != 0) path_partial_match = 0;
+            if(_path2_[5] == 0 && i4 != 0) path_partial_match = 0;
         }
         _path3_ = g(json, _path3_);
         i4++;
