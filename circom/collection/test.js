@@ -5,7 +5,7 @@ const gen = require("./gen")
 
 describe("JSON circuit", function () {
   let circuit
-  this.timeout(1000000000)
+  this.timeout(0)
 
   before(async () => {
     circuit = await wasm_tester(join(__dirname, "index.circom"))

@@ -7,7 +7,7 @@ const gen = async ({
   size_val = 5,
   size_path = 5,
   size_json = 256,
-  level = 40,
+  level = 100,
 }) => {
   const col = new Collection({
     size_val,

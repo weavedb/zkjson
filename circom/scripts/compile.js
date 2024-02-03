@@ -57,7 +57,8 @@ component main {public [path, val]} = JSON(${size_json}, ${size_path}, ${size_va
     script = `pragma circom 2.1.5;
 include "../../../collection/collection.circom";
 
-ocomponent main {public [key, path, val]} = Collection(${level}, ${size_json}, ${size_path}, ${size_val});`
+component main {public [key, path, val]} = Collection(${level}, ${size_json}, ${size_path}, ${size_val});`
+    console.log(script)
   } else if (circuit === "db") {
     script = `pragma circom 2.1.5;
 include "../../../db/db.circom";
