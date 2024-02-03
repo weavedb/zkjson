@@ -115,9 +115,9 @@ For DB, `level_col` determines how many collections the DB can contain. The coll
 | Circuit | POT | size_json | size_path | size_val | level | level_col | tx_size |
 |---|---|---|---|---|---|---|---|
 | **JSON** | 14 | 256 | 5 | 5 |   |   |   |
-| **Collection** | 15 | 256 | 5 | 5 | 100 |   |   |
-| **DB** | 17 | 256 | 5 | 5 | 100 | 8 |   |
-| **Query** | 19 | 256 |  |   | 100 | 8 |   |
+| **Collection** | 16 | 256 | 5 | 5 | 100 |   |   |
+| **DB** | 16 | 256 | 5 | 5 | 100 | 8 |   |
+| **Query** | 17 | 256 |  |   | 100 | 8 |   |
 | **Rollup** | 20 | 256 |  |   | 100 | 8 | 10 |
 
 **Currently the SDK only works with `size_json=256` due to some hash logic. Keep it 256 for now please.**
