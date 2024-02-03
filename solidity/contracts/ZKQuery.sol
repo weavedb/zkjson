@@ -105,49 +105,70 @@ contract ZKQuery {
 	if gt(v,0) {  
 	  let p := 0
 	  let x := v
-	  let on := 0
+  	  let on := 0 // 0 = first, 1 = off, 2 = on, 3 = is9, 4 = to set zero, 5 = zero
 	  let cur := 0
 	  let len := 0
 	  let num := 0
-	  let is9 := 0
           for { } gt(v, 0) { } {
 	    v := div(v, 10)
             p := add(p, 1)
           }
 	  for { } gt(p, 0) { } {
 	    let n := div(x, exp(10, sub(p, 1)))
-	    let _on := on  
-            if and(iszero(_on), gt(n, 0)) {
-              on := 1
-              if eq(n, 9) {
-                len := 8
-                is9 := 0
-              }
-	      if iszero(eq(n, 9)) {
-                len := n
-              }
+	    let _on := on
+	    if iszero(_on){
+	      on := 1
+	    }
+	    if and(eq(_on, 1), iszero(n)) {
+	        on := 4
+	    }
+    	    if eq(_on, 4) {
+	        on := 5
+		len := n
+	    }	
+	    if and(eq(_on, 1), gt(n, 0)) {
+	      if eq(n, 9) {
+		len := 8
+	        on := 3       
+	      }
+	      if and(iszero(iszero(n)), iszero(eq(n,9))) {
+	        on := 2
+		len := n  
+	      }
               cur := 0
-            }
-	    if eq(_on, 1) {
-	      num := add(num, mul(n, exp(10, sub(sub(len, cur), 1))))
-              cur := add(cur, 1)
-              if eq(cur, len) {
-                prev := mul(prev, exp(10, len))
-                if eq(is9, 1) {
-                  prev := add(prev, num)
+	    }
+	    if gt(_on, 1) {
+	      if eq(_on, 5){
+		mstore(add(_json0, ji), n)
+		len := sub(len, 1)
+		ji := add(ji, 0x20)
+		if iszero(len) {
+		  cur := 0
+		  on := 1
+		  len := 0
+		  num := 0
+		}
+	      }
+	      if iszero(eq(_on, 5)){
+                num := add(num, mul(n, exp(10, sub(sub(len, cur), 1))))
+                cur := add(cur, 1)
+                if eq(cur, len) {
+                  prev := mul(prev, exp(10, len))
+                  if eq(_on, 3) {
+                    prev := add(prev, num)
+                  }
+	          if iszero(eq(_on, 3)) {
+                    num := add(num, prev)
+                    prev := 0
+		    mstore(add(_json0, ji), num)
+                    ji := add(ji, 0x20)
+                  }
+                  cur := 0
+                  on := 1
+                  len := 0
+                  num := 0
                 }
-	        if iszero(eq(is9, 1)) {
-                  num := add(num, prev)
-                  prev := 0
-		  mstore(add(_json0, ji), num)
-                  ji := add(ji, 0x20)
-                }
-                cur := 0
-                on := 0
-                len := 0
-                num := 0
-                is9 := 0
-              }
+	      }
             }
 	    x := sub(x, mul(exp(10, sub(p, 1)), n))
 	    p := sub(p, 1)

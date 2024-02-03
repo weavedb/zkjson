@@ -15,22 +15,42 @@ function g(json, _c){
     }
     var prev = 0;
     for(var j = _c[2]; j < _c[1]; j++){
+        var is = json[j] > 0 ? 1 : 0;
+        var is2 = json[j] < 0 ? 1 : 0;
+        var is3 = 100 > 0 ? 1 : 0;
+        var d = digits(json[j]);
+
         if(json[j] > 0){
             var p = _c[4] == 0 ? digits(json[j]) : _c[4];
             var x = _c[4] == 0 ? json[j] : _c[3];
-            var on = 0;
             var cur = 0;
-            var len = 0;
             var num = 0;
             var is9 = 0;
+            var first = _c[4] == 0 ? 1 : 0;
+            var zero = _c[4] == 0 ? 0 : _c[7];
+            var on = zero == 1 ? 1 : 0;
+            var len = _c[4] == 0 ? 0 : _c[8];
             while(p > 0){
                 var n = x \ 10 ** (p - 1);
-                if(on == 0 && n > 0){
-                    on = 1;
-                    if(n == 9){
+                if(first == 1){
+                    first = 0;
+                }else if(on == 0){
+                    if(n == 0){
+                        if(zero == 0){
+                            zero = 1;
+                        }else{
+                            return [0, _c[1], 0, 0, 0, 1, _c[6], 0, 0];
+                        }
+                    }else if(zero == 1){
+                        on = 1;
+                        len = n;
+                        is9 = 0;
+                    }else if(n == 9){
+                        on = 1;
                         len = 8;
                         is9 = 1;
                     }else{
+                        on = 1;
                         len = n;
                         is9 = 0;
                     }
@@ -38,13 +58,29 @@ function g(json, _c){
                 }else if(on == 1){ 
                     num += n * 10 ** (len - cur - 1);
                     cur++;
-                    if(cur == len){
+                    if(zero == 1){
+                        num = n;
+                        len--;
+                        x -= 10 ** (p - 1) * n;
+                        p--;
+                        var done = 0;
+                        if(p == 0) {
+                            j++;
+                            if(_c[1] == j || json[j] == 0){
+                                x = 0;
+                                done = 1;
+                            }else{
+                                x = json[j];
+                            }
+                        }
+                        if(len == 0) zero = 0;
+                        return [num, _c[1], j, x, p, done, _c[6], zero, len];
+                    }else if(cur == len){
                         prev *= 10 ** len;
                         if(is9 == 1){
                             prev += num;
                         }else{
                             num += prev;
-                            prev = 0;
                             x -= 10 ** (p - 1) * n;
                             p--;
                             var done = 0;
@@ -57,78 +93,25 @@ function g(json, _c){
                                  x = json[j];
                                 }
                             }
-                            return [num, _c[1], j, x, p, done, _c[6], _c[7], _c[8]];
+                            return [num, _c[1], j, x, p, done, _c[6], zero, len];
                         }
                         cur = 0;
                         on = 0;
                         len = 0;
                         num = 0;
                         is9 = 0;
+                        zero = 0;
                     }
                 }
                 x -= 10 ** (p - 1) * n;
                 p--;
             }
         }else{
-            return [0, _c[1], 0, 0, 0, 1, _c[6], _c[7], _c[8]];
+            return [0, _c[1], 0, 0, 0, 1, _c[6], 0, 0];
         }
     }
-    return [0, _c[1], 0, 0, 0, 1, _c[6], _c[7], _c[8]];
+    return [0, _c[1], 0, 0, 0, 1, _c[6], 0, 0];
 }
-
-function toArr(size_json, json, _len, _json){
-    var ji = 0;
-    var prev = 0;
-    for(var j = 0; j < size_json; j++){
-        if(json[j] > 0){
-            var p = digits(json[j]);
-            var x = json[j];
-            var on = 0;
-            var cur = 0;
-            var len = 0;
-            var num = 0;
-            var is9 = 0;
-            while(p > 0){
-                var n = x \ 10 ** (p - 1);
-                if(on == 0 && n > 0){
-                    on = 1;
-                    if(n == 9){
-                        len = 8;
-                        is9 = 1;
-                    }else{
-                        len = n;
-                        is9 = 0;
-                    }
-                    cur = 0;
-                }else if(on == 1){ 
-                    num += n * 10 ** (len - cur - 1);
-                    cur++;
-                    if(cur == len){
-                        prev *= 10 ** len;
-                        if(is9 == 1){
-                            prev += num;
-                        }else{
-                            num += prev;
-                            prev = 0;
-                            _json[ji + _len] = num;
-                            ji++;
-                        }
-                        cur = 0;
-                        on = 0;
-                        len = 0;
-                        num = 0;
-                        is9 = 0;
-                    }
-                }
-                x -= 10 ** (p - 1) * n;
-                p--;
-            }
-        }
-    }
-    if(_len == 1) _json[0] = ji;
-    return _json;
-}
-
 
 function getLen(size_json, json){
     var ji = 0;
@@ -142,22 +125,48 @@ function getLen(size_json, json){
             var len = 0;
             var num = 0;
             var is9 = 0;
+            var first = 1;
+            var zero = 0;
             while(p > 0){
                 var n = x \ 10 ** (p - 1);
-                if(on == 0 && n > 0){
-                    on = 1;
-                    if(n == 9){
+                if(first == 1){
+                    first = 0;
+                }else if(on == 0){
+                    if (n == 0){
+                        if(zero == 0){
+                            zero = 1;
+                        }else{
+                            return ji;
+                        }
+                    } else if(zero == 1){
+                        on = 1;
+                        len = n;
+                        is9 = 0;
+                    } else if(n == 9){
                         len = 8;
                         is9 = 1;
+                        on = 1;
                     }else{
                         len = n;
                         is9 = 0;
+                        on = 1;                        
                     }
                     cur = 0;
                 }else if(on == 1){ 
                     num += n * 10 ** (len - cur - 1);
                     cur++;
-                    if(cur == len){
+                    if(zero == 1){
+                        num = n;
+                        len--;
+                        ji++;
+                        if(len == 0){
+                            zero = 0;
+                            cur = 0;
+                            on = 0;
+                            num = 0;
+                            is9 = 0;                        
+                        }
+                    }else if(cur == len){
                         prev *= 10 ** len;
                         if(is9 == 1){
                             prev += num;
@@ -183,7 +192,7 @@ function getLen(size_json, json){
     return ji;
 }
 
-function checkPartialMatch(_exists, size_path, size_val, path, _path_start, pi, val, _val_start, vi, json){
+function checkPartialMatch(_exists, size_path, size_val, path, _path_start, pi, val, _val_start, vi, json, partial ,count){
     var path_len = getLen(size_path, path);
     var pi3 = 0;
     var pi4 = 0;
@@ -211,28 +220,35 @@ function checkPartialMatch(_exists, size_path, size_val, path, _path_start, pi, 
         _val3_ = g(json, _val3_);
         pi4++;
     }
-
     if(path_diff > 0){
         var val_match = 1;
-        var _val2_[9] = [0, size_val, 0,0,0,0,0,0,0];
         var i5 = 0;
-        while(_val2_[5] == 0 || i5 < 2 + pi3 + pi4){
-            _val2_ = g(val, _val2_);
+        var done = 0;
+        while((partial[5] == 0 || i5 < 2 + pi3 + pi4)  && done == 0){
             var pval = i5 == 0 ? 4 : 0;
             if(i5 == 1) pval = path_diff;
-            if(i5 > 1 && i5 < 2 + pi3){
+            if(i5 <= 1){
+                if(count == 1) partial = g(val, partial);
+            }if(i5 > 1 && i5 < 2 + pi3){
+                partial = g(val, partial);
                 pval = partial_path[0];
                 partial_path = g(json, partial_path);
+                if(pval != partial[0]) val_match = 0;
             }else if(i5 >= 2 + pi3 && i5 < 2 + pi3 + pi4){
                 pval = partial_val[0];
+                if(pval != partial[0]) val_match = 0;
+                partial = g(val, partial);
                 partial_val = g(json, partial_val);
             }
-            if(pval != _val2_[0]) val_match = 0;
+            if(i5 == 2 + pi3 - 1) partial = g(val, partial);
+            if(i5 == 2 + pi3 + pi4 - 1) done = 1;
             i5++;
         }
         if(val_match == 1) _exists = 1;
     }
-    return _exists;
+    partial[6] = _exists;
+    if(_exists && partial[0]) partial[6] = 2;
+    return partial;
 }
 
 function getPath(json, _json_, pi){
