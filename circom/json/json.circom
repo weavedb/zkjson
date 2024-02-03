@@ -14,18 +14,22 @@ template JSON (size_json, size_path, size_val) {
     var _json_[9] = [0, size_json, 0,0,0,0,0,0,0];
  
     var contains[101];
-
+    var nomatch = 0;
     var _val_[9] = [0, size_val, 0,0,0,0,0,0,0];
     _val_ = g(val, _val_);
     var op = _val_[0];
     var _exists = op == 21 ? 1 : 0;
+    var partial[9] = [0, size_val, 0,0,0,0,0,0,0];
+    var count = 0;
+
+    var _path_[9] = [0, size_path, 0,0,0,0,0,0,0];
 
     while(_json_[5] == 0){ 
         _json_ = g(json, _json_);
+
         var _path_start[9] = _json_;
         _json_ = getPath(json, _json_, 1);
         var pi = _json_[6];
-
          _json_ = g(json, _json_);
         var _val_start[9] = _json_;
         _json_ = getVal(json, _json_);
@@ -34,7 +38,6 @@ template JSON (size_json, size_path, size_val) {
         var match[2] = checkPathMatch(json, path, _path_start, size_path, pi);
         var path_match = match[0];
         var path_partial_match = match[1];
-
         var plus = op >= 10 ? 1 : 0;
         if(path_match == 1){
             var _val_match = 1;
@@ -54,10 +57,13 @@ template JSON (size_json, size_path, size_val) {
             if(op == 19 || op == 20 || op == 21){
                 contains = checkArrayContains(_exists, op, _val_, _val_start, vi, val, json, contains);
                 _exists = contains[100];
-            }else if(op == 18){
+            } else if (op == 18){
                 _exists = checkContains(_exists, size_val, val, _val_start, vi, json, plus);
-             } else {
-                _exists = checkPartialMatch(_exists, size_path, size_val, path, _path_start, pi, val, _val_start, vi, json);
+            } else {
+                count++;
+                partial = checkPartialMatch(_exists, size_path, size_val, path, _path_start, pi, val, _val_start, vi, json, partial, count);
+                if(partial[6] == 0) nomatch = 1;
+                if(partial[6] == 2 && nomatch == 0) _exists = 1;
             }
         }
      }

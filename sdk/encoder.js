@@ -395,7 +395,7 @@ function decode(arr) {
   return json
 }
 
-const str2id = str => {
+const toIndex = str => {
   return (
     "1" +
     str
@@ -405,7 +405,7 @@ const str2id = str => {
   )
 }
 
-const id2str = id => {
+const fromIndex = id => {
   let _id = id.toString().split("")
   _id.shift()
   return splitEvery(2, _id)
@@ -415,7 +415,7 @@ const id2str = id => {
     .join("")
 }
 
-function val2str(arr) {
+function toSignal(arr) {
   const _arr = flatten(
     arr.map(n => {
       let str = splitEvery(8, n.toString().split(""))
@@ -428,30 +428,118 @@ function val2str(arr) {
       return str
     })
   )
-  let arrs = []
-  let len = 0
-  let str = ""
+  let _arr2 = []
+  let one = 0
+  let i = 0
+  let start = null
   for (let v of _arr) {
-    if (len + v.length > 76) {
-      len = 0
-      arrs.push(str)
-      str = ""
+    _arr2.push(v)
+    if (v.length - 1 === 1) {
+      if (start === null) start = i
+      one += v.length - 1
+      if (one === 9) {
+        _arr2[start] = `0${one}${_arr2[start][1]}`
+        for (let i2 = start + 1; i2 <= i; i2++) _arr2[i2] = `${_arr2[i2][1]}`
+        one = 0
+        start = null
+      }
+    } else {
+      if (one > 2) {
+        _arr2[start] = `0${one}${_arr2[start][1]}`
+        for (let i2 = start + 1; i2 < i; i2++) _arr2[i2] = `${_arr2[i2][1]}`
+      }
+      one = 0
+      start = null
     }
-    len += v.length
-    str += v
+    i++
   }
-  if (str !== "") arrs.push(str)
-  return arrs
+  if (one > 2) {
+    _arr2[start] = `0${one}${_arr2[start][1]}`
+    for (let i2 = start + 1; i2 <= i - 1; i2++) _arr2[i2] = `${_arr2[i2][1]}`
+  }
+  let _arr3 = []
+  let chain = null
+  let cur = 0
+  let num = ""
+  for (let v of _arr2) {
+    if (chain === null && +v[0] === 0) {
+      chain = +v[1]
+      cur = 1
+      num = v
+    } else if (chain !== null) {
+      num += v
+      cur++
+      if (chain == cur) {
+        _arr3.push(num)
+        chain = null
+        num = ""
+        cur = 0
+      }
+    } else {
+      _arr3.push(v)
+    }
+  }
+  if (chain !== null) _arr3.push(num)
+  let arrs2 = []
+  let len2 = 0
+  let str2 = ""
+  for (let v of _arr3) {
+    if (len2 + v.length > 75) {
+      arrs2.push("1" + str2)
+      if (+v[0] === 0) {
+        let len3 = 75 - len2
+        if (len3 == 2 || len3 == 3) {
+          arrs2[arrs2.length - 1] += `1${v[2]}`
+          let new_len = +v[1] - 1
+          if (new_len === 2) {
+            v = `1${v[3]}1${v[4]}`
+          } else {
+            v = `0${new_len}${v.slice(3)}`
+          }
+        } else if (len3 > 3) {
+          let new_len = +v[1] - 2
+          let old_len = 2
+          if (len3 === 4) {
+            arrs2[arrs2.length - 1] += `1${v[2]}1${v[3]}`
+          } else {
+            old_len = len3 - 2
+            new_len = +v[1] - old_len
+            arrs2[arrs2.length - 1] += `0${old_len}${v.slice(2, 2 + old_len)}`
+          }
+          if (new_len === 1) {
+            v = `1${v[old_len + 2]}`
+          } else if (new_len === 2) {
+            v = `1${v[old_len + 2]}1${v[old_len + 3]}`
+          } else {
+            v = `0${new_len}${v.slice(old_len + 2)}`
+          }
+        }
+      }
+      len2 = 0
+      str2 = ""
+    }
+    len2 += v.length
+    str2 += v
+  }
+  if (str2 !== "") arrs2.push("1" + str2)
+  return arrs2
 }
 
-function str2val(arr) {
+function fromSignal(arr) {
   let _arr = []
   let prev = ""
-  for (const s of arr) {
+  for (let s of arr) {
+    s = s.slice(1)
     let str = s.split("")
     while (str.length > 0) {
       const len = +str.shift()
-      if (len === 9) {
+      if (len === 0) {
+        const len2 = +str.shift()
+        for (let i2 = 0; i2 < len2; i2++) {
+          _arr.push(+str[i2])
+        }
+        str = str.slice(len2)
+      } else if (len === 9) {
         prev += str.slice(0, 8).join("")
         str = str.slice(8)
       } else {
@@ -464,11 +552,6 @@ function str2val(arr) {
   }
   return _arr
 }
-
-const toSignal = val2str
-const fromSignal = str2val
-const toIndex = str2id
-const fromIndex = id2str
 
 const path = p => toSignal(encodePath(p))
 const val = v => toSignal(encodeVal(v))
@@ -484,7 +567,7 @@ function encodeQuery(v) {
 function decodeQuery(v) {
   const op = opMap[v[0]]
   if (isNil(op)) throw Error("op doens't exist")
-  return [op, ...decodeVal(v.slice(1))]
+  return [op, decodeVal(v.slice(1))]
 }
 
 module.exports = {
@@ -497,10 +580,6 @@ module.exports = {
   pad,
   _encode,
   flattenPath,
-  str2id,
-  val2str,
-  str2val,
-  id2str,
   toSignal,
   fromSignal,
   toIndex,

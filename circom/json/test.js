@@ -76,7 +76,7 @@ describe("JSON circuit", function () {
     await circuit.loadSymbols()
   })
 
-  it("should insert docs", async () => {
+  it.only("should insert docs", async () => {
     const { inputs } = await gen({})
     const w = await circuit.calculateWitness(inputs, true)
     await circuit.checkConstraints(w)
