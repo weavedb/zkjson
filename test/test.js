@@ -1,4 +1,6 @@
 const {
+  path,
+  val,
   toSignal,
   fromSignal,
   pad,
@@ -31,7 +33,15 @@ describe("zkJSON", () => {
     }
   })
 
-  it("should encode/decode JSON", () => {
+  it.only("should encode/decode JSON", () => {
+    const enc = encode({
+      a: 1,
+      c: false,
+      b: { e: null, d: "four" },
+      f: 3.14,
+      ghi: [5, 6, 7],
+    })
+    console.log(toSignal(encode({ a: 1 })))
     let jsons = [
       null,
       false,
