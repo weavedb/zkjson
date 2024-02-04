@@ -251,7 +251,27 @@ So to convert the encoded array to a circuit signal, it becomes
 ]
 ```
 
-What's surprising here is that the entire JSON is compressed into just 3 integers in the end. It's just `uint[3]` in Solidity. This indeed is extreme efficiency! The zkJSON circuit by default allows up to 256 integers (256 * 76 digits), which can contain a huge JSON data size, and Solidity handles it efficiently with a dynamic array `uint[]`, which is optimized with [Yul](https://docs.soliditylang.org/en/latest/yul.html) assembly language. What's even better is that the only bits passed to Solidity is the tiny bits of the value at the queried path, and not the entire JSON bits. So if you are querying the value at the path `a`, `1111297`(path: "a") and `12111011`(value: 1) are the only digits passed to Solidity as public signals of zkp.
+If you observe carefully, there's a room for more compression. Most digits are a single digit with a prefix of `1`, so we can remove the prefixes and join the succession of single digits, and we can use `0` and the number of single digits in the succession. For instance `121110111211` becomes `06210121`, and we save 4 digits.
+
+We will prefix each integer with `1`, since now `0` could come at the beginning and it disappears without the prefix. So
+
+`032123314121331033104310509000210523310331043105090012106233103310431051010` 
+
+will be prefixed with `1` and become
+
+`1032123314121331033104310509000210523310331043105090012106233103310431051010`
+
+otherwise the first `0` will disapper when being evaluated as a number.
+
+```js
+[
+  1111129706210121298113100131431023111311731141211298113101030112990410113102,
+  1032123314121331033104310509000210523310331043105090012106233103310431051010,
+  10522107
+]
+```
+
+Now it's much shorter than before. What's surprising here is that the entire JSON is compressed into just 3 integers in the end (well, almost 2 integers). It's just `uint[3]` in Solidity. This indeed is extreme efficiency! The zkJSON circuit by default allows up to 256 integers (256 * 76 safe digits), which can contain a huge JSON data size, and Solidity handles it efficiently with a dynamic array `uint[]`, which is optimized with [Yul](https://docs.soliditylang.org/en/latest/yul.html) assembly language. What's even better is that the only bits passed to Solidity is the tiny bits of the value at the queried path, and not the entire JSON bits. So if you are querying the value at the path `a`, `1111297`(path: "a") and `1042101`(value: 1) are the only digits passed to Solidity as public signals of zkp.
 
 Now we can build a circuit to handle these digits and prove the value of a selected path without revealing the entire JSON. It's easy to explain the encoding, but harder to write the actual encoder/decoder and a circuit to properly process this encoding. But fortunately, we already did write them!
 
@@ -271,7 +291,7 @@ const { encode, decode, toSignal, fromSignal } = require("zkjson")
 
 const json = { a : 1 }
 const encoded = encode(json) // [ 1, 1, 97, 2, 1, 0,  1 ]
-const signal = toSignal(encoded) // [ '111129712111011' ]
+const signal = toSignal(encoded) // [ '11111297042101' ]
 const encoded2 = fromSignal(signal) // [ 1, 1, 97, 2, 1, 0, 1 ]
 const decoded = decode(encoded2) // { a : 1 }
 ```
