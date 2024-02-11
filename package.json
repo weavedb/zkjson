@@ -13,6 +13,7 @@
     "circomlib": "^2.0.5",
     "circomlibjs": "^0.1.7",
     "mocha": "^10.2.0",
+    "multiformats": "^13.0.1",
     "ramda": "^0.29.1",
     "uuid": "^9.0.1",
     "yargs": "^17.7.2"
