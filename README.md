@@ -251,7 +251,7 @@ So to convert the encoded array to a circuit signal, it becomes
 ]
 ```
 
-If you observe carefully, there's a room for more compression. Most digits are a single digit with a prefix of `1`, so we can remove the prefixes and join the succession of single digits, and we can use `0` and the number of single digits in the succession. For instance `121110111211` becomes `06210121`, and we save 4 digits.
+If you observe carefully, there's room for more compression. Most digits are a single digit with a prefix of `1`, so we can remove the prefixes and join the succession of single digits, and we can use `0` and the number of single digits in the succession. For instance `121110111211` becomes `06210121`, and we save 4 digits.
 
 We will prefix each integer with `1`, since now `0` could come at the beginning and it disappears without the prefix. So
 
@@ -533,4 +533,5 @@ WeaveChain will also be a PoS network to manage rollup nodes and [IBC](https://c
 #### Other Links
 
 - [zkJSON Docs](./docs)
+- [WeaveDB Litepaper](https://github.com/weavedb/weavedb)
 - [WeaveDB Links](https://linktr.ee/weavedb)
