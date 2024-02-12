@@ -86,13 +86,11 @@ const popArray = (json, size, digit) => {
 const length = (json, size) => {
   var _len = 0
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
-  var nonzero = 0
   while (c[5] == 0) {
     c = next(json, c)
-    if (c[0] > 0) nonzero = 1
     _len++
   }
-  if (nonzero) {
+  if (json[0] != 0) {
     return _len
   } else {
     return 0
@@ -234,6 +232,18 @@ const unshift = (json, size, digit, num) => {
   return _arr
 }
 
+const concat = (json, json2, size, digit) => {
+  var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
+  var i = 0
+  if (json2[0] !== 0) {
+    while (c[5] == 0) {
+      c = next(json2, c)
+      json = push(json, size, digit, c[0])
+      i++
+    }
+  }
+  return json
+}
 const pop = (json, size, overflow = 3) => {
   var l = 0
   var ll = 0
@@ -533,5 +543,6 @@ module.exports = {
   mul,
   arrGet,
   remove,
-  popArray
+  popArray,
+  concat
 }
