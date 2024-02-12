@@ -59,11 +59,10 @@ describe("zkJSON", () => {
   })
 
   it("should parse", () => {
-    let len = 10
-    const j = { ab: 3}
+    let len = 100
+    const j = [1]
     const uint = new TextEncoder().encode(JSON.stringify(j))
 
-    //console.log(enc)
     let json = arr(len)
     for (let v of Array.from(uint)) {
       json = push(json, len, 9, v)
@@ -72,7 +71,7 @@ describe("zkJSON", () => {
     expect(decode(toArray(enc, len))).to.eql(j)
   })
   
-  it.only("should handle arrays", () => {
+  it("should handle arrays", () => {
     let json = arr(5)
     for (let i = 1; i <= 5; i++) {
       json = push(json, 5, 9, i)
