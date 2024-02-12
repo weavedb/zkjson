@@ -26,6 +26,63 @@ const toArray = (json, size) => {
   return j
 }
 
+
+const arrPush = (json, size, digit, index, val) => {
+  var len = get(json, size, 0)
+  var _sum = sum(json, size, digit, 1, index + 2)
+  var at = _sum + 1 + len
+  json = insert(json, size, digit, at, val)
+  var alen = get(json, size, index + 1)
+  json = replace(json, size, digit, index + 1, alen + 1)
+  return json
+}
+
+const arrGet = (json, size, digit, index, index2) => {
+  var len = get(json, size, 0)
+  var _sum = sum(json, size, digit, 1, index + 1)
+  var at = _sum + 1 + len + index2
+  return get(json, size, at)
+}
+
+const pushArray = (json, size, digit, _arr, asize) => {
+  var jlen = length(json,size)
+  var alen = 0
+  if(jlen == 0) {
+    json = push(json, size, digit, 1)
+  }else{
+    alen = get(json, size, 0)
+    json = replace(json, size, digit, 0, alen + 1)
+  }
+  var len = length(_arr,size)
+  json = insert(json, size, digit, alen + 1, len)
+  var c = [0, asize, 0, 0, 0, 0, 0, 0, 0]
+  while (c[5] == 0) {
+    c = next(_arr, c)
+    json = push(json, size, digit, c[0])
+  }
+  return json
+}
+
+const popArray = (json, size, digit) => {
+  var jlen = length(json,size)
+  var alen = 0
+  if(jlen == 0) {
+    throw Error()
+  }else{
+    alen = get(json, size, 0)
+  }
+  if(alen == 1) return []
+  var len = get(json, size, alen)
+  json = replace(json, size, digit, 0, alen - 1)
+  var _sum = sum(json, size, digit, 1, alen)
+  var start = alen + 1 +_sum
+  var end = start + len + 1
+  json = remove(json, size, digit, start,  end)
+  json = remove(json, size, digit, alen,  alen + 1)
+  return json
+}
+
+
 const length = (json, size) => {
   var _len = 0
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
@@ -40,6 +97,42 @@ const length = (json, size) => {
   } else {
     return 0
   }
+}
+
+const sum = (json, size, digit, start, end) =>{
+  var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
+  var _sum = 0
+  var i = 0
+  while (c[5] == 0) {
+    c = next(json, c)
+    if (i >= start && i < end) _sum += c[0]
+    i++
+  }
+  return _sum
+}
+
+const mul = (json, size, digit, start, end) =>{
+  var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
+  var _mul = 0
+  var i = 0
+  while (c[5] == 0) {
+    c = next(json, c)
+    if (i >= start && i < end) _mul *= c[0]
+    i++
+  }
+  return _mul
+}
+
+const remove = (json, size, digit, start, end) =>{
+  var _arr = arr(size)
+  var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
+  var i = 0
+  while (c[5] == 0) {
+    c = next(json, c)
+    if (i < start || i >= end) push(_arr, size, digit, c[0])
+    i++
+  }
+  return _arr
 }
 
 const slice = (json, size, digit, start, end) =>{
@@ -421,5 +514,24 @@ const next = (json, c) => {
 }
 
 module.exports = {
-  next, arr, push, length, last, pop, toArray, shift, unshift, slice, insert, replace,get
+  next,
+  arr,
+  push,
+  length,
+  last,
+  pop,
+  toArray,
+  shift,
+  unshift,
+  slice,
+  insert,
+  replace,
+  get,
+  pushArray,
+  arrPush,
+  sum,
+  mul,
+  arrGet,
+  remove,
+  popArray
 }
