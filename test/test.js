@@ -26,7 +26,12 @@ const {
   arr,
   last,
   replace,
-  get
+  get,
+  pushArray,
+  arrPush,
+  arrGet,
+  popArray,
+  remove
 } = require("../sdk/uint")
 const { parse } = require("../sdk/parse")
 const { expect } = require("chai")
@@ -67,8 +72,23 @@ describe("zkJSON", () => {
     expect(decode(toArray(enc, len))).to.eql(j)
   })
   
-  it("should handle arrays", () => {
-    
+  it.only("should handle arrays", () => {
+    let json = arr(5)
+    for (let i = 1; i <= 5; i++) {
+      json = push(json, 5, 9, i)
+    }
+    let json2 = arr(3)
+    for (let i = 1; i <= 3; i++) {
+      json2 = push(json2, 3, 9, i)
+    }
+
+    let ajson = arr(10)
+    ajson = pushArray(ajson, 10, 9, json, 5)
+    ajson = pushArray(ajson, 10, 9, json2, 3)
+    ajson = arrPush(ajson, 10, 9, 1, 10);
+    expect(arrGet(ajson,10,9,1,3)).to.eql(10)
+    ajson = popArray(ajson, 10, 9);
+    expect(toArray(ajson,9)).to.eql([1,5,1,2,3,4,5])
   })
   
   it("should push/pop/shift/unshift", () => {
