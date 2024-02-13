@@ -8,7 +8,7 @@ function digits(x) {
   return p
 }
 
-const arr = row => {
+function arr(row) {
   var _arr = []
   for (var i = 0; i < row; i++) {
     _arr.push(0)
@@ -16,7 +16,7 @@ const arr = row => {
   return _arr
 }
 
-const toArray = (json, size) => {
+function toArray(json, size) {
   var j = []
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   while (c[5] == 0) {
@@ -26,8 +26,7 @@ const toArray = (json, size) => {
   return j
 }
 
-
-const arrPush = (json, size, digit, index, val) => {
+function arrPush(json, size, digit, index, val) {
   var len = get(json, size, 0)
   var _sum = sum(json, size, digit, 1, index + 2)
   var at = _sum + 1 + len
@@ -37,23 +36,23 @@ const arrPush = (json, size, digit, index, val) => {
   return json
 }
 
-const arrGet = (json, size, digit, index, index2) => {
+function arrGet(json, size, digit, index, index2) {
   var len = get(json, size, 0)
   var _sum = sum(json, size, digit, 1, index + 1)
   var at = _sum + 1 + len + index2
   return get(json, size, at)
 }
 
-const pushArray = (json, size, digit, _arr, asize) => {
-  var jlen = length(json,size)
+function pushArray(json, size, digit, _arr, asize) {
+  var jlen = length(json, size)
   var alen = 0
-  if(jlen == 0) {
+  if (jlen == 0) {
     json = push(json, size, digit, 1)
-  }else{
+  } else {
     alen = get(json, size, 0)
     json = replace(json, size, digit, 0, alen + 1)
   }
-  var len = length(_arr,size)
+  var len = length(_arr, size)
   json = insert(json, size, digit, alen + 1, len)
   var c = [0, asize, 0, 0, 0, 0, 0, 0, 0]
   while (c[5] == 0) {
@@ -63,27 +62,26 @@ const pushArray = (json, size, digit, _arr, asize) => {
   return json
 }
 
-const popArray = (json, size, digit) => {
-  var jlen = length(json,size)
+function popArray(json, size, digit) {
+  var jlen = length(json, size)
   var alen = 0
-  if(jlen == 0) {
+  if (jlen == 0) {
     throw Error()
-  }else{
+  } else {
     alen = get(json, size, 0)
   }
-  if(alen == 1) return []
+  if (alen == 1) return []
   var len = get(json, size, alen)
   json = replace(json, size, digit, 0, alen - 1)
   var _sum = sum(json, size, digit, 1, alen)
-  var start = alen + 1 +_sum
+  var start = alen + 1 + _sum
   var end = start + len + 1
-  json = remove(json, size, digit, start,  end)
-  json = remove(json, size, digit, alen,  alen + 1)
+  json = remove(json, size, digit, start, end)
+  json = remove(json, size, digit, alen, alen + 1)
   return json
 }
 
-
-const length = (json, size) => {
+function length(json, size) {
   var _len = 0
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   while (c[5] == 0) {
@@ -97,7 +95,7 @@ const length = (json, size) => {
   }
 }
 
-const sum = (json, size, digit, start, end) =>{
+function sum(json, size, digit, start, end) {
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   var _sum = 0
   var i = 0
@@ -109,7 +107,7 @@ const sum = (json, size, digit, start, end) =>{
   return _sum
 }
 
-const mul = (json, size, digit, start, end) =>{
+function mul(json, size, digit, start, end) {
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   var _mul = 0
   var i = 0
@@ -121,19 +119,21 @@ const mul = (json, size, digit, start, end) =>{
   return _mul
 }
 
-const remove = (json, size, digit, start, end) =>{
+function remove(json, size, digit, start, end) {
   var _arr = arr(size)
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   var i = 0
   while (c[5] == 0) {
     c = next(json, c)
-    if (i < start || i >= end) push(_arr, size, digit, c[0])
+    if (i < start || i >= end) {
+      _arr = push(_arr, size, digit, c[0])
+    }
     i++
   }
   return _arr
 }
 
-const slice = (json, size, digit, start, end) =>{
+function slice(json, size, digit, start, end) {
   var _arr = arr(size)
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   var i = 0
@@ -145,50 +145,50 @@ const slice = (json, size, digit, start, end) =>{
   return _arr
 }
 
-const get = (json,size,index) =>{
+function get(json, size, index) {
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   var i = 0
   while (c[5] == 0) {
     c = next(json, c)
-    if(i == index) return c[0]
+    if (i == index) return c[0]
     i++
   }
   throw Error()
 }
 
-const insert = (json, size, digit, at, val) =>{
+function insert(json, size, digit, at, val) {
   var _arr = arr(size)
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   var i = 0
-  if(at == 0) {
+  if (at == 0) {
     _arr = push(_arr, size, digit, val)
   }
   while (c[5] == 0) {
     c = next(json, c)
-    push(_arr, size, digit, c[0])
+    _arr = push(_arr, size, digit, c[0])
     i++
-    if(at == i) push(_arr, size, digit, val)
+    if (at == i) _arr = push(_arr, size, digit, val)
   }
   return _arr
 }
 
-const replace = (json, size, digit, at, val) =>{
+function replace(json, size, digit, at, val) {
   var _arr = arr(size)
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   var i = 0
   while (c[5] == 0) {
     c = next(json, c)
-    if(at == i) {
+    if (at == i) {
       _arr = push(_arr, size, digit, val)
-    }else{
-      push(_arr, size, digit, c[0])
+    } else {
+      _arr = push(_arr, size, digit, c[0])
     }
     i++
   }
   return _arr
 }
 
-const last = (json, size) => {
+function last(json, size) {
   var val = 0
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   while (c[5] == 0) {
@@ -197,7 +197,8 @@ const last = (json, size) => {
   }
   return val
 }
-const lastRow = (json, size) => {
+
+function lastRow(json, size) {
   var v = 0
   for (var j = 0; j < size; j++) {
     if (json[j] != 0) v = j
@@ -205,7 +206,7 @@ const lastRow = (json, size) => {
   return v
 }
 
-const shift = (json, size, digit) => {
+function shift(json, size, digit) {
   var _arr = arr(size)
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   var i = 0
@@ -217,12 +218,12 @@ const shift = (json, size, digit) => {
   return _arr
 }
 
-const unshift = (json, size, digit, num) => {
+function unshift(json, size, digit, num) {
   var _arr = arr(size)
   push(_arr, size, digit, num)
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   var i = 0
-  if (json[0] !== 0) {
+  if (json[0] != 0) {
     while (c[5] == 0) {
       c = next(json, c)
       push(_arr, size, digit, c[0])
@@ -232,10 +233,10 @@ const unshift = (json, size, digit, num) => {
   return _arr
 }
 
-const concat = (json, json2, size, digit) => {
+function concat(json, json2, size, digit) {
   var c = [0, size, 0, 0, 0, 0, 0, 0, 0]
   var i = 0
-  if (json2[0] !== 0) {
+  if (json2[0] != 0) {
     while (c[5] == 0) {
       c = next(json2, c)
       json = push(json, size, digit, c[0])
@@ -244,7 +245,8 @@ const concat = (json, json2, size, digit) => {
   }
   return json
 }
-const pop = (json, size, overflow = 3) => {
+
+function pop(json, size, overflow = 3) {
   var l = 0
   var ll = 0
   var lnum = 0
@@ -323,7 +325,7 @@ const pop = (json, size, overflow = 3) => {
     }
   } else if (series != 0) {
     if (series == 3) {
-      json[l] = (json[l] / 10 ** (d - ll)) >> 0
+      json[l] = (json[l] / 10 ** (_d - ll)) >> 0
       json[l] = json[l] * 10 + 1
       var n = (snum / 10 ** 2) >> 0
       json[l] = json[l] * 10 + n
@@ -331,7 +333,7 @@ const pop = (json, size, overflow = 3) => {
       var n2 = ((snum / 10) >> 0) - n * 10
       json[l] = json[l] * 10 + n2
     } else {
-      json[l] = (json[l] / 10 ** (d - ll - 1)) >> 0
+      json[l] = (json[l] / 10 ** (_d - ll - 1)) >> 0
       json[l] = json[l] * 10 + (series - 1)
       snum = (snum / 10) >> 0
       json[l] = json[l] * 10 ** (series - 1) + snum
@@ -344,7 +346,7 @@ const pop = (json, size, overflow = 3) => {
   return json
 }
 
-const push = (json, size, digit, c, overflow = 3) => {
+function push(json, size, digit, c, overflow = 3) {
   var i4 = 0
   var init = 0
   while (c > 0 || init == 0) {
@@ -376,7 +378,7 @@ const push = (json, size, digit, c, overflow = 3) => {
           if (len == 1) {
             if (ones == 0) one = i2
             ones++
-          } else if (len !== 0) {
+          } else if (len != 0) {
             ones = 0
             nums = 0
           } else {
@@ -433,7 +435,7 @@ const push = (json, size, digit, c, overflow = 3) => {
   return json
 }
 
-const next = (json, c) => {
+function next(json, c) {
   if (c[5] == 1) {
     return [0, c[1], 0, 0, 0, 1, c[6], c[7], c[8]]
   }
@@ -544,5 +546,5 @@ module.exports = {
   arrGet,
   remove,
   popArray,
-  concat
+  concat,
 }
