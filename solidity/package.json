@@ -19,6 +19,7 @@
     "typescript": "^5.3.3"
   },
   "dependencies": {
+    "@openzeppelin/contracts": "^5.0.1",
     "snarkjs": "^0.7.2"
   },
   "license": "MIT"

@@ -26,7 +26,7 @@ let {
   circuit: {
     type: "string",
     demandOption: true,
-    choices: ["json", "collection", "db", "query", "rollup"],
+    choices: ["json", "collection", "db", "query", "rollup", "ipfs"],
   },
 }).argv
 
@@ -48,7 +48,12 @@ const main = async () => {
   for (const v of [circuits, circuits_x]) if (!existsSync(v)) mkdirSync(v)
 
   let script = ""
-  if (circuit === "json") {
+  if (circuit === "ipfs") {
+    script = `pragma circom 2.1.5;
+include "../../../ipfs/ipfs.circom";
+
+component main {public [path, val]} = IPFS(${size_json}, ${size_path}, ${size_val});`
+  } else if (circuit === "json") {
     script = `pragma circom 2.1.5;
 include "../../../json/json.circom";
 
