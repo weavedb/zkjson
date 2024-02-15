@@ -4,13 +4,22 @@ include "./parse.circom";
 include "../../node_modules/circomlib/circuits/sha256/sha256.circom";
 include "../json/json.circom";
 
+function packBits(bits) {
+  var packed[32];
+  for (var i = 0; i < 32; i++) {
+    for (var i2 = 0; i2 < 8; i2++) {
+      packed[i] += bits[i * 8 + i2] * (1 << (8 - 1 - i2));
+    }
+  }
+  return packed;
+}
 template IPFS (size_json, size_path, size_val) {
     signal input encoded[size_json];
     signal json[size_json];
     signal input path[size_path];
     signal input val[size_val];
-    signal out[256];
     signal output exist;
+    signal output out[32];
     var binary[136];
     var _json[size_json];
     var _path[size_json];
@@ -29,7 +38,9 @@ template IPFS (size_json, size_path, size_val) {
     }
     component sha = Sha256(136);
     sha.in <-- binary;
-    out <== sha.out;
+    //out <== sha.out;
+    var packed[32] = packBits(sha.out);
+    out <== packed;
     component _json2 = JSON(256, 5, 5);
     _json2.json <-- _json;
     _json2.path <== path;
