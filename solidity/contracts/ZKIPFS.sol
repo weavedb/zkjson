@@ -9,13 +9,13 @@ contract ZKIPFS is ZKQuery{
 
   function _validateQueryIPFS(uint[] memory path, uint[] memory zkp, uint size_path, uint size_val) internal pure returns(uint[] memory){
     require(zkp[8] == 1, "value doesn't exist");
-
-    for(uint i = 9; i < 9 + size_path; i++){
-      require((path.length <= i - 9 && zkp[i] == 0) || path[i - 9] == zkp[i], "wrong path");
+    uint len = 41;
+    for(uint i = len; i < len + size_path; i++){
+      require((path.length <= i - len && zkp[i] == 0) || path[i - len] == zkp[i], "wrong path");
     }
     uint[] memory value = new uint[](size_val);
-    for(uint i = 9 + size_path; i < 9 + size_path + size_val; i++){
-      value[i - (9 + size_val)] = zkp[i];
+    for(uint i = len + size_path; i < len + size_path + size_val; i++){
+      value[i - (len + size_val)] = zkp[i];
     }
     return toArr(value);
   }
