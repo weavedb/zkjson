@@ -750,6 +750,11 @@
     table "^6.8.0"
     undici "^5.14.0"
 
+"@openzeppelin/contracts@^5.0.1":
+  version "5.0.1"
+  resolved "https://registry.yarnpkg.com/@openzeppelin/contracts/-/contracts-5.0.1.tgz#93da90fc209a0a4ff09c1deb037fbb35e4020890"
+  integrity sha512-yQJaT5HDp9hYOOp4jTYxMsR02gdFZFXhewX5HW9Jo4fsqSVqqyIO/xTHdWDaKX5a3pv1txmf076Lziz+sO7L1w==
+
 "@scure/base@~1.1.0":
   version "1.1.5"
   resolved "https://registry.npmjs.org/@scure/base/-/base-1.1.5.tgz"

@@ -1,6 +1,6 @@
 pragma circom 2.1.5;
 
-function digits(x) {
+function digits2(x) {
   if (x == 0) return 1;
   var p = 0;
   while (x > 0) {
@@ -17,9 +17,9 @@ function next(json, c) {
   }
   var prev = 0;
   for (var j = c[2]; j < c[1]; j++) {
-    var d = digits(json[j]);
+    var d = digits2(json[j]);
     if (json[j] > 0) {
-      var p = c[4] == 0 ? digits(json[j]) : c[4];
+      var p = c[4] == 0 ? digits2(json[j]) : c[4];
       var x = c[4] == 0 ? json[j] : c[3];
       var cur = 0;
       var num = 0;
@@ -156,7 +156,7 @@ function push(json, size, digit, c) {
   var init = 0;
   while (c > 0 || init == 0) {
     init = 1;
-    var len = digits(c);
+    var len = digits2(c);
     var _len = len;
     var _len2 = len;
     var _c = c;
@@ -170,7 +170,7 @@ function push(json, size, digit, c) {
     }
     var appended = 0;
     for (var i = i4; i < size; i++) {
-      var d = digits(json[i]);
+      var d = digits2(json[i]);
       var one = 0;
       var ones = 0;
       var nums = 0;
@@ -422,7 +422,7 @@ function pop(json, size) {
     if (json[l2] != 0) {
       _l = l2;
       var x = json[l2];
-      var d = digits(x);
+      var d = digits2(x);
       var p = d;
       var on = 0;
       var i = 0;
