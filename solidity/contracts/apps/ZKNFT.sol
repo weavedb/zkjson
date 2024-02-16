@@ -87,6 +87,7 @@ contract ZKNFT is ERC721URIStorage, ZKIPFS {
   function isEqual(string memory a, string memory b) public pure returns (bool) {
     return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
   }
+  
   function query (uint tokenId, uint[] memory path, uint[] memory zkp) public view returns (string memory) {
     uint[34] memory hash;
     hash[0] = 18;

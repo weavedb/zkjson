@@ -94,7 +94,9 @@ describe("zkNFT", function () {
   this.timeout(0)
   it("Should query metadata", async function () {
     const { user, owner, zknft } = await loadFixture(deploy)
-    const json = { hello: "world" }
+    const json = {
+      hello: "world",
+    }
     const str = new TextEncoder().encode(JSON.stringify(json))
     const hash = coerce(crypto.createHash("sha256").update(str).digest())
     const cid = toCID(new Uint8Array([18, hash.length, ...Array.from(hash)]))

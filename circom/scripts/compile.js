@@ -12,6 +12,7 @@ let {
   level = 100,
   level_col = 8,
   size_txs = 10,
+  nBlocks = 10,
   name,
 } = require("yargs")(process.argv.slice(2)).options({
   size: { type: "number" },
@@ -52,7 +53,7 @@ const main = async () => {
     script = `pragma circom 2.1.5;
 include "../../../ipfs/ipfs.circom";
 
-component main {public [path, val]} = IPFS(${size_json}, ${size_path}, ${size_val});`
+component main {public [path, val]} = IPFS(${size_json}, ${size_path}, ${size_val}, ${nBlocks});`
   } else if (circuit === "json") {
     script = `pragma circom 2.1.5;
 include "../../../json/json.circom";
