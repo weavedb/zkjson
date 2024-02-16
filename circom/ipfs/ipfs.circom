@@ -1,7 +1,7 @@
 pragma circom 2.1.5;
 include "../utils/uint.circom";
 include "./parse.circom";
-include "../../node_modules/circomlib/circuits/sha256/sha256.circom";
+include "./sha256.circom";
 include "../json/json.circom";
 
 function packBits(bits) {
@@ -13,14 +13,14 @@ function packBits(bits) {
   }
   return packed;
 }
-template IPFS (size_json, size_path, size_val) {
+template IPFS (size_json, size_path, size_val, nBlocks) {
     signal input encoded[size_json];
     signal json[size_json];
     signal input path[size_path];
     signal input val[size_val];
     signal output exist;
     signal output out[32];
-    var binary[136];
+    var binary[458];
     var _json[size_json];
     var _path[size_json];
     var _val[size_json];
@@ -36,9 +36,23 @@ template IPFS (size_json, size_path, size_val) {
            i++;
         }
     }
-    component sha = Sha256(136);
-    sha.in <-- binary;
-    //out <== sha.out;
+    var paddedIn[nBlocks][512];
+    var tBlock = ((i + 64)\512)+1;
+    var k;
+    for (k=0; k<i; k++) {
+        paddedIn[k \ 512][k % 512] = binary[k];
+    }
+    paddedIn[i \ 512][i % 512] = 1;
+    
+    for (k=i+1; k<tBlock*512-64; k++) {
+        paddedIn[k \ 512][k % 512] = 0;
+    }
+    for (k = 0; k< 64; k++) {
+        paddedIn[(tBlock * 512 - k - 1) \ 512][(tBlock * 512 - k - 1) % 512] = (i >> k)&1;
+    }
+    component sha = Sha256_unsafe(nBlocks);
+    sha.tBlock <-- tBlock;
+    sha.in <-- paddedIn;
     var packed[32] = packBits(sha.out);
     out <== packed;
     component _json2 = JSON(256, 5, 5);
