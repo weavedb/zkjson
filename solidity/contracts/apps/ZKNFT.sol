@@ -88,7 +88,7 @@ contract ZKNFT is ERC721URIStorage, ZKIPFS {
     return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
   }
   
-  function query (uint tokenId, uint[] memory path, uint[] memory zkp) public view returns (string memory) {
+  function _verify (uint tokenId, uint[] memory path, uint[] memory zkp) public view returns (uint[] memory) {
     uint[34] memory hash;
     hash[0] = 18;
     hash[1] = 32;
@@ -96,12 +96,31 @@ contract ZKNFT is ERC721URIStorage, ZKIPFS {
     string memory CID = concat("ipfs://", toCID(hash));
     string memory URI = tokenURI(tokenId);
     require(isEqual(CID,URI), "wrong CID");
-    return qString(path, zkp);
-      
+    return validateQuery(path, zkp);
   }
-  function qString (uint[] memory path, uint[] memory zkp) public view returns (string memory) {
-    uint[] memory value = validateQuery(path, zkp);
-    return _qString(value);
+  
+  function qString (uint tokenId, uint[] memory path, uint[] memory zkp) public view returns (string memory) {
+    return _qString(_verify(tokenId, path, zkp));
+  }
+  
+  function qInt (uint tokenId, uint[] memory path, uint[] memory zkp) public view returns (int) {
+    return _qInt(_verify(tokenId, path, zkp));
   }
 
+  function qFloat (uint tokenId, uint[] memory path, uint[] memory zkp) public view returns (uint[3] memory) {
+    return _qFloat(_verify(tokenId, path, zkp));
+  }
+
+  function qBool (uint tokenId, uint[] memory path, uint[] memory zkp) public view returns (bool) {
+    return _qBool(_verify(tokenId, path, zkp));
+  }
+
+  function qNull (uint tokenId, uint[] memory path, uint[] memory zkp) public view returns (bool) {
+    return _qNull(_verify(tokenId, path, zkp));
+  }  
+
+  function qCond (uint tokenId, uint[] memory path, uint[] memory cond, uint[] memory zkp) public view returns (bool) {
+    return _qCond(_verify(tokenId, path, zkp), cond);
+  }  
+  
 }
