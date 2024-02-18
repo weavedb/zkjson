@@ -15,25 +15,25 @@ function eql  (a, b, blen, size)  {
 function constVal  (_v, type, size, val)  {
   var _true_[4] = [116, 114, 117, 101];
   
-  val = push(val, size, 9, type);
+  val = push(val, size, 76, type);
   if (type == 1) {
     if (eql(_v, _true_, 4, size) == 1) {
-      val = push(val, size, 9, 1);
+      val = push(val, size, 76, 1);
     } else {
-      val = push(val, size, 9, 0);
+      val = push(val, size, 76, 0);
     }
   } else if (type == 3) {
-    val = push(val, size, 9, length(_v, size));
+    val = push(val, size, 76, length(_v, size));
     var c[9] = [0, size, 0, 0, 0, 0, 0, 0, 0];
     while (c[5] == 0) {
       c = next(_v, c);
-      val = push(val, size, 9, c[0]);
+      val = push(val, size, 76, c[0]);
     }
   } else if (type == 2) {
     if (get(_v, size, 0) == 45) {
-      val = push(val, size, 9, 0);
+      val = push(val, size, 76, 0);
     } else {
-      val = push(val, size, 9, 1);
+      val = push(val, size, 76, 1);
     }
     var after = 0;
     var right = 0;
@@ -48,27 +48,27 @@ function constVal  (_v, type, size, val)  {
         digits = digits * 10 + (c[0] - 48);
       }
     }
-    val = push(val, size, 9, right);
-    val = push(val, size, 9, digits);
+    val = push(val, size, 76, right);
+    val = push(val, size, 76, digits);
   }
   return val;
 }
 
 function constPath  (p, size, pth2)  {
   var len = get(p, size, 0);
-  pth2 = push(pth2, size, 9, len);
+  pth2 = push(pth2, size, 76, len);
   for (var i = 0; i < len; i++) {
     var len2 = get(p, size, i + 1);
-    var _sum = sum(p, size, 9, 1, 1 + i);
+    var _sum = sum(p, size, 76, 1, 1 + i);
     var first = get(p, size, 1 + len + _sum);
     if (first == 0) {
-      pth2 = push(pth2, size, 9, 0);
+      pth2 = push(pth2, size, 76, 0);
     } else {
-      pth2 = push(pth2, size, 9, len2);
+      pth2 = push(pth2, size, 76, len2);
     }
     for (var i2 = 0; i2 < len2; i2++) {
       var v = get(p, size, 1 + len + _sum + i2);
-      pth2 = push(pth2, size, 9, v);
+      pth2 = push(pth2, size, 76, v);
     }
   }
   return pth2;
@@ -133,9 +133,9 @@ function parse  (str, size, path, val, json, temp) {
             }
             json = concat(
               json,
-              concat(constPath(path, size, temp), constVal(val, 3, size, temp), size, 9),
+              concat(constPath(path, size, temp), constVal(val, 3, size, temp), size, 76),
               size,
-              9
+              76
             );
 	    if(bare == 0)  path = popArray(path, size, 76, temp);
           }
@@ -163,7 +163,7 @@ function parse  (str, size, path, val, json, temp) {
           eql(val, _true_, 4, size) == 0 &&
           eql(val, _false_, 5, size) == 0 &&
           eql(val, _null_, 4, size) == 0 &&
-          isNumber(val, size, 9) == 0
+          isNumber(val, size, 76) == 0
         ) {
           err = 1;
         }
@@ -178,9 +178,9 @@ function parse  (str, size, path, val, json, temp) {
         }
         json = concat(
           json,
-          concat(constPath(path, size, temp), constVal(val, type, size, temp), size, 9),
+          concat(constPath(path, size, temp), constVal(val, type, size, temp), size, 76),
           size,
-          9
+          76
         );
         path = popArray(path, size, 76, temp);
         if (s == 93) {
@@ -270,15 +270,15 @@ function parse  (str, size, path, val, json, temp) {
     } else if (eql(val, _true_, 4, size) == 1 || eql(val, _false_, 5, size)) {
       type = 1;
       isNum = 0;
-    } else if (isNumber(val, size, 9) == 1) {
+    } else if (isNumber(val, size, 76) == 1) {
       type = 2;
       isNum = 0;
     }
     json = concat(
       json,
-      concat(constPath(path, size, temp), constVal(val, type, size, temp), size, 9),
+      concat(constPath(path, size, temp), constVal(val, type, size, temp), size, 76),
       size,
-      9
+      76
     );
   }
   if (length(ao, 5) > 0) err = 1;

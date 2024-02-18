@@ -26,7 +26,6 @@ template JSON (size_json, size_path, size_val) {
 
     while(_json_[5] == 0){ 
         _json_ = g(json, _json_);
-
         var _path_start[9] = _json_;
         _json_ = getPath(json, _json_, 1);
         var pi = _json_[6];
@@ -34,7 +33,6 @@ template JSON (size_json, size_path, size_val) {
         var _val_start[9] = _json_;
         _json_ = getVal(json, _json_);
         var vi = _json_[6];
-
         var match[2] = checkPathMatch(json, path, _path_start, size_path, pi);
         var path_match = match[0];
         var path_partial_match = match[1];

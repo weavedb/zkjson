@@ -136,8 +136,12 @@ describe("JSON circuit", function () {
 
   it("should insert docs", async () => {
     const json = {
-      hello: "world!",
-      world: "hello!",
+      str: "Hello World!",
+      int: 123,
+      bool: true,
+      null: null,
+      float: 1.23,
+      arr: [1, 2, 3],
     }
     const str = new TextEncoder().encode(JSON.stringify(json))
     const hash = coerce(crypto.createHash("sha256").update(str).digest())
@@ -145,16 +149,17 @@ describe("JSON circuit", function () {
     let encoded = arr(256)
     for (let v of Array.from(str)) encoded = push(encoded, 256, 76, v)
     const enc = parse(encoded, 256, 76)
-    const _path = pad(path("hello"), 5)
-    const _val = pad(path("world!"), 5)
+    const _path = pad(path("str"), 5)
+    const _val = pad(val(json["str"]), 5)
+
     const w = await circuit.calculateWitness(
       { encoded: encoded, path: _path, val: _val },
       true,
     )
+    await circuit.checkConstraints(w)
+    await circuit.assertOut(w, { exist: 1 })
     const _arr2 = w.slice(2, 34).map(n => Number(n))
     const cid2 = toCID2(new Uint8Array([18, hash.length, ..._arr2]))
-    await circuit.checkConstraints(w)
-
     const cid = toCID(new Uint8Array([18, hash.length, ...Array.from(hash)]))
     expect(cid).to.eql(cid2)
     return

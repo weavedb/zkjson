@@ -30,6 +30,8 @@ describe("zkNFT", function () {
       int: 123,
       bool: true,
       null: null,
+      float: 1.23,
+      arr: [1, 2, 3, true, null, "hello", 3.14],
     }
     const nft = new NFT({ wasm, zkey, json })
     const cid = nft.cid()
@@ -55,6 +57,25 @@ describe("zkNFT", function () {
       await zknft.qNull(0, nft.path("null"), await nft.zkp("null")),
     ).to.eql(true)
 
+    // query float
+    expect(
+      (await zknft.qFloat(0, nft.path("float"), await nft.zkp("float"))).map(
+        n => n.toNumber(),
+      ),
+    ).to.eql([1, 2, 123])
+
+    // custom
+    expect(
+      (
+        await zknft.qCustom(
+          0,
+          nft.path("arr"),
+          nft.path("[1]"),
+          await nft.zkp("arr"),
+        )
+      ).toNumber(),
+    ).to.eql(2)
+
     // query cond
     expect(
       await zknft.qCond(
@@ -62,6 +83,15 @@ describe("zkNFT", function () {
         nft.path("int"),
         nft.query("int", ["$gt", 100]),
         await nft.zkp("int", ["$gt", 100]),
+      ),
+    ).to.eql(true)
+
+    expect(
+      await zknft.qCond(
+        0,
+        nft.path("arr"),
+        nft.query("arr", ["$contains", 2]),
+        await nft.zkp("arr", ["$contains", 2]),
       ),
     ).to.eql(true)
   })

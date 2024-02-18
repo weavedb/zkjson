@@ -205,7 +205,7 @@ contract ZKQuery {
     require(value[0] == 4, "not object or array");
     return value;
   }
-
+  
   function _qString (uint[] memory value) internal pure returns (string memory) {
     require(value[0] == 3, "not string");
     uint8[] memory charCodes = new uint8[](value[1]);
