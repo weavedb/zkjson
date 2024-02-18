@@ -107,6 +107,7 @@ function parse  (str, size, path, val, json, temp) {
   var ind[5];
   var err = 0;
   var c[9] = [0, size, 0, 0, 0, 0, 0, 0, 0];
+  var bare = 1;
   while (c[5] == 0) {
     c = next(str, c);
     var s = c[0];
@@ -115,20 +116,20 @@ function parse  (str, size, path, val, json, temp) {
         esc = 1;
       } else if (s == 34) {
         if (esc == 1) {
-          val = push(val, size, 9, s);
+          val = push(val, size, 76, s);
         } else {
           inVal = 0;
           if (nextKey == 1 && last(ao, 5) == 1) {
-            path = pushArray(path, size, 9, val, size, temp);
+            path = pushArray(path, size, 76, val, size, temp);
           } else {
             if (last(ao, 5) == 2) {
               var _ind = last(ind, 5);
               var __ind[5];
-              __ind = push(__ind, 5, 9, 0);
-              __ind = push(__ind, 5, 9, _ind);
-              path = pushArray(path, size, 9, __ind, 5, temp);
+              __ind = push(__ind, 5, 76, 0);
+              __ind = push(__ind, 5, 76, _ind);
+              path = pushArray(path, size, 76, __ind, 5, temp);
               ind = pop(ind, 5);
-              ind = push(ind, 5, 9, _ind + 1);
+              ind = push(ind, 5, 76, _ind + 1);
             }
             json = concat(
               json,
@@ -136,7 +137,7 @@ function parse  (str, size, path, val, json, temp) {
               size,
               9
             );
-            path = popArray(path, size, 9, temp);
+	    if(bare == 0)  path = popArray(path, size, 76, temp);
           }
 
           val = empty(val, size);
@@ -144,7 +145,7 @@ function parse  (str, size, path, val, json, temp) {
         }
         esc = 0;
       } else {
-        val = push(val, size, 9, s);
+        val = push(val, size, 76, s);
         esc = 0;
       }
     } else if (isNum == 1) {
@@ -152,11 +153,11 @@ function parse  (str, size, path, val, json, temp) {
         if (last(ao, 5) == 2) {
           var _ind = last(ind, 5);
           var __ind[5];
-          __ind = push(__ind, 5, 9, 0);
-          __ind = push(__ind, 5, 9, _ind);
-          path = pushArray(path, size, 9, __ind, 5, temp);
+          __ind = push(__ind, 5, 76, 0);
+          __ind = push(__ind, 5, 76, _ind);
+          path = pushArray(path, size, 76, __ind, 5, temp);
           ind = pop(ind, 5);
-          ind = push(ind, 5, 9, _ind + 1);
+          ind = push(ind, 5, 76, _ind + 1);
         }
         if (
           eql(val, _true_, 4, size) == 0 &&
@@ -181,25 +182,24 @@ function parse  (str, size, path, val, json, temp) {
           size,
           9
         );
-        path = popArray(path, size, 9, temp);
+        path = popArray(path, size, 76, temp);
         if (s == 93) {
           if (last(ao, 5) != 2) err = 1;
           ao = pop(ao, 5);
-          path = popArray(path, size, 9, temp);
+	  if(bare == 0)  path = popArray(path, size, 76, temp);
           arr--;
           ind = pop(ind, 5);
         }
         if (s == 125) {
           if (last(ao, 5) != 1) err = 1;
           ao = pop(ao, 5);
-          path = popArray(path, size, 9, temp);
           obj--;
         }
         isNum = 0;
         val = empty(val, size);
         if (s == 44) nextKey = 1;
       } else {
-        val = push(val, size, 9, s);
+        val = push(val, size, 76, s);
       }
     } else if (s == 34) {
       inVal = 1;
@@ -213,48 +213,50 @@ function parse  (str, size, path, val, json, temp) {
       s != 125
     ) {
       isNum = 1;
-      val = push(val, size, 9, s);
+      val = push(val, size, 76, s);
     } else {
       if (s != 32) {
-        if (s == 123 || s == 44) nextKey = 1;
+        if (s == 123 || s == 44){
+	  bare = 0;
+	  nextKey = 1;
+	}
         if (s == 123) {
           if (last(ao, 5) == 2) {
             var _ind = last(ind, 5);
             var __ind[5];
-            __ind = push(__ind, 5, 9, 0);
-            __ind = push(__ind, 5, 9, _ind);
-            path = pushArray(path, size, 9, __ind, 5, temp);
+            __ind = push(__ind, 5, 76, 0);
+            __ind = push(__ind, 5, 76, _ind);
+            path = pushArray(path, size, 76, __ind, 5, temp);
             ind = pop(ind, 5);
-            ind = push(ind, 5, 9, _ind + 1);
+            ind = push(ind, 5, 76, _ind + 1);
           }
-          ao = push(ao, 5, 9, 1);
+          ao = push(ao, 5, 76, 1);
           obj++;
         }
         if (s == 125) {
           if (last(ao, 5) != 1) err = 1;
           ao = pop(ao, 5);
-          path = popArray(path, size, 9, temp);
           obj--;
         }
         if (s == 91) {
           if (last(ao, 5) == 2) {
             var _ind = last(ind, 5);
             var __ind[5];
-            __ind = push(__ind, 5, 9, 0);
-            __ind = push(__ind, 5, 9, _ind);
-            path = pushArray(path, size, 9, __ind, 5, temp);
+            __ind = push(__ind, 5, 76, 0);
+            __ind = push(__ind, 5, 76, _ind);
+            path = pushArray(path, size, 76, __ind, 5, temp);
             ind = pop(ind, 5);
-            ind = push(ind, 5, 9, _ind + 1);
+            ind = push(ind, 5, 76, _ind + 1);
           }
-          ind = push(ind, 5, 9, 0);
-          ao = push(ao, 5, 9, 2);
+          ind = push(ind, 5, 76, 0);
+          ao = push(ao, 5, 76, 2);
           arr++;
         }
         if (s == 93) {
           if (last(ao, 5) != 2) err = 1;
           ao = pop(ao, 5);
           ind = pop(ind, 5);
-          path = popArray(path, size, 9, temp);
+          path = popArray(path, size, 76, temp);
           arr--;
         }
       }

@@ -99,39 +99,39 @@ function encodePath(path) {
   let str = ""
   let num = 0
   for (const s of path) {
-    if (num === 2 && !(s === "." || s === "[")) throw Error()
-    if (s === ".") {
-      if (num === 2) {
+    if (num == 2 && !(s == "." || s == "[")) throw Error()
+    if (s == ".") {
+      if (num == 2) {
         num = 0
       } else {
         parts.push(str)
         str = ""
       }
-    } else if (s === "[") {
-      if (num !== 2) {
-        if (str !== "" || parts.length > 0) parts.push(str)
+    } else if (s == "[") {
+      if (num != 2) {
+        if (str != "" || parts.length > 0) parts.push(str)
         str = ""
       }
       num = 1
-    } else if (s === "]") {
-      if (num !== 1) throw Error()
+    } else if (s == "]") {
+      if (num != 1) throw Error()
       num = 2
-      if (str === "" || Number.isNaN(+str)) throw Error()
+      if (str == "" || Number.isNaN(+str)) throw Error()
       parts.push(+str)
       str = ""
     } else {
       str += s
     }
   }
-  if (str !== "") parts.push(str)
-  if (parts.length === 0) parts.push("")
+  if (str != "") parts.push(str)
+  if (parts.length == 0) parts.push("")
   let encoded = [parts.length]
   for (const p of parts) {
-    if (typeof p === "number") {
+    if (typeof p == "number") {
       encoded = encoded.concat([0, 0, p])
     } else {
       let plen = [p.length]
-      if (p.length === 0) plen.push(1)
+      if (p.length == 0) plen.push(1)
       encoded = encoded.concat([
         ...plen,
         ...p.split("").map(c => c.charCodeAt(0)),
@@ -148,9 +148,9 @@ function decodePath(path) {
   while (path.length > 0) {
     const type = path.shift()
     let val = null
-    if (type === 0) {
+    if (type == 0) {
       const type2 = path.shift()
-      if (type2 === 0) {
+      if (type2 == 0) {
         val = [type2, path.shift()]
       } else {
         val = [type2]
@@ -165,14 +165,14 @@ function decodePath(path) {
   }
   let i = 0
   for (let s of p) {
-    if (s[0] === 0 && s[1] === 0) {
+    if (s[0] == 0 && s[1] == 0) {
       str += `[${s[2]}]`
-    } else if (s[0] === 0 && s[1] === 1) {
-      if (str !== "") str += "."
+    } else if (s[0] == 0 && s[1] == 1) {
+      if (str != "") str += "."
     } else {
-      str += `${i === 0 ? "" : "."}${s
+      str += `${i == 0 ? "" : "."}${s
         .slice(1)
-        .map(c => String.fromCharCode(c))
+        .map(c => String.fromCharCode(Number(c)))
         .join("")}`
     }
     i++
@@ -190,13 +190,13 @@ function flattenPath(path) {
 
 function _encode(v, path = []) {
   let vals = []
-  if (typeof v === "number") {
+  if (typeof v == "number") {
     vals.push([path, encodeVal(v)])
-  } else if (typeof v === "boolean") {
+  } else if (typeof v == "boolean") {
     vals.push([path, encodeVal(v)])
-  } else if (v === null) {
+  } else if (v == null) {
     vals.push([path, encodeVal(v)])
-  } else if (typeof v === "string") {
+  } else if (typeof v == "string") {
     vals.push([path, encodeVal(v)])
   } else if (Array.isArray(v)) {
     let i = 0
@@ -204,12 +204,12 @@ function _encode(v, path = []) {
       for (const v3 of _encode(v2, [...path, [0, 0, i]])) vals.push(v3)
       i++
     }
-  } else if (typeof v === "object") {
+  } else if (typeof v == "object") {
     for (const k in v) {
       const key = k.split("").map(c => c.charCodeAt(0))
       for (let v4 of _encode(v[k], [
         ...path,
-        [key.length, ...(key.length === 0 ? [1] : key)],
+        [key.length, ...(key.length == 0 ? [1] : key)],
       ])) {
         vals.push(v4)
       }
@@ -220,9 +220,8 @@ function _encode(v, path = []) {
 
 function encode(json) {
   let flattened = _encode(json)
-
   flattened.sort((a, b) => {
-    const isUndefined = v => typeof v === "undefined"
+    const isUndefined = v => typeof v == "undefined"
     const max = Math.max(a[0].length, b[0].length)
     if (max > 0) {
       for (let i = 0; i < max; i++) {
@@ -250,7 +249,7 @@ function encode(json) {
 
   return flattened.reduce(
     (arr, v) => arr.concat([...flattenPath(v[0]), ...v[1]]),
-    []
+    [],
   )
 }
 
@@ -262,14 +261,14 @@ function _decode(arr) {
     let val = null
     while (plen > 0) {
       const plen2 = arr.shift()
-      if (plen2 === 0) {
+      if (plen2 == 0) {
         const plen3 = arr.shift()
-        if (plen3 === 1) {
+        if (plen3 == 1) {
           keys.push([plen2, plen3])
         } else {
           keys.push([plen2, plen3, arr.shift()])
         }
-      } else if (plen2 !== 0) {
+      } else if (plen2 != 0) {
         const plen3 = plen2
         const key = []
         for (let i2 = 0; i2 < plen3; i2++) key.push(arr.shift())
@@ -279,13 +278,13 @@ function _decode(arr) {
     }
     const type = arr.shift()
     val = [type]
-    if (type === 2) {
+    if (type == 2) {
       val.push(arr.shift())
       val.push(arr.shift())
       val.push(arr.shift())
-    } else if (type === 1) {
+    } else if (type == 1) {
       val.push(arr.shift())
-    } else if (type === 3) {
+    } else if (type == 3) {
       const strlen = arr.shift()
       val.push(strlen)
       for (let i2 = 0; i2 < strlen; i2++) val.push(arr.shift())
@@ -297,20 +296,20 @@ function _decode(arr) {
 
 function encodeVal(v) {
   let vals = []
-  if (typeof v === "number") {
+  if (typeof v == "number" || typeof v == "bigint") {
     const int = Number.isInteger(v)
     let moved = 0
     let num = v
-    while (num % 1 !== 0) {
+    while (num % 1 != 0) {
       num *= 10
       moved += 1
     }
     vals = v < 0 ? [2, 0, moved, -num] : [2, 1, moved, num]
-  } else if (typeof v === "boolean") {
+  } else if (typeof v == "boolean") {
     vals = [1, v ? 1 : 0]
-  } else if (v === null) {
+  } else if (v == null) {
     vals = [0]
-  } else if (typeof v === "string") {
+  } else if (typeof v == "string") {
     vals = [3, v.length, ...v.split("").map(c => c.charCodeAt(0))]
   } else {
     vals = [4, ...encode(v)]
@@ -322,21 +321,21 @@ function decodeVal(arr) {
   const type = arr[0]
   const _val = arr[1]
   let val = null
-  if (type === 0) {
+  if (type == 0) {
     val = null
-  } else if (type === 1) {
+  } else if (type == 1) {
     val = arr[1] ? true : false
-  } else if (type === 2) {
-    val = (arr[1] === 0 ? -1 : 1) * arr[3]
+  } else if (type == 2) {
+    val = (arr[1] == 0 ? -1 : 1) * arr[3]
     for (let i = 0; i < arr[2]; i++) {
       val /= 10
     }
-  } else if (type === 3) {
+  } else if (type == 3) {
     val = arr
       .slice(2)
-      .map(c => String.fromCharCode(c))
+      .map(c => String.fromCharCode(Number(c)))
       .join("")
-  } else if (type === 4) {
+  } else if (type == 4) {
     val = decode(arr.slice(1))
   }
   return val
@@ -345,31 +344,31 @@ function decodeVal(arr) {
 function decode(arr) {
   const decoded = _decode(arr)
   let json =
-    decoded[0]?.[0]?.[0]?.[0] === 0 && decoded[0]?.[0]?.[0]?.[1] === 0 ? [] : {}
+    decoded[0]?.[0]?.[0]?.[0] == 0 && decoded[0]?.[0]?.[0]?.[1] == 0 ? [] : {}
   for (const v of decoded) {
     const keys = v[0].map(v2 => {
-      if (v2[0] === 0) {
-        if (v2[1] === 1) return ""
+      if (v2[0] == 0) {
+        if (v2[1] == 1) return ""
         return v2[2]
       } else {
         return v2
           .slice(1)
-          .map(c => String.fromCharCode(c))
+          .map(c => String.fromCharCode(Number(c)))
           .join("")
       }
     })
-    if (keys.length === 0) {
+    if (keys.length == 0) {
       json = decodeVal(v[1])
     } else {
       let obj = json
       let i = 0
       for (const k of keys) {
-        if (typeof k === "number") {
-          if (typeof keys[i + 1] === "undefined") {
+        if (typeof k == "number") {
+          if (typeof keys[i + 1] == "undefined") {
             obj[k] = decodeVal(v[1])
           } else {
-            if (typeof obj[k] === "undefined") {
-              if (typeof keys[i + 1] === "string") {
+            if (typeof obj[k] == "undefined") {
+              if (typeof keys[i + 1] == "string") {
                 obj[k] = {}
               } else {
                 obj[k] = []
@@ -377,10 +376,10 @@ function decode(arr) {
             }
           }
         } else {
-          if (typeof obj[k] === "undefined") {
-            if (typeof keys[i + 1] === "undefined") {
+          if (typeof obj[k] == "undefined") {
+            if (typeof keys[i + 1] == "undefined") {
               obj[k] = decodeVal(v[1])
-            } else if (typeof keys[i + 1] === "string") {
+            } else if (typeof keys[i + 1] == "string") {
               obj[k] = {}
             } else {
               obj[k] = []
@@ -421,12 +420,12 @@ function toSignal(arr) {
       let str = splitEvery(8, n.toString().split(""))
       let i = 0
       str = str.map(s => {
-        const len = i === str.length - 1 ? s.length : 9
+        const len = i == str.length - 1 ? s.length : 9
         i++
         return len.toString() + s.join("")
       })
       return str
-    })
+    }),
   )
   let _arr2 = []
   let one = 0
@@ -434,10 +433,10 @@ function toSignal(arr) {
   let start = null
   for (let v of _arr) {
     _arr2.push(v)
-    if (v.length - 1 === 1) {
-      if (start === null) start = i
+    if (v.length - 1 == 1) {
+      if (start == null) start = i
       one += v.length - 1
-      if (one === 9) {
+      if (one == 9) {
         _arr2[start] = `0${one}${_arr2[start][1]}`
         for (let i2 = start + 1; i2 <= i; i2++) _arr2[i2] = `${_arr2[i2][1]}`
         one = 0
@@ -462,11 +461,11 @@ function toSignal(arr) {
   let cur = 0
   let num = ""
   for (let v of _arr2) {
-    if (chain === null && +v[0] === 0) {
+    if (chain == null && +v[0] == 0) {
       chain = +v[1]
       cur = 1
       num = v
-    } else if (chain !== null) {
+    } else if (chain != null) {
       num += v
       cur++
       if (chain == cur) {
@@ -479,19 +478,19 @@ function toSignal(arr) {
       _arr3.push(v)
     }
   }
-  if (chain !== null) _arr3.push(num)
+  if (chain != null) _arr3.push(num)
   let arrs2 = []
   let len2 = 0
   let str2 = ""
   for (let v of _arr3) {
     if (len2 + v.length > 75) {
       arrs2.push("1" + str2)
-      if (+v[0] === 0) {
+      if (+v[0] == 0) {
         let len3 = 75 - len2
         if (len3 == 2 || len3 == 3) {
           arrs2[arrs2.length - 1] += `1${v[2]}`
           let new_len = +v[1] - 1
-          if (new_len === 2) {
+          if (new_len == 2) {
             v = `1${v[3]}1${v[4]}`
           } else {
             v = `0${new_len}${v.slice(3)}`
@@ -499,16 +498,16 @@ function toSignal(arr) {
         } else if (len3 > 3) {
           let new_len = +v[1] - 2
           let old_len = 2
-          if (len3 === 4) {
+          if (len3 == 4) {
             arrs2[arrs2.length - 1] += `1${v[2]}1${v[3]}`
           } else {
             old_len = len3 - 2
             new_len = +v[1] - old_len
             arrs2[arrs2.length - 1] += `0${old_len}${v.slice(2, 2 + old_len)}`
           }
-          if (new_len === 1) {
+          if (new_len == 1) {
             v = `1${v[old_len + 2]}`
-          } else if (new_len === 2) {
+          } else if (new_len == 2) {
             v = `1${v[old_len + 2]}1${v[old_len + 3]}`
           } else {
             v = `0${new_len}${v.slice(old_len + 2)}`
@@ -521,7 +520,7 @@ function toSignal(arr) {
     len2 += v.length
     str2 += v
   }
-  if (str2 !== "") arrs2.push("1" + str2)
+  if (str2 != "") arrs2.push("1" + str2)
   return arrs2
 }
 
@@ -533,13 +532,13 @@ function fromSignal(arr) {
     let str = s.split("")
     while (str.length > 0) {
       const len = +str.shift()
-      if (len === 0) {
+      if (len == 0) {
         const len2 = +str.shift()
         for (let i2 = 0; i2 < len2; i2++) {
           _arr.push(+str[i2])
         }
         str = str.slice(len2)
-      } else if (len === 9) {
+      } else if (len == 9) {
         prev += str.slice(0, 8).join("")
         str = str.slice(8)
       } else {

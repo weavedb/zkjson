@@ -91,6 +91,7 @@ component main {public [oldRoot]} = Rollup(${size_txs}, ${level_col}, ${level}, 
     size_txs,
     level_col,
   })
+
   writeFileSync(input, JSON.stringify(inputs))
 
   const compile = resolve(__dirname, "./compile.sh")
