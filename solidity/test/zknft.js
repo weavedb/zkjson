@@ -102,7 +102,7 @@ describe("zkNFT", function () {
     const cid = toCID(new Uint8Array([18, hash.length, ...Array.from(hash)]))
     await zknft.mint(user.address, `ipfs://${cid}`)
     let encoded = arr(256)
-    for (let v of Array.from(str)) encoded = push(encoded, 256, 9, v)
+    for (let v of Array.from(str)) encoded = push(encoded, 256, 76, v)
     const enc = parse(encoded, 256)
     const _path = pad(path("hello"), 5)
     const _val = pad(val("world"), 5)

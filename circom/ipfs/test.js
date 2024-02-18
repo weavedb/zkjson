@@ -137,15 +137,14 @@ describe("JSON circuit", function () {
   it("should insert docs", async () => {
     const json = {
       hello: "world!",
-      world: "world war2 is starting...",
-      hello2: "asjflksdajfklsdajfsklafs;ldafksdal;fksjadl;fkkljfsd",
+      world: "hello!",
     }
     const str = new TextEncoder().encode(JSON.stringify(json))
     const hash = coerce(crypto.createHash("sha256").update(str).digest())
 
     let encoded = arr(256)
-    for (let v of Array.from(str)) encoded = push(encoded, 256, 9, v)
-    const enc = parse(encoded, 256)
+    for (let v of Array.from(str)) encoded = push(encoded, 256, 76, v)
+    const enc = parse(encoded, 256, 76)
     const _path = pad(path("hello"), 5)
     const _val = pad(path("world!"), 5)
     const w = await circuit.calculateWitness(

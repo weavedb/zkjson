@@ -153,6 +153,9 @@ function mul(json, size, digit, start, end) {
 function push(json, size, digit, c) {
   var overflow = 8;
   var i4 = 0;
+  for (var i = i4; i < size; i++) {
+    if (json[i] != 0) i4 = i;
+  }
   var init = 0;
   while (c > 0 || init == 0) {
     init = 1;
@@ -212,7 +215,7 @@ function push(json, size, digit, c) {
         }
         if (ones == 2) nums = nums * 10 + _c;
       }
-      if (ones > 2) {
+      if (ones > 2 && ones < 9) {
         var x = json[i] \ 10 ** (d - one - 1);
         x = x * 10 + ones + 1;
         x = x * 10 ** ones + nums;
@@ -329,7 +332,6 @@ function popArray(json, size, digit, _arr) {
   } else {
     alen = get(json, size, 0);
   }
-  //if (alen == 1) return [];
   //if (alen == 1) return [];
   var len = get(json, size, alen);
   json = replace(json, size, digit, 0, alen - 1, _arr);
