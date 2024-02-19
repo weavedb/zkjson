@@ -71,7 +71,7 @@ function toCID(source) {
   return str
 }
 
-class NFT {
+module.exports = class NFT {
   constructor({
     size_val = 5,
     size_path = 5,
@@ -127,5 +127,3 @@ class NFT {
     return toCID(new Uint8Array([18, hash.length, ...Array.from(hash)]))
   }
 }
-
-module.exports = NFT

@@ -11,6 +11,7 @@
     "@typechain/hardhat": "^6.1.6",
     "@types/chai": "^4.3.11",
     "@types/mocha": "^10.0.6",
+    "chai": "4",
     "hardhat": "^2.19.4",
     "hardhat-gas-reporter": "^1.0.9",
     "solidity-coverage": "^0.8.5",
@@ -20,7 +21,8 @@
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.0.1",
-    "snarkjs": "^0.7.2"
+    "snarkjs": "^0.7.2",
+    "zkjson": "^0.1.29"
   },
   "license": "MIT"
 }
