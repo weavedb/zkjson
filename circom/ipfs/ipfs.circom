@@ -15,7 +15,6 @@ function packBits(bits) {
 }
 template IPFS (size_json, size_path, size_val, nBlocks) {
     signal input encoded[size_json];
-    signal json[size_json];
     signal input path[size_path];
     signal input val[size_val];
     signal output exist;
@@ -26,7 +25,12 @@ template IPFS (size_json, size_path, size_val, nBlocks) {
     var _val[size_json];
     var _temp[size_json];
     _json = parse(encoded, size_json, _path, _val, _json, _temp);
-    json <-- _json;
+    component _json2 = JSON(256, 5, 5);
+    _json2.json <-- _json;
+    _json2.path <== path;
+    _json2.val <== val;
+    exist <== _json2.exist;
+
     var c[9] = [0, size_json, 0, 0, 0, 0, 0, 0, 0];
     var i = 0;
     while(c[5] == 0){
@@ -55,9 +59,4 @@ template IPFS (size_json, size_path, size_val, nBlocks) {
     sha.in <-- paddedIn;
     var packed[32] = packBits(sha.out);
     out <== packed;
-    component _json2 = JSON(256, 5, 5);
-    _json2.json <-- _json;
-    _json2.path <== path;
-    _json2.val <== val;
-    exist <== _json2.exist;
 }

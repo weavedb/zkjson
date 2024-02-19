@@ -591,4 +591,5 @@ module.exports = {
   concat,
   bn,
   digits,
+  str,
 }

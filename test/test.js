@@ -40,10 +40,14 @@ const { expect } = require("chai")
 
 describe("zkJSON", () => {
   it("should operate on uints 3", () => {
-    let len = 2
-    let json = {
-      hello: "world2",
-      world: "b",
+    let len = 256
+    const json = {
+      str: "Hello, World!",
+      int: 123,
+      float: 1.23,
+      bool: true,
+      null: null,
+      arr: [1, 2, 3],
     }
     const str = new TextEncoder().encode(JSON.stringify(json))
     let encoded = arr(len)
