@@ -10,7 +10,7 @@ async function deploy() {
   const VerifierDB = await ethers.getContractFactory("Groth16VerifierDB")
   const verifierDB = await VerifierDB.deploy()
 
-  const MyRU = await ethers.getContractFactory("SimpleRU")
+  const MyRU = await ethers.getContractFactory("SimpleOPRU")
   const myru = await MyRU.deploy(
     verifierRU.address,
     verifierDB.address,
@@ -65,8 +65,12 @@ describe("MyRollup", function () {
     let txs = people.map(v => {
       return [col_id, v.name, v]
     })
-    const zkp = await db.genRollupProof(txs)
-    await myru.commit(zkp)
+
+    for (const v of txs) {
+      await db.insert(...v)
+    }
+    const root = db.tree.F.toObject(db.tree.root).toString()
+    await myru.commit(root)
 
     const zkp2 = await db.genProof({
       json: people[0],
