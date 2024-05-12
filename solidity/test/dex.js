@@ -12,7 +12,7 @@ async function deploy() {
   const zkdb = await ZKDB.deploy(
     verifier.address,
     verifierDB.address,
-    owner.address
+    owner.address,
   )
   const DEX = await ethers.getContractFactory("DEX")
   const dex = await DEX.deploy(zkdb.address)
@@ -31,19 +31,19 @@ describe("zkDB", function () {
     const db = new DB({
       wasmRU: resolve(
         __dirname,
-        "../../circom/build/circuits/rollup/index_js/index.wasm"
+        "../../circom/build/circuits/rollup/index_js/index.wasm",
       ),
       zkeyRU: resolve(
         __dirname,
-        "../../circom/build/circuits/rollup/index_0001.zkey"
+        "../../circom/build/circuits/rollup/index_0001.zkey",
       ),
       wasm: resolve(
         __dirname,
-        "../../circom/build/circuits/db/index_js/index.wasm"
+        "../../circom/build/circuits/db/index_js/index.wasm",
       ),
       zkey: resolve(
         __dirname,
-        "../../circom/build/circuits/db/index_0001.zkey"
+        "../../circom/build/circuits/db/index_0001.zkey",
       ),
     })
     await db.init()

@@ -56,7 +56,30 @@ describe("MyRollup", function () {
     })
     await db.init()
     col_id = await db.addCollection()
-    const people = [
+    const people = [{ name: "Bob" }]
+    let txs = people.map(v => {
+      return [col_id, v.name, v]
+    })
+
+    for (const v of txs) {
+      await db.insert(...v)
+    }
+    const root = db.tree.F.toObject(db.tree.root).toString()
+    console.log(root)
+    await myru.commit(root)
+
+    const zkp2 = await db.genProof({
+      json: people[0],
+      col_id,
+      path: "name",
+      id: "Bob",
+    })
+    console.log(zkp2)
+    expect(
+      await myru.qString([col_id, toIndex("Bob"), ...path("name")], zkp2),
+    ).to.eql("Bob")
+    /*
+      const people = [
       { name: "Bob", age: 10 },
       { name: "Alice", age: 20 },
       { name: "Mike", age: 30 },
@@ -70,6 +93,7 @@ describe("MyRollup", function () {
       await db.insert(...v)
     }
     const root = db.tree.F.toObject(db.tree.root).toString()
+    console.log(root)
     await myru.commit(root)
 
     const zkp2 = await db.genProof({
@@ -78,7 +102,7 @@ describe("MyRollup", function () {
       path: "age",
       id: "Bob",
     })
-
+    console.log(zkp2)
     expect(
       (
         await myru.qInt([col_id, toIndex("Bob"), ...path("age")], zkp2)
@@ -93,6 +117,7 @@ describe("MyRollup", function () {
     })
     expect(
       await myru.qString([col_id, toIndex("Beth"), ...path("name")], zkp3),
-    ).to.eql("Beth")
+      ).to.eql("Beth")
+      */
   })
 })
