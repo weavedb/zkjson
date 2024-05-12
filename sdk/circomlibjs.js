@@ -26,31 +26,31 @@ class BabyJub {
   constructor(F) {
     this.F = F
     this.p = ffjavascript.Scalar.fromString(
-      "21888242871839275222246405745257275088548364400416034343698204186575808495617"
+      "21888242871839275222246405745257275088548364400416034343698204186575808495617",
     )
     this.pm1d2 = ffjavascript.Scalar.div(
       ffjavascript.Scalar.sub(this.p, ffjavascript.Scalar.e(1)),
-      ffjavascript.Scalar.e(2)
+      ffjavascript.Scalar.e(2),
     )
 
     this.Generator = [
       F.e(
-        "995203441582195749578291179787384436505546430278305826713579947235728471134"
+        "995203441582195749578291179787384436505546430278305826713579947235728471134",
       ),
       F.e(
-        "5472060717959818805561601436314318772137091100104008585924551046643952123905"
+        "5472060717959818805561601436314318772137091100104008585924551046643952123905",
       ),
     ]
     this.Base8 = [
       F.e(
-        "5299619240641551281634865583518297030282874472190772894086521144482721001553"
+        "5299619240641551281634865583518297030282874472190772894086521144482721001553",
       ),
       F.e(
-        "16950150798460657717958625567821834550301663161624707787222815936182638968203"
+        "16950150798460657717958625567821834550301663161624707787222815936182638968203",
       ),
     ]
     this.order = ffjavascript.Scalar.fromString(
-      "21888242871839275222246405745257275088614511777268538073601725287587578984328"
+      "21888242871839275222246405745257275088614511777268538073601725287587578984328",
     )
     this.subOrder = ffjavascript.Scalar.shiftRight(this.order, 3)
     this.A = F.e("168700")
@@ -77,7 +77,7 @@ class BabyJub {
 
     res[1] = F.div(
       F.add(delta, F.sub(F.mul(this.A, beta), gamma)),
-      F.sub(F.one, dtau)
+      F.sub(F.one, dtau),
     )
 
     return res
@@ -115,7 +115,7 @@ class BabyJub {
     if (
       !F.eq(
         F.add(F.mul(this.A, x2), y2),
-        F.add(F.one, F.mul(F.mul(x2, y2), this.D))
+        F.add(F.one, F.mul(F.mul(x2, y2), this.D)),
       )
     )
       return false
@@ -184,7 +184,7 @@ class PedersenHash {
       return createBlakeHash__default["default"]("blake256").update(S).digest()
     } else if (type == "blake2b") {
       return Buffer.from(
-        blake2b__default["default"](32).update(Buffer.from(S)).digest()
+        blake2b__default["default"](32).update(Buffer.from(S)).digest(),
       )
     }
   }
@@ -206,7 +206,7 @@ class PedersenHash {
       if (s == nSegments - 1) {
         nWindows =
           Math.floor(
-            (bits.length - (nSegments - 1) * bitsPerSegment - 1) / windowSize
+            (bits.length - (nSegments - 1) * bitsPerSegment - 1) / windowSize,
           ) + 1
       } else {
         nWindows = nWindowsPerSegment
@@ -220,7 +220,7 @@ class PedersenHash {
           if (bits[o]) {
             acc = ffjavascript.Scalar.add(
               acc,
-              ffjavascript.Scalar.shl(ffjavascript.Scalar.e(1), b)
+              ffjavascript.Scalar.shl(ffjavascript.Scalar.e(1), b),
             )
           }
           o++
@@ -233,7 +233,7 @@ class PedersenHash {
         }
         escalar = ffjavascript.Scalar.add(
           escalar,
-          ffjavascript.Scalar.mul(acc, exp)
+          ffjavascript.Scalar.mul(acc, exp),
         )
         exp = ffjavascript.Scalar.shl(exp, windowSize + 1)
       }
@@ -244,7 +244,10 @@ class PedersenHash {
 
       accP = babyJub.addPoint(
         accP,
-        babyJub.mulPointEscalar(this.getBasePoint(options.baseHash, s), escalar)
+        babyJub.mulPointEscalar(
+          this.getBasePoint(options.baseHash, s),
+          escalar,
+        ),
       )
     }
 
@@ -324,7 +327,7 @@ class Mimc7 {
     const F = this.F
     if (typeof seed === "undefined") seed = SEED$1
     const c = ethers.ethers.utils.keccak256(
-      ethers.ethers.utils.toUtf8Bytes(seed + "_iv")
+      ethers.ethers.utils.toUtf8Bytes(seed + "_iv"),
     )
     const cn = ffjavascript.Scalar.e(c)
     const iv = ffjavascript.Scalar.mod(cn, F.p)
@@ -336,7 +339,7 @@ class Mimc7 {
     if (typeof nRounds === "undefined") nRounds = NROUNDS$1
     const cts = new Array(nRounds)
     let c = ethers.ethers.utils.keccak256(
-      ethers.ethers.utils.toUtf8Bytes(SEED$1)
+      ethers.ethers.utils.toUtf8Bytes(SEED$1),
     )
     for (let i = 1; i < nRounds; i++) {
       c = ethers.ethers.utils.keccak256(c)
@@ -25188,7 +25191,7 @@ async function buildPoseidon$2() {
   const bn128 = await ffjavascript.getCurveFromName(
     "bn128",
     true,
-    buildPoseidonWasm
+    buildPoseidonWasm,
   )
 
   const F = bn128.Fr
@@ -25240,8 +25243,8 @@ async function buildPoseidon$2() {
 function buildPoseidonWasm(module) {
   const F = new ffjavascript.F1Field(
     ffjavascript.Scalar.e(
-      "21888242871839275222246405745257275088548364400416034343698204186575808495617"
-    )
+      "21888242871839275222246405745257275088548364400416034343698204186575808495617",
+    ),
   )
   const N_ROUNDS_P = [
     56, 57, 56, 60, 60, 63, 64, 63, 60, 66, 60, 65, 70, 60, 64, 68,
@@ -25304,18 +25307,18 @@ function buildPoseidonWasm(module) {
             "frm_add",
             c.getLocal("pC"),
             c.getLocal("pState"),
-            c.getLocal("pState")
+            c.getLocal("pState"),
           ),
           c.setLocal("pC", c.i32_add(c.getLocal("pC"), c.i32_const(32))),
           c.setLocal(
             "pState",
-            c.i32_add(c.getLocal("pState"), c.i32_const(32))
+            c.i32_add(c.getLocal("pState"), c.i32_const(32)),
           ),
           c.setLocal("i", c.i32_add(c.getLocal("i"), c.i32_const(1))),
-          c.br(0)
-        )
+          c.br(0),
+        ),
       ),
-      c.ret(c.getLocal("pC"))
+      c.ret(c.getLocal("pC")),
     )
   }
 
@@ -25330,7 +25333,7 @@ function buildPoseidonWasm(module) {
     f.addCode(
       c.call("frm_square", c.getLocal("p"), AUX),
       c.call("frm_square", AUX, AUX),
-      c.call("frm_mul", c.getLocal("p"), AUX, c.getLocal("p"))
+      c.call("frm_mul", c.getLocal("p"), AUX, c.getLocal("p")),
     )
   }
 
@@ -25351,12 +25354,12 @@ function buildPoseidonWasm(module) {
           c.call("poseidon_power5", c.getLocal("pState")),
           c.setLocal(
             "pState",
-            c.i32_add(c.getLocal("pState"), c.i32_const(32))
+            c.i32_add(c.getLocal("pState"), c.i32_const(32)),
           ),
           c.setLocal("i", c.i32_add(c.getLocal("i"), c.i32_const(1))),
-          c.br(0)
-        )
-      )
+          c.br(0),
+        ),
+      ),
     )
   }
 
@@ -25391,30 +25394,30 @@ function buildPoseidonWasm(module) {
                 "frm_mul",
                 c.getLocal("pState"),
                 c.getLocal("pM"),
-                c.i32_const(pAux)
+                c.i32_const(pAux),
               ),
               c.call(
                 "frm_add",
                 c.i32_const(pAux),
                 c.getLocal("pStateAux"),
-                c.getLocal("pStateAux")
+                c.getLocal("pStateAux"),
               ),
               c.setLocal("pM", c.i32_add(c.getLocal("pM"), c.i32_const(32))),
               c.setLocal(
                 "pState",
-                c.i32_add(c.getLocal("pState"), c.i32_const(32))
+                c.i32_add(c.getLocal("pState"), c.i32_const(32)),
               ),
               c.setLocal("j", c.i32_add(c.getLocal("j"), c.i32_const(1))),
-              c.br(0)
-            )
+              c.br(0),
+            ),
           ),
           c.setLocal(
             "pStateAux",
-            c.i32_add(c.getLocal("pStateAux"), c.i32_const(32))
+            c.i32_add(c.getLocal("pStateAux"), c.i32_const(32)),
           ),
           c.setLocal("i", c.i32_add(c.getLocal("i"), c.i32_const(1))),
-          c.br(0)
-        )
+          c.br(0),
+        ),
       ),
       c.setLocal("pStateAux", c.i32_const(pStateAux)),
       c.setLocal("pState", c.i32_const(pState)),
@@ -25425,16 +25428,16 @@ function buildPoseidonWasm(module) {
           c.call("frm_copy", c.getLocal("pStateAux"), c.getLocal("pState")),
           c.setLocal(
             "pState",
-            c.i32_add(c.getLocal("pState"), c.i32_const(32))
+            c.i32_add(c.getLocal("pState"), c.i32_const(32)),
           ),
           c.setLocal(
             "pStateAux",
-            c.i32_add(c.getLocal("pStateAux"), c.i32_const(32))
+            c.i32_add(c.getLocal("pStateAux"), c.i32_const(32)),
           ),
           c.setLocal("i", c.i32_add(c.getLocal("i"), c.i32_const(1))),
-          c.br(0)
-        )
-      )
+          c.br(0),
+        ),
+      ),
     )
   }
 
@@ -25462,22 +25465,22 @@ function buildPoseidonWasm(module) {
             "frm_mul",
             c.getLocal("pState"),
             c.getLocal("pS"),
-            c.i32_const(pAux)
+            c.i32_const(pAux),
           ),
           c.call(
             "frm_add",
             c.i32_const(pS0),
             c.i32_const(pAux),
-            c.i32_const(pS0)
+            c.i32_const(pS0),
           ),
           c.setLocal("pS", c.i32_add(c.getLocal("pS"), c.i32_const(32))),
           c.setLocal(
             "pState",
-            c.i32_add(c.getLocal("pState"), c.i32_const(32))
+            c.i32_add(c.getLocal("pState"), c.i32_const(32)),
           ),
           c.setLocal("i", c.i32_add(c.getLocal("i"), c.i32_const(1))),
-          c.br(0)
-        )
+          c.br(0),
+        ),
       ),
 
       c.setLocal("pState", c.i32_const(pState + 32)),
@@ -25489,25 +25492,25 @@ function buildPoseidonWasm(module) {
             "frm_mul",
             c.i32_const(pState),
             c.getLocal("pS"),
-            c.i32_const(pAux)
+            c.i32_const(pAux),
           ),
           c.call(
             "frm_add",
             c.getLocal("pState"),
             c.i32_const(pAux),
-            c.getLocal("pState")
+            c.getLocal("pState"),
           ),
           c.setLocal("pS", c.i32_add(c.getLocal("pS"), c.i32_const(32))),
           c.setLocal(
             "pState",
-            c.i32_add(c.getLocal("pState"), c.i32_const(32))
+            c.i32_add(c.getLocal("pState"), c.i32_const(32)),
           ),
           c.setLocal("i", c.i32_add(c.getLocal("i"), c.i32_const(1))),
-          c.br(0)
-        )
+          c.br(0),
+        ),
       ),
       c.call("frm_copy", c.i32_const(pS0), c.i32_const(pState)),
-      c.ret(c.getLocal("pS"))
+      c.ret(c.getLocal("pS")),
     )
   }
 
@@ -25535,25 +25538,28 @@ function buildPoseidonWasm(module) {
         "pAux",
         c.i32_add(
           c.i32_const(pConstants),
-          c.i32_mul(c.i32_sub(c.getLocal("n"), c.i32_const(1)), c.i32_const(20))
-        )
+          c.i32_mul(
+            c.i32_sub(c.getLocal("n"), c.i32_const(1)),
+            c.i32_const(20),
+          ),
+        ),
       ),
       c.setLocal("nRoundsP", c.i32_load(c.getLocal("pAux"))),
       c.setLocal(
         "pC",
-        c.i32_load(c.i32_add(c.getLocal("pAux"), c.i32_const(4)))
+        c.i32_load(c.i32_add(c.getLocal("pAux"), c.i32_const(4))),
       ),
       c.setLocal(
         "pS",
-        c.i32_load(c.i32_add(c.getLocal("pAux"), c.i32_const(8)))
+        c.i32_load(c.i32_add(c.getLocal("pAux"), c.i32_const(8))),
       ),
       c.setLocal(
         "pM",
-        c.i32_load(c.i32_add(c.getLocal("pAux"), c.i32_const(12)))
+        c.i32_load(c.i32_add(c.getLocal("pAux"), c.i32_const(12))),
       ),
       c.setLocal(
         "pP",
-        c.i32_load(c.i32_add(c.getLocal("pAux"), c.i32_const(16)))
+        c.i32_load(c.i32_add(c.getLocal("pAux"), c.i32_const(16))),
       ),
 
       // Initialize state
@@ -25568,24 +25574,24 @@ function buildPoseidonWasm(module) {
               c.getLocal("pIn"),
               c.i32_mul(
                 c.i32_sub(c.getLocal("i"), c.i32_const(1)),
-                c.i32_const(32)
-              )
+                c.i32_const(32),
+              ),
             ),
             c.i32_add(
               c.i32_const(pState),
-              c.i32_mul(c.getLocal("i"), c.i32_const(32))
-            )
+              c.i32_mul(c.getLocal("i"), c.i32_const(32)),
+            ),
           ),
           c.br_if(1, c.i32_eq(c.getLocal("i"), c.getLocal("n"))),
           c.setLocal("i", c.i32_add(c.getLocal("i"), c.i32_const(1))),
-          c.br(0)
-        )
+          c.br(0),
+        ),
       ),
 
       // Initialize state
       c.setLocal(
         "pC",
-        c.call("poseidon_addConstant", c.getLocal("t"), c.getLocal("pC"))
+        c.call("poseidon_addConstant", c.getLocal("t"), c.getLocal("pC")),
       ),
       // First full rounds
       c.setLocal("i", c.i32_const(0)),
@@ -25595,18 +25601,18 @@ function buildPoseidonWasm(module) {
           c.call("poseidon_power5all", c.getLocal("t")),
           c.setLocal(
             "pC",
-            c.call("poseidon_addConstant", c.getLocal("t"), c.getLocal("pC"))
+            c.call("poseidon_addConstant", c.getLocal("t"), c.getLocal("pC")),
           ),
           c.call("poseidon_applyMatrix", c.getLocal("t"), c.getLocal("pM")),
           c.setLocal("i", c.i32_add(c.getLocal("i"), c.i32_const(1))),
-          c.br(0)
-        )
+          c.br(0),
+        ),
       ),
 
       c.call("poseidon_power5all", c.getLocal("t")),
       c.setLocal(
         "pC",
-        c.call("poseidon_addConstant", c.getLocal("t"), c.getLocal("pC"))
+        c.call("poseidon_addConstant", c.getLocal("t"), c.getLocal("pC")),
       ),
       c.call("poseidon_applyMatrix", c.getLocal("t"), c.getLocal("pP")),
 
@@ -25619,16 +25625,16 @@ function buildPoseidonWasm(module) {
             "frm_add",
             c.i32_const(pState),
             c.getLocal("pC"),
-            c.i32_const(pState)
+            c.i32_const(pState),
           ),
           c.setLocal("pC", c.i32_add(c.getLocal("pC"), c.i32_const(32))),
           c.setLocal(
             "pS",
-            c.call("poseidon_applySMatrix", c.getLocal("t"), c.getLocal("pS"))
+            c.call("poseidon_applySMatrix", c.getLocal("t"), c.getLocal("pS")),
           ),
           c.setLocal("i", c.i32_add(c.getLocal("i"), c.i32_const(1))),
-          c.br(0)
-        )
+          c.br(0),
+        ),
       ),
 
       c.setLocal("i", c.i32_const(0)),
@@ -25638,12 +25644,12 @@ function buildPoseidonWasm(module) {
           c.call("poseidon_power5all", c.getLocal("t")),
           c.setLocal(
             "pC",
-            c.call("poseidon_addConstant", c.getLocal("t"), c.getLocal("pC"))
+            c.call("poseidon_addConstant", c.getLocal("t"), c.getLocal("pC")),
           ),
           c.call("poseidon_applyMatrix", c.getLocal("t"), c.getLocal("pM")),
           c.setLocal("i", c.i32_add(c.getLocal("i"), c.i32_const(1))),
-          c.br(0)
-        )
+          c.br(0),
+        ),
       ),
       c.call("poseidon_power5all", c.getLocal("t")),
       c.call("poseidon_applyMatrix", c.getLocal("t"), c.getLocal("pM")),
@@ -25656,17 +25662,17 @@ function buildPoseidonWasm(module) {
             "frm_copy",
             c.i32_add(
               c.i32_const(pState),
-              c.i32_mul(c.getLocal("i"), c.i32_const(32))
+              c.i32_mul(c.getLocal("i"), c.i32_const(32)),
             ),
             c.i32_add(
               c.getLocal("pOut"),
-              c.i32_mul(c.getLocal("i"), c.i32_const(32))
-            )
+              c.i32_mul(c.getLocal("i"), c.i32_const(32)),
+            ),
           ),
           c.setLocal("i", c.i32_add(c.getLocal("i"), c.i32_const(1))),
-          c.br(0)
-        )
-      )
+          c.br(0),
+        ),
+      ),
     )
   }
 
@@ -25698,7 +25704,7 @@ class MimcSponge {
     const F = this.F
     if (typeof seed === "undefined") seed = SEED
     const c = ethers.ethers.utils.keccak256(
-      ethers.ethers.utils.toUtf8Bytes(seed + "_iv")
+      ethers.ethers.utils.toUtf8Bytes(seed + "_iv"),
     )
     const cn = ffjavascript.Scalar.e(c)
     const iv = cn.mod(F.p)
@@ -25809,12 +25815,12 @@ class Eddsa {
     const sBuff = this.pruneBuffer(
       createBlakeHash__default["default"]("blake512")
         .update(Buffer.from(prv))
-        .digest()
+        .digest(),
     )
     let s = ffjavascript.Scalar.fromRprLE(sBuff, 0, 32)
     const A = this.babyJub.mulPointEscalar(
       this.babyJub.Base8,
-      ffjavascript.Scalar.shr(s, 3)
+      ffjavascript.Scalar.shr(s, 3),
     )
     return A
   }
@@ -25824,12 +25830,12 @@ class Eddsa {
     const sBuff = this.pruneBuffer(
       createBlakeHash__default["default"]("blake512")
         .update(Buffer.from(prv))
-        .digest()
+        .digest(),
     )
     const s = ffjavascript.Scalar.fromRprLE(sBuff, 0, 32)
     const A = this.babyJub.mulPointEscalar(
       this.babyJub.Base8,
-      ffjavascript.Scalar.shr(s, 3)
+      ffjavascript.Scalar.shr(s, 3),
     )
 
     const composeBuff = new Uint8Array(32 + msg.length)
@@ -25840,7 +25846,7 @@ class Eddsa {
       .digest()
     let r = ffjavascript.Scalar.mod(
       ffjavascript.Scalar.fromRprLE(rBuff, 0, 64),
-      this.babyJub.subOrder
+      this.babyJub.subOrder,
     )
     const R8 = this.babyJub.mulPointEscalar(this.babyJub.Base8, r)
     const R8p = this.babyJub.packPoint(R8)
@@ -25856,7 +25862,7 @@ class Eddsa {
 
     const S = ffjavascript.Scalar.mod(
       ffjavascript.Scalar.add(r, ffjavascript.Scalar.mul(hm, s)),
-      this.babyJub.subOrder
+      this.babyJub.subOrder,
     )
     return {
       R8: R8,
@@ -25869,12 +25875,12 @@ class Eddsa {
     const sBuff = this.pruneBuffer(
       createBlakeHash__default["default"]("blake512")
         .update(Buffer.from(prv))
-        .digest()
+        .digest(),
     )
     const s = ffjavascript.Scalar.fromRprLE(sBuff, 0, 32)
     const A = this.babyJub.mulPointEscalar(
       this.babyJub.Base8,
-      ffjavascript.Scalar.shr(s, 3)
+      ffjavascript.Scalar.shr(s, 3),
     )
 
     const composeBuff = new Uint8Array(32 + msg.length)
@@ -25885,7 +25891,7 @@ class Eddsa {
       .digest()
     let r = ffjavascript.Scalar.mod(
       ffjavascript.Scalar.fromRprLE(rBuff, 0, 64),
-      this.babyJub.subOrder
+      this.babyJub.subOrder,
     )
     const R8 = this.babyJub.mulPointEscalar(this.babyJub.Base8, r)
 
@@ -25893,7 +25899,7 @@ class Eddsa {
     const hms = ffjavascript.Scalar.e(this.babyJub.F.toObject(hm))
     const S = ffjavascript.Scalar.mod(
       ffjavascript.Scalar.add(r, ffjavascript.Scalar.mul(hms, s)),
-      this.babyJub.subOrder
+      this.babyJub.subOrder,
     )
     return {
       R8: R8,
@@ -25906,12 +25912,12 @@ class Eddsa {
     const sBuff = this.pruneBuffer(
       createBlakeHash__default["default"]("blake512")
         .update(Buffer.from(prv))
-        .digest()
+        .digest(),
     )
     const s = ffjavascript.Scalar.fromRprLE(sBuff, 0, 32)
     const A = this.babyJub.mulPointEscalar(
       this.babyJub.Base8,
-      ffjavascript.Scalar.shr(s, 3)
+      ffjavascript.Scalar.shr(s, 3),
     )
 
     const composeBuff = new Uint8Array(32 + msg.length)
@@ -25922,7 +25928,7 @@ class Eddsa {
       .digest()
     let r = ffjavascript.Scalar.mod(
       ffjavascript.Scalar.fromRprLE(rBuff, 0, 64),
-      this.babyJub.subOrder
+      this.babyJub.subOrder,
     )
     const R8 = this.babyJub.mulPointEscalar(this.babyJub.Base8, r)
 
@@ -25930,7 +25936,7 @@ class Eddsa {
     const hms = ffjavascript.Scalar.e(this.babyJub.F.toObject(hm))
     const S = ffjavascript.Scalar.mod(
       ffjavascript.Scalar.add(r, ffjavascript.Scalar.mul(hms, s)),
-      this.babyJub.subOrder
+      this.babyJub.subOrder,
     )
     return {
       R8: R8,
@@ -25943,12 +25949,12 @@ class Eddsa {
     const sBuff = this.pruneBuffer(
       createBlakeHash__default["default"]("blake512")
         .update(Buffer.from(prv))
-        .digest()
+        .digest(),
     )
     const s = ffjavascript.Scalar.fromRprLE(sBuff, 0, 32)
     const A = this.babyJub.mulPointEscalar(
       this.babyJub.Base8,
-      ffjavascript.Scalar.shr(s, 3)
+      ffjavascript.Scalar.shr(s, 3),
     )
 
     const composeBuff = new Uint8Array(32 + msg.length)
@@ -25959,7 +25965,7 @@ class Eddsa {
       .digest()
     let r = ffjavascript.Scalar.mod(
       ffjavascript.Scalar.fromRprLE(rBuff, 0, 64),
-      this.babyJub.subOrder
+      this.babyJub.subOrder,
     )
     const R8 = this.babyJub.mulPointEscalar(this.babyJub.Base8, r)
 
@@ -25967,7 +25973,7 @@ class Eddsa {
     const hms = ffjavascript.Scalar.e(this.babyJub.F.toObject(hm))
     const S = ffjavascript.Scalar.mod(
       ffjavascript.Scalar.add(r, ffjavascript.Scalar.mul(hms, s)),
-      this.babyJub.subOrder
+      this.babyJub.subOrder,
     )
     return {
       R8: R8,
@@ -26023,7 +26029,7 @@ class Eddsa {
     const Pleft = this.babyJub.mulPointEscalar(this.babyJub.Base8, sig.S)
     let Pright = this.babyJub.mulPointEscalar(
       A,
-      ffjavascript.Scalar.mul(hms, 8)
+      ffjavascript.Scalar.mul(hms, 8),
     )
     Pright = this.babyJub.addPoint(sig.R8, Pright)
 
@@ -26049,7 +26055,7 @@ class Eddsa {
     const Pleft = this.babyJub.mulPointEscalar(this.babyJub.Base8, sig.S)
     let Pright = this.babyJub.mulPointEscalar(
       A,
-      ffjavascript.Scalar.mul(hms, 8)
+      ffjavascript.Scalar.mul(hms, 8),
     )
     Pright = this.babyJub.addPoint(sig.R8, Pright)
 
@@ -26081,7 +26087,7 @@ class Eddsa {
     const Pleft = this.babyJub.mulPointEscalar(this.babyJub.Base8, sig.S)
     let Pright = this.babyJub.mulPointEscalar(
       A,
-      ffjavascript.Scalar.mul(hms, 8)
+      ffjavascript.Scalar.mul(hms, 8),
     )
     Pright = this.babyJub.addPoint(sig.R8, Pright)
 
@@ -26371,7 +26377,7 @@ class Contract {
       if (ffjavascript.Scalar.isNegative(v)) {
         v = ffjavascript.Scalar.add(
           ffjavascript.Scalar.shl(ffjavascript.Scalar.e(1), 256),
-          v
+          v,
         )
       }
       let S = ffjavascript.Scalar.toString(v, 16)
@@ -39795,18 +39801,18 @@ function createCode(nInputs) {
   C.push(
     ethers.ethers.utils
       .keccak256(
-        ethers.ethers.utils.toUtf8Bytes(`poseidon(uint256[${nInputs}])`)
+        ethers.ethers.utils.toUtf8Bytes(`poseidon(uint256[${nInputs}])`),
       )
-      .slice(0, 10)
+      .slice(0, 10),
   ) // poseidon(uint256[n])
   C.eq()
   C.swap(1)
   C.push(
     ethers.ethers.utils
       .keccak256(
-        ethers.ethers.utils.toUtf8Bytes(`poseidon(bytes32[${nInputs}])`)
+        ethers.ethers.utils.toUtf8Bytes(`poseidon(bytes32[${nInputs}])`),
       )
-      .slice(0, 10)
+      .slice(0, 10),
   ) // poseidon(bytes32[n])
   C.eq()
   C.or()
@@ -39978,8 +39984,8 @@ async function buildPoseidon$1() {
       state = state.map((_, i) =>
         state.reduce(
           (acc, a, j) => F.add(acc, F.mul(M[t - 2][i][j], a)),
-          F.zero
-        )
+          F.zero,
+        ),
       )
     }
     if (nOut == 1) {
@@ -40056,13 +40062,13 @@ async function buildPoseidon() {
       state = state.map(a => pow5(a))
       state = state.map((a, i) => F.add(a, C[(r + 1) * t + i]))
       state = state.map((_, i) =>
-        state.reduce((acc, a, j) => F.add(acc, F.mul(M[j][i], a)), F.zero)
+        state.reduce((acc, a, j) => F.add(acc, F.mul(M[j][i], a)), F.zero),
       )
     }
     state = state.map(a => pow5(a))
     state = state.map((a, i) => F.add(a, C[(nRoundsF / 2 - 1 + 1) * t + i]))
     state = state.map((_, i) =>
-      state.reduce((acc, a, j) => F.add(acc, F.mul(P[j][i], a)), F.zero)
+      state.reduce((acc, a, j) => F.add(acc, F.mul(P[j][i], a)), F.zero),
     )
     for (let r = 0; r < nRoundsP; r++) {
       state[0] = pow5(state[0])
@@ -40074,7 +40080,7 @@ async function buildPoseidon() {
       for (let k = 1; k < t; k++) {
         state[k] = F.add(
           state[k],
-          F.mul(state[0], S[(t * 2 - 1) * r + t + k - 1])
+          F.mul(state[0], S[(t * 2 - 1) * r + t + k - 1]),
         )
       }
       state[0] = s0
@@ -40082,15 +40088,15 @@ async function buildPoseidon() {
     for (let r = 0; r < nRoundsF / 2 - 1; r++) {
       state = state.map(a => pow5(a))
       state = state.map((a, i) =>
-        F.add(a, C[(nRoundsF / 2 + 1) * t + nRoundsP + r * t + i])
+        F.add(a, C[(nRoundsF / 2 + 1) * t + nRoundsP + r * t + i]),
       )
       state = state.map((_, i) =>
-        state.reduce((acc, a, j) => F.add(acc, F.mul(M[j][i], a)), F.zero)
+        state.reduce((acc, a, j) => F.add(acc, F.mul(M[j][i], a)), F.zero),
       )
     }
     state = state.map(a => pow5(a))
     state = state.map((_, i) =>
-      state.reduce((acc, a, j) => F.add(acc, F.mul(M[j][i], a)), F.zero)
+      state.reduce((acc, a, j) => F.add(acc, F.mul(M[j][i], a)), F.zero),
     )
 
     if (nOut == 1) {
@@ -40200,17 +40206,35 @@ class SMT {
   }
 
   async update(_key, _newValue) {
-    const poseidon = await buildPoseidon()
+    this.poseidon ??= await buildPoseidon()
+    this.zero ??= this.poseidon([
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+    ])
     let _hash_value = _newValue
     if (_newValue.length === 256) {
       _hash_value = []
       for (let v of splitEvery(16, _newValue)) {
-        const poseidon = await buildPoseidon()
-        const value = poseidon(v)
+        const value =
+          v.join("") === "0000000000000000" ? this.zero : this.poseidon(v)
         _hash_value.push(value)
       }
     }
-    const newValue = poseidon(_hash_value)
+    const newValue = this.poseidon(_hash_value)
     const F = this.F
     const key = F.e(_key)
     const resFind = await this.find(key)
@@ -40279,7 +40303,7 @@ class SMT {
     let mixed
     if (resFind.siblings.length > 0) {
       const record = await this.db.get(
-        resFind.siblings[resFind.siblings.length - 1]
+        resFind.siblings[resFind.siblings.length - 1],
       )
       if (record.length == 3 && F.eq(record[0], F.one)) {
         mixed = false
@@ -40346,18 +40370,36 @@ class SMT {
   }
 
   async insert(_key, _value) {
-    const poseidon = await buildPoseidon()
+    this.poseidon ??= await buildPoseidon()
+    this.zero ??= this.poseidon([
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+      "0",
+    ])
     let _hash_value = _value
     if (_value.length === 256) {
       _hash_value = []
       for (let v of splitEvery(16, _value)) {
-        const poseidon = await buildPoseidon()
-        const value = poseidon(v)
+        const value =
+          v.join("") === "0000000000000000" ? this.zero : this.poseidon(v)
         _hash_value.push(value)
       }
     }
 
-    const value = poseidon(_hash_value)
+    const value = this.poseidon(_hash_value)
     const F = this.F
     const key = F.e(_key)
     let addedOne = false
