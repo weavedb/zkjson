@@ -79,7 +79,7 @@ class DB {
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       inputs,
       this.wasm,
-      this.zkey
+      this.zkey,
     )
     return [
       ...proof.pi_a.slice(0, 2),
@@ -95,7 +95,7 @@ class DB {
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       inputs,
       this.wasmRU,
-      this.zkeyRU
+      this.zkeyRU,
     )
     return [
       ...proof.pi_a.slice(0, 2),
@@ -115,14 +115,14 @@ class DB {
       val === null
         ? 0
         : typeof val === "string"
-        ? 3
-        : typeof val === "boolean"
-        ? 1
-        : typeof val === "number"
-        ? Number.isInteger(val)
-          ? 2
-          : 2.5
-        : 4
+          ? 3
+          : typeof val === "boolean"
+            ? 1
+            : typeof val === "number"
+              ? Number.isInteger(val)
+                ? 2
+                : 2.5
+              : 4
     switch (type) {
       case 0:
         return await this.zkdb.qNull(...params)
@@ -255,7 +255,7 @@ class DB {
 
   async getInputs({ id, col_id, json, path, val }) {
     const col_root = this.tree.F.toObject(this.tree.root).toString()
-    const col_res = await this.getCol(id)
+    const col_res = await this.getCol(col_id)
 
     let col_siblings = col_res.siblings
     for (let i = 0; i < col_siblings.length; i++)
@@ -335,9 +335,8 @@ class DB {
     const _col = this.getColTree(col)
     return await _col.get(_key)
   }
-  async getCol(_key) {
-    const id = toIndex(_key)
-    return await this.tree.find(id)
+  async getCol(col) {
+    return await this.tree.find(col)
   }
 }
 
