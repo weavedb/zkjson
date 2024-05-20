@@ -1,3 +1,4 @@
+const { resolve } = require("path")
 const {
   path,
   val,
@@ -12,6 +13,7 @@ const {
   decodeVal,
   encodeQuery,
   decodeQuery,
+  DB,
 } = require("../sdk")
 const {
   insert,
@@ -38,7 +40,46 @@ const {
 const { parse } = require("../sdk/parse")
 const { expect } = require("chai")
 
-describe("zkJSON", () => {
+describe("zkJSON", function () {
+  this.timeout(0)
+  it("should generate proofs", async () => {
+    const wasm = resolve(
+      __dirname,
+      "../circom/build/circuits/db/index_js/index.wasm",
+    )
+    const zkey = resolve(
+      __dirname,
+      "../circom/build/circuits/db/index_0001.zkey",
+    )
+
+    const zkdb = new DB({
+      level: 100,
+      size_path: 5,
+      size_val: 5,
+      size_json: 256,
+      size_txs: 10,
+      level_col: 8,
+      wasm,
+      zkey,
+    })
+    await zkdb.init()
+    await zkdb.addCollection()
+    await zkdb.insert(0, "Bob", { name: "Bob" })
+    const zkp = await zkdb.genProof({
+      json: { name: "Bob" },
+      col_id: 0,
+      path: "name",
+      id: "Bob",
+    })
+    await zkdb.addCollection()
+    await zkdb.insert(1, "Alice", { name: "Alice" })
+    const zkp2 = await zkdb.genProof({
+      json: { name: "Alice" },
+      col_id: 1,
+      path: "name",
+      id: "Alice",
+    })
+  })
   it("should operate on uints 3", () => {
     let len = 256
     const json = {
