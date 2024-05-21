@@ -9,13 +9,18 @@ interface IZKDB {
   function qString ( uint[] memory path, uint[] memory zkp) external view returns (string memory);
   
 }
+
+interface IERC20 {
+  function mint (address, uint) external;
+}
   
-contract DEX {
+contract ZKBridge {
   address public zkdb;
+  address public token;
   mapping(uint => bool) public done;
-  mapping(address => uint) public balances;
-  constructor (address _zkdb){
+  constructor (address _zkdb, address _token){
     zkdb = _zkdb;
+    token = _token;
   }
 
   function hexCharToByte(uint8 c) public pure returns (uint8) {
@@ -48,21 +53,21 @@ contract DEX {
     else return bytes1(uint8(b) + 0x57);
   }
   
-  function mint(uint col, uint doc, uint[] memory zkp, uint[] memory zkp2) public returns (address){
+  function bridge(uint col, uint doc, uint[] memory zkp, uint[] memory zkp2) public returns (address){
     require(done[doc] == false, "already minted");
     done[doc] = true;
     uint[] memory path = new uint[](3);
     path[0] = col;
     path[1] = doc;
-    path[2] = 1111297;
+    path[2] = 1111231163111;
     uint[] memory path2 = new uint[](3);
     path2[0] = col;
     path2[1] = doc;
-    path2[2] = 1111298;
+    path2[2] = 1111629731093111311731103116;
     string memory str = IZKDB(zkdb).qString(path, zkp);
     address addr = toAddr(str);
     int balance = IZKDB(zkdb).qInt(path2, zkp2);
-    balances[addr] += uint(balance);
+    IERC20(token).mint(addr, uint(balance));
     return addr;
   }
   
