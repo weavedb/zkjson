@@ -115,7 +115,7 @@ For DB, `level_col` determines how many collections the DB can contain. The coll
 ### Default Parameters and Required POT
 
 | Circuit | POT | size_json | size_path | size_val | level | level_col | tx_size |
-|---|---|---|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|---|
 | **JSON** | 14 | 256 | 4 | 8 |   |   |   |
 | **Collection** | 16 | 256 | 4 | 8 | 168 |   |   |
 | **DB** | 16 | 256 | 4 | 8 | 168 | 8 |   |
