@@ -5,12 +5,12 @@ pragma solidity >=0.7.0 <0.9.0;
 import "../OPRollup.sol";
 
 interface VerifierDB {
-  function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[14] calldata _pubSignals) view external returns (bool);
+  function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[16] calldata _pubSignals) view external returns (bool);
 }
 
 contract SimpleOPRU is OPRollup {
-  uint constant SIZE_PATH = 5;
-  uint constant SIZE_VAL = 5;
+  uint constant SIZE_PATH = 4;
+  uint constant SIZE_VAL = 8;
   address public verifierDB;
 
   constructor (address _verifierRU, address _verifierDB, address _committer){

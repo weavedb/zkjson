@@ -5,15 +5,15 @@ pragma solidity >=0.7.0 <0.9.0;
 import "../ZKJson.sol";
 
 interface VerifierJSON {
-  function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[12] calldata _pubSignals) view external returns (bool);
+  function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[14] calldata _pubSignals) view external returns (bool);
 
 }
 
 contract ZKArweave is ZKJson {
   address public verifier;
   address public validator;
-  uint constant SIZE_PATH = 5;
-  uint constant SIZE_VAL = 5;
+  uint constant SIZE_PATH = 4;
+  uint constant SIZE_VAL = 8;
   
   constructor (address _verifier, address _validator){
     verifier = _verifier;

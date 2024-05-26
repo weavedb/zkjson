@@ -11,7 +11,7 @@ const {
 } = require("./encoder")
 
 module.exports = class Doc {
-  constructor({ size_val = 5, size_path = 5, size_json = 256, wasm, zkey }) {
+  constructor({ size_val = 8, size_path = 4, size_json = 256, wasm, zkey }) {
     this.size_val = size_val
     this.size_path = size_path
     this.size_json = size_json
@@ -51,7 +51,7 @@ module.exports = class Doc {
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       inputs,
       this.wasm,
-      this.zkey
+      this.zkey,
     )
     return [
       ...proof.pi_a.slice(0, 2),

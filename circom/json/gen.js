@@ -1,6 +1,6 @@
 const { Doc } = require("../../sdk")
 
-const gen = async ({ size_val = 5, size_path = 5, size_json = 256 }) => {
+const gen = async ({ size_val = 8, size_path = 4, size_json = 256 }) => {
   const doc = new Doc({ size_val, size_path, size_json })
   const json = {
     num: 1,

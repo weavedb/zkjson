@@ -9,34 +9,34 @@ There are 5 main circuits, and each circuit is built on top of the preceding one
 The base building block to prove JSON with an efficient encoding.
 
 - `size_json` : JSON size : default `256`
-- `size_path` : path size : default `5`
-- `size_val` : value size : default `5`
+- `size_path` : path size : default `4`
+- `size_val` : value size : default `8`
 
 #### Collection.circom
 
-A collection proven by a sparse merkle tree (SMT) can contain many JSON documents (256 ** 100 by default).
+A collection proven by a sparse merkle tree (SMT) can contain many JSON documents (2 ** 168 by default).
 
-- `level` : collection SMT level : default `100`
+- `level` : collection SMT level : default `168`
 - `size_json` : JSON size : default `256`
-- `size_path` : path size : default `5`
-- `size_val` : value size : default `5`
+- `size_path` : path size : default `4`
+- `size_val` : value size : default `8`
 
 #### DB.circom
 
 A database proven by a sparse merkle tree (SMT) can contain many collections (2 ** 8 by default).
 
 - `level_col` : DB SMT level : default `8`
-- `level` : collection SMT level : default `100`
+- `level` : collection SMT level : default `168`
 - `size_json` : JSON size : default `256`
-- `size_path` : path size : default `5`
-- `size_val` : value size : default `5`
+- `size_path` : path size : default `4`
+- `size_val` : value size : default `8`
 
 #### Query.circom
 
 Query proves a JSON data insert or update by a single write query.
 
 - `level_col` : DB SMT level : default `8`
-- `level` : collection SMT level : default `100`
+- `level` : collection SMT level : default `168`
 - `size_json` : JSON size : default `256`
 
 #### Rollup.circom
@@ -45,7 +45,7 @@ Rollup proves batch data transitions.
 
 - `tx_size` : max number of queries in a batch : default `10`
 - `level_col` : DB SMT level : default `8`
-- `level` : collection SMT level : default `100`
+- `level` : collection SMT level : default `168`
 - `size_json` : JSON size : default `256`
 
 ### Powers of Tau
@@ -75,13 +75,13 @@ You can specify the parameters when compiling a circuit. Unspecified parameters 
 For instance, to compile the `JSON` circuit,
 
 ```bash
-yarn compile --power 14 --circuit json --size_json 256 --size_path 5 --size_val 5
+yarn compile --power 14 --circuit json --size_json 256 --size_path 4 --size_val 8
 ```
 
-To compile the `Rollup` circuit,
+To compile the `Rollup` circuit, you might need to increase `--max-old-space-size` of NodeJS.
 
 ```bash
-yarn compile --power 20 --circuit rollup --tx_size 10 --level_col 8 --level 100 --size_json 256
+yarn compile --power 20 --circuit rollup --tx_size 10 --level_col 8 --level 168 --size_json 256
 ```
 
 All the generated files are stored at `build/circuits` including a Solidity verifier contract.
@@ -106,18 +106,20 @@ The default `json_size` is set `256`, which is 256 * 76 digits and should be suf
 Number of Characters = \frac{\log_{10}(2^{\text{Level}})}{2}
 ```
 
-`level=100` can allow 15 characters in document ID. This is significant because document IDs are often used in access control rules of NoSQL databases (with WeaveDB, for instance).
+`level=168` can allow 28 characters in document ID. This is significant because document IDs are often used in access control rules of NoSQL databases (with WeaveDB, for instance).
+
+28 characters can fit compressed Ethereum addresses (20 bytes) in Bse64 format.
 
 For DB, `level_col` determines how many collections the DB can contain. The collection IDs use the direct index numbers and are not converted to an alphanumeric representation, so `level_col=8` (2 ** 8 = 256) collections should be sufficient for most applications. But you are free to set a different value.
 
 ### Default Parameters and Required POT
 
-| Circuit | POT | size_json | size_path | size_val | level | level_col | tx_size |
-|---|---|---|---|---|---|---|---|
-| **JSON** | 14 | 256 | 5 | 5 |   |   |   |
-| **Collection** | 16 | 256 | 5 | 5 | 100 |   |   |
-| **DB** | 16 | 256 | 5 | 5 | 100 | 8 |   |
-| **Query** | 17 | 256 |  |   | 100 | 8 |   |
-| **Rollup** | 20 | 256 |  |   | 100 | 8 | 10 |
+| Circuit | POT | size_json | size_path | size_val | level | level_col | tx_size | Proof Gen |
+|---|---|---|---|---|---|---|---|---|
+| **JSON** | 14 | 256 | 4 | 8 |   |   |   | 3 secs  |
+| **Collection** | 16 | 256 | 4 | 8 | 168 |   |   | 3 secs  |
+| **DB** | 16 | 256 | 4 | 8 | 168 | 8 |   | 3 secs  |
+| **Query** | 17 | 256 |  |   | 168 | 8 |   | 3 secs  |
+| **Rollup** | 20 | 256 |  |   | 168 | 8 | 14 | 30 secs  |
 
 **Currently the SDK only works with `size_json=256` due to some hash logic. Keep it 256 for now please.**

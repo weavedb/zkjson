@@ -25,7 +25,7 @@ template IPFS (size_json, size_path, size_val, nBlocks) {
     var _val[size_json];
     var _temp[size_json];
     _json = parse(encoded, size_json, _path, _val, _json, _temp);
-    component _json2 = JSON(256, 5, 5);
+    component _json2 = JSON(256, size_path, size_val);
     _json2.json <-- _json;
     _json2.path <== path;
     _json2.val <== val;
