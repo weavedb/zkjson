@@ -6,9 +6,9 @@ const Collection = require("./collection")
 
 class DB {
   constructor({
-    size_val = 5,
-    size_path = 5,
-    level = 100,
+    size_val = 8,
+    size_path = 4,
+    level = 168,
     size_json = 256,
     size_txs = 10,
     level_col = 8,
@@ -22,7 +22,7 @@ class DB {
     this.wasmRU = wasmRU
     this.zkeyRU = zkeyRU
     this.level_col = level_col
-    this.size = size_val
+    this.size_val = size_val
     this.size_path = size_path
     this.level = level
     this.size_json = size_json

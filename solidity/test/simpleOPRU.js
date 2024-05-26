@@ -31,9 +31,9 @@ describe("MyRollup", function () {
 
   it("should verify rollup transactions", async function () {
     db = new DB({
-      level: 100,
-      size_path: 5,
-      size_val: 5,
+      level: 168,
+      size_path: 4,
+      size_val: 8,
       size_json: 256,
       size_txs: 10,
       level_col: 8,
@@ -65,8 +65,8 @@ describe("MyRollup", function () {
       await db.insert(...v)
     }
     const root = db.tree.F.toObject(db.tree.root).toString()
-    console.log(root)
-    await myru.commit(root)
+
+    await myru.commitRoot(root)
 
     const zkp2 = await db.genProof({
       json: people[0],
@@ -74,50 +74,9 @@ describe("MyRollup", function () {
       path: "name",
       id: "Bob",
     })
-    console.log(zkp2)
+
     expect(
       await myru.qString([col_id, toIndex("Bob"), ...path("name")], zkp2),
     ).to.eql("Bob")
-    /*
-      const people = [
-      { name: "Bob", age: 10 },
-      { name: "Alice", age: 20 },
-      { name: "Mike", age: 30 },
-      { name: "Beth", age: 40 },
-    ]
-    let txs = people.map(v => {
-      return [col_id, v.name, v]
-    })
-
-    for (const v of txs) {
-      await db.insert(...v)
-    }
-    const root = db.tree.F.toObject(db.tree.root).toString()
-    console.log(root)
-    await myru.commit(root)
-
-    const zkp2 = await db.genProof({
-      json: people[0],
-      col_id,
-      path: "age",
-      id: "Bob",
-    })
-    console.log(zkp2)
-    expect(
-      (
-        await myru.qInt([col_id, toIndex("Bob"), ...path("age")], zkp2)
-      ).toNumber(),
-    ).to.eql(10)
-
-    const zkp3 = await db.genProof({
-      json: people[3],
-      col_id,
-      path: "name",
-      id: "Beth",
-    })
-    expect(
-      await myru.qString([col_id, toIndex("Beth"), ...path("name")], zkp3),
-      ).to.eql("Beth")
-      */
   })
 })

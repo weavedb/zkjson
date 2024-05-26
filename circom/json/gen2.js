@@ -1,8 +1,8 @@
 const { Doc, fromSignal } = require("../../sdk")
 
 const gen2 = async ({
-  size_val = 5,
-  size_path = 5,
+  size_val = 256,
+  size_path = 256,
   size_json = 256,
   json,
   path,

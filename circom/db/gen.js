@@ -5,10 +5,10 @@ const _path = "a"
 const _val = _json[_path]
 
 const gen = async ({
-  size_val = 5,
-  size_path = 5,
+  size_val = 8,
+  size_path = 4,
   size_json = 256,
-  level = 32,
+  level = 168,
   level_col = 8,
 }) => {
   const db = new DB({ size_val, size_path, size_json, level, level_col })

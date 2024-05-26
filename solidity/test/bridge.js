@@ -8,7 +8,7 @@ async function deploy() {
   const verifierDB = await VerifierDB.deploy()
   const Verifier = await ethers.getContractFactory("Groth16VerifierRU")
   const verifier = await Verifier.deploy()
-  const ZKDB = await ethers.getContractFactory("SimpleRU")
+  const ZKDB = await ethers.getContractFactory("SimpleOPRU")
   const zkdb = await ZKDB.deploy(
     verifier.address,
     verifierDB.address,
@@ -31,14 +31,6 @@ describe("zkDB", function () {
     const json = { amount: 100, to: user.address.toLowerCase() }
 
     const db = new DB({
-      wasmRU: resolve(
-        __dirname,
-        "../../circom/build/circuits/rollup/index_js/index.wasm",
-      ),
-      zkeyRU: resolve(
-        __dirname,
-        "../../circom/build/circuits/rollup/index_0001.zkey",
-      ),
       wasm: resolve(
         __dirname,
         "../../circom/build/circuits/db/index_js/index.wasm",
@@ -51,8 +43,9 @@ describe("zkDB", function () {
     await db.init()
     const col = await db.addCollection()
     let txs = [[col, "abc", json]]
-    const zkp = await db.genRollupProof(txs)
-    await zkdb.commit(zkp)
+    for (const v of txs) await db.insert(...v)
+    const root = db.tree.F.toObject(db.tree.root).toString()
+    await zkdb.commitRoot(root)
 
     const proof = await db.genProof({
       col_id: col,
@@ -60,6 +53,7 @@ describe("zkDB", function () {
       json: json,
       path: "to",
     })
+
     const proof2 = await db.genProof({
       col_id: col,
       id: "abc",
@@ -67,8 +61,8 @@ describe("zkDB", function () {
       path: "amount",
     })
     const sigs = proof.slice(8)
-    const _col = sigs[12]
-    const _doc = sigs[13]
+    const _col = sigs[14]
+    const _doc = sigs[15]
 
     expect((await token.balanceOf(user.address)).toNumber()).to.eql(0)
     await bridge.bridge(_col, _doc, proof, proof2)

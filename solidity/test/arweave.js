@@ -38,7 +38,7 @@ describe("zkArweave", function () {
   })
 
   it("Should verify rollup transactions", async function () {
-    const zkar = new ZKAR(zkdb, 5, 256)
+    const zkar = new ZKAR(zkdb, 4, 8, 256)
 
     const _json = { a: "Hello", b: true, c: null, d: 1.1, e: 5, f: [1, 2, 3] }
     const _path = "a"

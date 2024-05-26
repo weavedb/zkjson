@@ -14,7 +14,7 @@ contract ZKRollup is ZKQuery {
   uint public root;
   
   function _validateQueryRU(uint[] memory path, uint[] memory zkp, uint size_path, uint size_val) internal view returns(uint[] memory){
-    require(zkp[19] == root, "root mismatch");
+    require(zkp[size_path + size_val + 9] == root, "root mismatch");
     require(zkp[size_path + size_val + 10] == path[0], "wrong collection");
     require(zkp[size_path + size_val + 11] == path[1], "wrong doc");
     require(zkp[8] == 1, "value doesn't exist");

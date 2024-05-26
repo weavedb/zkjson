@@ -3,7 +3,7 @@ const { pad, toSignal, id2str, encode, toIndex } = require("./encoder")
 const Doc = require("./doc")
 
 class Collection {
-  constructor({ size_val = 5, size_path = 5, size_json = 16, level = 100 }) {
+  constructor({ size_val = 8, size_path = 4, size_json = 256, level = 168 }) {
     this.size_val = size_val
     this.size_path = size_path
     this.size_json = size_json

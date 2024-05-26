@@ -24,11 +24,11 @@ describe("MyApp", function () {
     const doc = new Doc({
       wasm: resolve(
         __dirname,
-        "../../circom/build/circuits/json/index_js/index.wasm"
+        "../../circom/build/circuits/json/index_js/index.wasm",
       ),
       zkey: resolve(
         __dirname,
-        "../../circom/build/circuits/json/index_0001.zkey"
+        "../../circom/build/circuits/json/index_0001.zkey",
       ),
     })
     const json = {
@@ -59,18 +59,18 @@ describe("MyApp", function () {
     // query float
     const zkp5 = await doc.genProof({ json, path: "float" })
     expect(
-      (await myapp.qFloat(path("float"), zkp5)).map(f => f.toNumber())
+      (await myapp.qFloat(path("float"), zkp5)).map(f => f.toNumber()),
     ).to.eql([1, 2, 123])
 
     // query array and get number
     const zkp6 = await doc.genProof({ json, path: "array" })
     expect(
-      (await myapp.qCustom(path("array"), path("[1]"), zkp6)).toNumber()
+      (await myapp.qCustom(path("array"), path("[1]"), zkp6)).toNumber(),
     ).to.eql(2)
+
     // conditional operator
     const zkp7 = await doc.genProof({ json, path: "num", query: ["$gt", 0] })
-    expect(await myapp.qCond(path("num"), zkp7.slice(15, 21), zkp7)).to.eql(
-      true
-    )
+    expect(await myapp.qCond(path("num"), zkp7.slice(14), zkp7)).to.eql(true)
+    return
   })
 })

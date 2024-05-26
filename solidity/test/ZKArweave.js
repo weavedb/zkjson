@@ -16,23 +16,24 @@ const {
 } = require("../../sdk")
 
 module.exports = class ZKArweave {
-  constructor(zkdb, size, size_json) {
+  constructor(zkdb, size_path, size_val, size_json) {
     this.zkdb = zkdb
-    this.size = size
+    this.size_path = size_path
+    this.size_val = size_val
     this.size_json = size_json
   }
   async genProof(_path, _json) {
     const json = pad(toSignal(encode(_json)), this.size_json)
-    const path = pad(toSignal(encodePath(_path)), this.size)
-    const val = pad(toSignal(encodeVal(_json[_path])), this.size)
+    const path = pad(toSignal(encodePath(_path)), this.size_path)
+    const val = pad(toSignal(encodeVal(_json[_path])), this.size_val)
     const _inputs = { json, path, val }
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       _inputs,
       resolve(
         __dirname,
-        "../../circom/build/circuits/json/index_js/index.wasm"
+        "../../circom/build/circuits/json/index_js/index.wasm",
       ),
-      resolve(__dirname, "../../circom/build/circuits/json/index_0001.zkey")
+      resolve(__dirname, "../../circom/build/circuits/json/index_0001.zkey"),
     )
     return [
       ...proof.pi_a.slice(0, 2),
@@ -70,14 +71,14 @@ module.exports = class ZKArweave {
       val === null
         ? 0
         : typeof val === "string"
-        ? 3
-        : typeof val === "boolean"
-        ? 1
-        : typeof val === "number"
-        ? Number.isInteger(val)
-          ? 2
-          : 2.5
-        : 4
+          ? 3
+          : typeof val === "boolean"
+            ? 1
+            : typeof val === "number"
+              ? Number.isInteger(val)
+                ? 2
+                : 2.5
+              : 4
     switch (type) {
       case 0:
         return await this.zkdb.qNull(...params)

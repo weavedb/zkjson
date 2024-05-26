@@ -1,7 +1,6 @@
 const chai = require("chai")
 const { join } = require("path")
 const wasm_tester = require("circom_tester").wasm
-const { fromSignal, Doc } = require("../../sdk")
 const gen = require("./gen")
 const gen2 = require("./gen2")
 const json = {
