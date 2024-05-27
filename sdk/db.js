@@ -1,6 +1,6 @@
 const newMemEmptyTrie = require("./circomlibjs").newMemEmptyTrie
 const snarkjs = require("snarkjs")
-const { range } = require("ramda")
+const { indexOf, range, isNil } = require("ramda")
 const { pad, toSignal, encode, toIndex } = require("./encoder")
 const Collection = require("./collection")
 
@@ -28,6 +28,7 @@ class DB {
     this.size_json = size_json
     this.size_txs = size_txs
     this.count = 0
+    this.ids = []
   }
 
   async init() {
@@ -277,9 +278,23 @@ class DB {
       col_root,
     }
   }
-
-  async addCollection() {
-    const id = this.count++
+  getID(num) {
+    if (!isNil(num)) {
+      if (indexOf(+num)(this.ids) !== -1) {
+        throw Error("id exists")
+      }
+    } else {
+      while (indexOf(this.count)(this.ids) !== -1) {
+        this.count++
+      }
+      return this.count++
+    }
+  }
+  async addCollection(num) {
+    if (!isNil(num) && (Math.round(num) !== +num || Number.isNaN(+num))) {
+      throw Error("id is not numeric")
+    }
+    const id = this.getID(num)
     const col = await this.tree.find(id)
     if (col.found) throw Error("collection exists")
     const _col = new Collection({
