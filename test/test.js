@@ -52,16 +52,7 @@ describe("zkJSON", function () {
       "../circom/build/circuits/db/index_0001.zkey",
     )
 
-    const zkdb = new DB({
-      level: 100,
-      size_path: 5,
-      size_val: 5,
-      size_json: 256,
-      size_txs: 10,
-      level_col: 8,
-      wasm,
-      zkey,
-    })
+    const zkdb = new DB({ wasm, zkey })
     await zkdb.init()
     await zkdb.addCollection()
     await zkdb.insert(0, "Bob", { name: "Bob" })
