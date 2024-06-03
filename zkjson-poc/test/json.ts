@@ -66,5 +66,4 @@ describe("MyApp", function () {
     const zkp7 = await doc.genProof({ json, path: "num", query: ["$gt", 0] });
     expect(await myapp.qCond(path("num"), zkp7.slice(15, 21), zkp7)).to.eql(true);
   });
-});
- */
+}); */

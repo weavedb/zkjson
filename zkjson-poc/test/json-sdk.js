@@ -11,7 +11,7 @@ async function deploy() {
   return { myapp }
 }
 
-describe("MyApp", function () {
+describe("MyApp", function () { 
   let myapp
   this.timeout(0)
 
@@ -42,7 +42,6 @@ describe("MyApp", function () {
 
     // query number
     const zkp = await doc.genProof({ json, path: "num" })
-    console.log("zkp", zkp)
     expect((await myapp.qInt(path("num"), zkp)).toNumber()).to.eql(1)
 
     // query string
@@ -68,11 +67,12 @@ describe("MyApp", function () {
     expect(
       (await myapp.qCustom(path("array"), path("[1]"), zkp6)).toNumber()
     ).to.eql(2)
-
+	
     // conditional operator
     const zkp7 = await doc.genProof({ json, path: "num", query: ["$gt", 0] })
     expect(await myapp.qCond(path("num"), zkp7.slice(15, 21), zkp7)).to.eql(
       true
     )
+
   })
 })
