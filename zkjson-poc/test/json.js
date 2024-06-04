@@ -1,5 +1,5 @@
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers")
-const { path, Doc } = require("../../sdk")
+const { path, Doc } = require("../sdk")
 const { resolve } = require("path")
 const { expect } = require("chai")
 
@@ -43,6 +43,7 @@ describe("MyApp", function () {
     // query number
     const zkp = await doc.genProof({ json, path: "num" })
     console.log("zkp", zkp)
+    console.log("path", path("num"))
     expect((await myapp.qInt(path("num"), zkp)).toNumber()).to.eql(1)
 
     // query string

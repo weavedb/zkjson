@@ -1,35 +1,31 @@
 // SPDX-License-Identifier: UNLICENSED
 
-pragma solidity ^0.8.14;
+pragma solidity >=0.7.0 <0.9.0;
 
-import "../sdk/contracts/ZKRollup.sol";
-import "../sdk/contracts/ZKJson.sol";
-import "hardhat/console.sol";
+import "../zkjson/contracts/ZKRollup.sol";
 
-
-
-interface VerifierJSON {
-  function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[12] calldata _pubSignals) view external returns (bool);
+interface VerifierDB {
+  function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[14] calldata _pubSignals) view external returns (bool);
 }
 
-contract Json is ZKJson, ZKRollup {
+contract MyRollup is ZKRollup {
   uint constant SIZE_PATH = 5;
   uint constant SIZE_VAL = 5;
-  
-  constructor (address _verifierJSON){
-    verifierJSON = _verifierJSON;
+  address public verifierDB;
+
+  constructor (address _verifierRU, address _verifierDB, address _committer){
+    verifierRU = _verifierRU;
+    verifierDB = _verifierDB;
+    committer = _committer;
   }
   
   function validateQuery(uint[] memory path, uint[] memory zkp) private view returns(uint[] memory){
-    verify(zkp, VerifierJSON.verifyProof.selector, verifierJSON);
-    console.log("verify Done");
-	return _validateQueryRU(path, zkp, SIZE_PATH, SIZE_VAL);    
+    verify(zkp, VerifierDB.verifyProof.selector, verifierDB);
+    return _validateQueryRU(path, zkp, SIZE_PATH, SIZE_VAL);    
   }
 
   function qInt (uint[] memory path, uint[] memory zkp) public view returns (int) {
-    console.log("1");
     uint[] memory value = validateQuery(path, zkp);
-    console.log("2");
     return _qInt(value);
   }
 
@@ -56,10 +52,5 @@ contract Json is ZKJson, ZKRollup {
   function qNull (uint[] memory path, uint[] memory zkp) public view returns (bool) {
     uint[] memory value = validateQuery(path, zkp);
     return _qNull(value);
-  }
-  
-  function qCustom (uint[] memory path, uint[] memory path2, uint[] memory zkp) public view returns (int) {
-    uint[] memory value = validateQuery(path, zkp);
-    return getInt(path2, value);
   }
 }
