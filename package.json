@@ -5,7 +5,8 @@
   "license": "MIT",
   "scripts": {
     "ceremony": "node circom/scripts/ceremony.js",
-    "compile": "node circom/scripts/compile.js"
+    "compile": "node circom/scripts/compile.js",
+    "test": "mocha test"
   },
   "dependencies": {
     "chai": "^4",

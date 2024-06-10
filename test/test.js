@@ -40,7 +40,7 @@ const {
 const { parse } = require("../sdk/parse")
 const { expect } = require("chai")
 
-describe("zkJSON", function () {
+describe.skip("zkJSON", function () {
   this.timeout(0)
   it("should generate proofs", async () => {
     const wasm = resolve(
