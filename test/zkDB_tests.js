@@ -45,7 +45,7 @@ const { groth16 } = require("snarkjs");
 require('dotenv').config({ path: resolve(__dirname, '../.env') });
 
 // Define a constant with the JSON information
-const jsonInfo = { gamer: "Alice", strikes: 30, place: "BS" };
+const jsonInfo = { gamer: "Jack", strikes: 300, place: "BS", weapon: "AK47", place2: "A"};
 
 describe("zkDB-zkJSON", function () {
   this.timeout(0);

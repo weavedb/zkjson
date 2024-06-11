@@ -6,7 +6,7 @@
   "scripts": {
     "ceremony": "node circom/scripts/ceremony.js",
     "compile": "node circom/scripts/compile.js",
-    "test": "mocha test"
+    "test": "mocha test --exit"
   },
   "dependencies": {
     "chai": "^4",
