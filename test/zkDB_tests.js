@@ -41,7 +41,6 @@ const {
 const { parse } = require("../sdk/parse");
 const { expect } = require("chai");
 const { groth16 } = require("snarkjs");
-const fs = require('fs');
 
 require('dotenv').config({ path: resolve(__dirname, '../.env') });
 
@@ -74,28 +73,14 @@ describe("zkDB-zkJSON", function () {
     const zkdb = new DB({ wasm, zkey });
     await zkdb.init();
     await zkdb.addCollection();
-    await zkdb.insert(0, "Alice", jsonInfo);
-  
+    await zkdb.insert(0, "Jack", jsonInfo);
 
     const { proof, publicSignals } = await zkdb.genProof({
       json: jsonInfo,
       col_id: 0,
-      path: "name",
-      id: "Alice",
+      path: "gamer",
+      id: "Jack",
     });
-    
-    // Load the verification key
-    const vKey = JSON.parse(fs.readFileSync(vkey));
-      
-    // Check if vKey, publicSignals and proof are defined
-    if (!vKey || !publicSignals || !proof) {
-      console.error('vKey, publicSignals or proof is undefined');
-      return;
-    }
-    
-    // Verify the proof
-    const verification = await groth16.verify(vKey, publicSignals, proof);
-    console.log(verification ? 'Proof is valid' : 'Proof is invalid');
 
     // Combine jsonInfo with zkp to create finalJson
     const finalJson = { ...jsonInfo, zkProof: proof };

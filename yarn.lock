@@ -357,6 +357,14 @@
     fastfile "0.0.20"
     ffjavascript "^0.2.48"
 
+"@iden3/binfileutils@0.0.12":
+  version "0.0.12"
+  resolved "https://registry.npmjs.org/@iden3/binfileutils/-/binfileutils-0.0.12.tgz"
+  integrity sha512-naAmzuDufRIcoNfQ1d99d7hGHufLA3wZSibtr4dMe6ZeiOPV1KwOZWTJ1YVz4HbaWlpDuzVU72dS4ATQS4PXBQ==
+  dependencies:
+    fastfile "0.0.20"
+    ffjavascript "^0.3.0"
+
 "@mongodb-js/saslprep@^1.1.5":
   version "1.1.7"
   resolved "https://registry.npmjs.org/@mongodb-js/saslprep/-/saslprep-1.1.7.tgz"
@@ -621,12 +629,12 @@ chokidar@3.5.3:
   optionalDependencies:
     fsevents "~2.3.2"
 
-circom_runtime@0.1.24:
-  version "0.1.24"
-  resolved "https://registry.npmjs.org/circom_runtime/-/circom_runtime-0.1.24.tgz"
-  integrity sha512-H7/7I2J/cBmRnZm9docOCGhfxzS61BEm4TMCWcrZGsWNBQhePNfQq88Oj2XpUfzmBTCd8pRvRb3Mvazt3TMrJw==
+circom_runtime@0.1.25:
+  version "0.1.25"
+  resolved "https://registry.npmjs.org/circom_runtime/-/circom_runtime-0.1.25.tgz"
+  integrity sha512-xBGsBFF5Uv6AKvbpgExYqpHfmfawH2HKe+LyjfKSRevqEV8u63i9KGHVIILsbJNW+0c5bm/66f0PUYQ7qZSkJA==
   dependencies:
-    ffjavascript "0.2.60"
+    ffjavascript "0.3.0"
 
 circom_tester@^0.0.20:
   version "0.0.20"
@@ -860,7 +868,7 @@ fastfile@0.0.20:
   resolved "https://registry.npmjs.org/fastfile/-/fastfile-0.0.20.tgz"
   integrity sha512-r5ZDbgImvVWCP0lA/cGNgQcZqR+aYdFx3u+CtJqUE510pBUVGMn4ulL/iRTI4tACTYsNJ736uzFxEBXesPAktA==
 
-ffjavascript@^0.2.45, ffjavascript@^0.2.48, ffjavascript@^0.2.60, ffjavascript@0.2.62:
+ffjavascript@^0.2.45, ffjavascript@^0.2.48, ffjavascript@^0.2.60:
   version "0.2.62"
   resolved "https://registry.npmjs.org/ffjavascript/-/ffjavascript-0.2.62.tgz"
   integrity sha512-uJ7MTrdzhX/3f+hxn0XhdXbJCqYZJSBB6y2/ui4t21vKYVjyTMlU80pPXu40ir6qpqbrdzUeKdlOdJ0aFG9UNA==
@@ -868,6 +876,15 @@ ffjavascript@^0.2.45, ffjavascript@^0.2.48, ffjavascript@^0.2.60, ffjavascript@0
     wasmbuilder "0.0.16"
     wasmcurves "0.2.2"
     web-worker "^1.2.0"
+
+ffjavascript@^0.3.0, ffjavascript@0.3.0:
+  version "0.3.0"
+  resolved "https://registry.npmjs.org/ffjavascript/-/ffjavascript-0.3.0.tgz"
+  integrity sha512-l7sR5kmU3gRwDy8g0Z2tYBXy5ttmafRPFOqY7S6af5cq51JqJWt5eQ/lSR/rs2wQNbDYaYlQr5O+OSUf/oMLoQ==
+  dependencies:
+    wasmbuilder "0.0.16"
+    wasmcurves "0.2.2"
+    web-worker "1.2.0"
 
 ffjavascript@0.2.60:
   version "0.2.60"
@@ -1410,7 +1427,7 @@ punycode@^2.3.0:
   resolved "https://registry.npmjs.org/punycode/-/punycode-2.3.1.tgz"
   integrity sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==
 
-r1csfile@^0.0.47, r1csfile@0.0.47:
+r1csfile@^0.0.47:
   version "0.0.47"
   resolved "https://registry.npmjs.org/r1csfile/-/r1csfile-0.0.47.tgz"
   integrity sha512-oI4mAwuh1WwuFg95eJDNDDL8hCaZkwnPuNZrQdLBWvDoRU7EG+L/MOHL7SwPW2Y+ZuYcTLpj3rBkgllBQZN/JA==
@@ -1419,6 +1436,16 @@ r1csfile@^0.0.47, r1csfile@0.0.47:
     "@iden3/binfileutils" "0.0.11"
     fastfile "0.0.20"
     ffjavascript "0.2.60"
+
+r1csfile@0.0.48:
+  version "0.0.48"
+  resolved "https://registry.npmjs.org/r1csfile/-/r1csfile-0.0.48.tgz"
+  integrity sha512-kHRkKUJNaor31l05f2+RFzvcH5XSa7OfEfd/l4hzjte6NL6fjRkSMfZ4BjySW9wmfdwPOtq3mXurzPvPGEf5Tw==
+  dependencies:
+    "@iden3/bigarray" "0.0.2"
+    "@iden3/binfileutils" "0.0.12"
+    fastfile "0.0.20"
+    ffjavascript "0.3.0"
 
 ramda@^0.29.1:
   version "0.29.1"
@@ -1495,21 +1522,21 @@ set-function-length@^1.1.1:
     gopd "^1.0.1"
     has-property-descriptors "^1.0.0"
 
-snarkjs@^0.7.0:
-  version "0.7.2"
-  resolved "https://registry.npmjs.org/snarkjs/-/snarkjs-0.7.2.tgz"
-  integrity sha512-A8yPFm9pRnZ7XYXfPSjSFnugEV1rsHGjb8W7c0Qk7nzXl5h3WANTkpVC5FYxakmw/GKWekz7wjjHaOFtPp823Q==
+snarkjs@^0.7.0, snarkjs@^0.7.4:
+  version "0.7.4"
+  resolved "https://registry.npmjs.org/snarkjs/-/snarkjs-0.7.4.tgz"
+  integrity sha512-x4cOCR4YXSyBlLtfnUUwfbZrw8wFd/Y0lk83eexJzKwZB8ELdpH+10ts8YtDsm2/a3WK7c7p514bbE8NpqxW8w==
   dependencies:
-    "@iden3/binfileutils" "0.0.11"
+    "@iden3/binfileutils" "0.0.12"
     bfj "^7.0.2"
     blake2b-wasm "^2.4.0"
-    circom_runtime "0.1.24"
+    circom_runtime "0.1.25"
     ejs "^3.1.6"
     fastfile "0.0.20"
-    ffjavascript "0.2.62"
+    ffjavascript "0.3.0"
     js-sha3 "^0.8.0"
     logplease "^1.2.15"
-    r1csfile "0.0.47"
+    r1csfile "0.0.48"
 
 source-map@~0.6.1:
   version "0.6.1"
@@ -1667,7 +1694,7 @@ wasmcurves@0.2.2:
   dependencies:
     wasmbuilder "0.0.16"
 
-web-worker@^1.2.0:
+web-worker@^1.2.0, web-worker@1.2.0:
   version "1.2.0"
   resolved "https://registry.npmjs.org/web-worker/-/web-worker-1.2.0.tgz"
   integrity sha512-PgF341avzqyx60neE9DD+XS26MMNMoUQRz9NOZwW32nPQrF6p77f1htcnjBSEV8BGMKZ16choqUG4hyI0Hx7mA==
