@@ -87,8 +87,24 @@ class DB {
       ...proof.pi_b[0].slice(0, 2).reverse(),
       ...proof.pi_b[1].slice(0, 2).reverse(),
       ...proof.pi_c.slice(0, 2),
-      ...publicSignals,
+      ...publicSignals,    
     ]
+  }
+
+  async genSignalProof({ json, col_id, path, id }) {
+    const inputs = await this.getInputs({
+      id,
+      col_id,
+      json,
+      path,
+      val: this.getVal(json, path),
+    })
+    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+      inputs,
+      this.wasm,
+      this.zkey,
+    )
+    return { proof, publicSignals }
   }
 
   async genRollupProof(txs) {
