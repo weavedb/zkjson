@@ -41,6 +41,7 @@ const {
 const { parse } = require("../sdk/parse");
 const { expect } = require("chai");
 const { groth16 } = require("snarkjs");
+const fs = require('fs');
 
 require('dotenv').config({ path: resolve(__dirname, '../.env') });
 
@@ -76,36 +77,30 @@ describe("zkDB-zkJSON", function () {
     await zkdb.insert(0, "Alice", jsonInfo);
   
 
-    const proof = await zkdb.genProof({
+    const { proof, publicSignals } = await zkdb.genProof({
       json: jsonInfo,
       col_id: 0,
       path: "name",
       id: "Alice",
     });
+    
+    // Load the verification key
+    const vKey = JSON.parse(fs.readFileSync(vkey));
+      
+    // Check if vKey, publicSignals and proof are defined
+    if (!vKey || !publicSignals || !proof) {
+      console.error('vKey, publicSignals or proof is undefined');
+      return;
+    }
+    
+    // Verify the proof
+    const verification = await groth16.verify(vKey, publicSignals, proof);
+    console.log(verification ? 'Proof is valid' : 'Proof is invalid');
 
-    // Parse the proofResult into pi_a, pi_b, pi_c and publicSignals
-    //const proof = {
-    //  pi_a: proofResult.slice(0, 3).map(BigInt),
-    //  pi_b: [proofResult.slice(3, 5).map(BigInt), proofResult.slice(5, 7).map(BigInt)],
-    //  pi_c: proofResult.slice(7, 10).map(BigInt)
-    //};
-    //const publicSignals = proofResult.slice(10).map(BigInt);
-
-    // Log proof and publicSignals for debugging
-    //console.log("Proof:", proof);
-    //console.log("Public Signals:", publicSignals);
-//
     // Combine jsonInfo with zkp to create finalJson
     const finalJson = { ...jsonInfo, zkProof: proof };
 
     const collection1 = db.collection('counterstrike');
-    await collection1.insertOne(finalJson);  // Use finalJson constant
-
-    // Verify the proof
-    //const verificationKey = require(vkey);
-    //console.log("Verification Key:", verificationKey);
-    //const isValid = await groth16.verify(verificationKey, publicSignals, proof);
-    //console.log("Proof is valid:", isValid);
-    //expect(isValid).to.be.true;
+    await collection1.insertOne(finalJson);
   });
 });
