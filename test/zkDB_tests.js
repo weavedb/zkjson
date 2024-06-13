@@ -43,11 +43,30 @@ const { expect } = require("chai");
 const { groth16 } = require("snarkjs");
 const fs = require('fs');
 const snarkjs = require("snarkjs");
+const crypto = require('crypto');
 
 require('dotenv').config({ path: resolve(__dirname, '../.env') });
 
+function createFingerprint(json) {
+  const jsonString = JSON.stringify(json);
+  const hash = crypto.createHash('sha256');
+  hash.update(jsonString);
+  const fingerprint = hash.digest('hex');
+  return fingerprint;
+}
+
 // Define a constant with the JSON information
-const jsonInfo = { gamer: "Marcus", strikes: 7800, place: "SP", weapon: "AK-47", place2: "C"};
+const jsonInfo = { gamer: "JackieS", strikes: 780, place: "NY", weapon: "AK-47", place2: "C"};
+
+// Create a fingerprint for the JSON information
+const fingerprint = createFingerprint(jsonInfo);
+
+//TODO: Upload the fingerprint to the Mountain Merkle Range smart contract
+
+// Combine the JSON information with the fingerprint
+const json = { ...jsonInfo, fingerprint: fingerprint };
+
+//
 
 describe("zkDB-zkJSON", function () {
   this.timeout(0);
@@ -80,17 +99,17 @@ describe("zkDB-zkJSON", function () {
       "../circom/build/circuits/db/verification_key.json"
     );
 
-    // Create a new instance of the DB class
+    // Create a new instance of the DB class (ZKDB)
     const zkdb = new DB({ wasm, zkey });
 
-    // Initialize the database
+    // Initialize the zkdb database
     await zkdb.init();
     await zkdb.addCollection();
-    await zkdb.insert(0, "Jack", jsonInfo);
+    await zkdb.insert(0, "Jack", json);
 
     // Generate the proof
     const { proof, publicSignals } = await zkdb.genSignalProof({
-      json: jsonInfo,
+      json: json,
       col_id: 0,
       path: "gamer",
       id: "Jack",
@@ -105,13 +124,13 @@ describe("zkDB-zkJSON", function () {
     // Assert that the proof is valid
     expect(isValid).to.be.true;
 
-    // Combine jsonInfo with zkp to create finalJson
-    const finalJson = { ...jsonInfo, zkProof: proof };
+    // Combine json with zkp to create finalJson
+    const finalJson = { ...json, zkProof: proof };
 
     // Insert finalJson into the database
     const collection1 = db.collection('counterstrike');
     await collection1.insertOne(finalJson);
 
-    console.log("Inserted finalJson into the database");
+    console.log("Inserted finalJson into the database", finalJson);
   });
 });
