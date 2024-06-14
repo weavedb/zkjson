@@ -143,7 +143,7 @@ async function main() {
     });
 
     console.log(chalk.green.bold(`✔ Proof generated successfully`));
-    await delay(2000); // Wait for 2 seconds
+    await delay(1000); // Wait for 1 seconds
 
     // Load the verification key from a file
     const vKey = JSON.parse(fs.readFileSync(vkey));
@@ -166,7 +166,6 @@ async function main() {
     await collection1.insertOne(finalJson);
 
     console.log("Storing in storage layer...");
-    await delay(5000); // Wait for 5 seconds
 
     console.log("Final JSON with proof included:", finalJson);
 

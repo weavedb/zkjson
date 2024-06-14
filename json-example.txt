@@ -1,1 +1,1 @@
-{ "gamer": "James345", "strikes": 7837, "place": "SP", "weapon": "AK-47", "place2": "Y" }
+{ "gamer": "Hollan", "strikes": 7887, "place": "SP", "weapon": "AK-47", "place2": "Y" }
