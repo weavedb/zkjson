@@ -47,27 +47,6 @@ const crypto = require('crypto');
 
 require('dotenv').config({ path: resolve(__dirname, '../.env') });
 
-function createFingerprint(json) {
-  const jsonString = JSON.stringify(json);
-  const hash = crypto.createHash('sha256');
-  hash.update(jsonString);
-  const fingerprint = hash.digest('hex');
-  return fingerprint;
-}
-
-// Define a constant with the JSON information
-const jsonInfo = { gamer: "JackieS", strikes: 780, place: "NY", weapon: "AK-47", place2: "C"};
-
-// Create a fingerprint for the JSON information
-const fingerprint = createFingerprint(jsonInfo);
-
-//TODO: Upload the fingerprint to the Mountain Merkle Range smart contract
-
-// Combine the JSON information with the fingerprint
-const json = { ...jsonInfo, fingerprint: fingerprint };
-
-//
-
 describe("zkDB-zkJSON", function () {
   this.timeout(0);
   it.only("should generate and verify proofs", async () => {
@@ -84,6 +63,25 @@ describe("zkDB-zkJSON", function () {
 
     // Connect to the database
     const db = client.db(dbName);
+
+    function createFingerprint(json) {
+      const jsonString = JSON.stringify(json);
+      const hash = crypto.createHash('sha256');
+      hash.update(jsonString);
+      const fingerprint = hash.digest('hex');
+      return fingerprint;
+    }
+    
+    // Define a constant with the JSON information
+    const jsonInfo = { gamer: "James345", strikes: 7837, place: "SP", weapon: "AK-47", place2: "Y"};
+    
+    // Create a fingerprint for the JSON information
+    const fingerprint = createFingerprint(jsonInfo);
+    
+    //TODO: Upload the fingerprint to the Mountain Merkle Range smart contract
+    
+    // Combine the JSON information with the fingerprint
+    const json = { ...jsonInfo, fingerprint: fingerprint };
 
     // Define the paths to the wasm, zkey, and verification key files
     const wasm = resolve(
