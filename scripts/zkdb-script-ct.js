@@ -118,6 +118,7 @@ async function main() {
 
     console.log(chalk.green.bold(`✔ Json info and generated fingerprint`));
     console.log(json);
+
     await pauseForUserInput("Press ENTER to generate and verify the proof...");
 
     // Define the paths to the wasm, zkey, and verification key files
@@ -152,6 +153,8 @@ async function main() {
 
     console.log(chalk.green.bold(`✔ Proof generated successfully`));
 
+    await pauseForUserInput("Press ENTER to verify the proof...");
+
     // Load the verification key from a file
     const vKey = JSON.parse(fs.readFileSync(vkey));
 
@@ -164,6 +167,7 @@ async function main() {
       console.log("Proof verification failed.");
       process.exit(1);
     }
+
     await pauseForUserInput("Press ENTER to save the final JSON in the database...");
 
     // Combine json with zkp to create finalJson
@@ -175,8 +179,11 @@ async function main() {
 
     if (insertResult.acknowledged) {
       console.log("Storing in storage layer...");
-      console.log("Final JSON with proof included:", finalJson);
+
+      await pauseForUserInput("Press ENTER to complete the process...");
+
       console.log(chalk.green.bold(`✔ Process completed and JSON saved in Storage layer`));
+      console.log("Final JSON with proof included:", finalJson);
     } else {
       console.log("Error inserting into database.");
       process.exit(1);
@@ -184,8 +191,92 @@ async function main() {
 
     process.exit(0);
   } else if (operationAnswer.operation === 'query') {
-    // Query operation implementation here
-    console.log("Query operation not implemented yet.");
+    const gamerAnswer = await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'gamer',
+        message: 'Enter the gamer name:'
+      }
+    ]);
+
+    const collection1 = db.collection('counterstrike');
+    const fullRecord = await collection1.findOne({ "gamer": gamerAnswer.gamer });
+
+    if (!fullRecord) {
+      console.log("Gamer not found.");
+      process.exit(1);
+    }
+
+    // Extract the necessary fields for fingerprint calculation
+    const { gamer, strikes, place, weapon, place2 } = fullRecord;
+    const recordForFingerprint = { gamer, strikes, place, weapon, place2 };
+
+    console.log(chalk.green.bold(`✔ Gamer found in database`));
+    console.log(recordForFingerprint);
+
+    // Regenerate the fingerprint
+    const regeneratedFingerprint = createFingerprint(recordForFingerprint);
+
+    if (regeneratedFingerprint !== fullRecord.fingerprint) {
+      console.log("Fingerprint does not match.");
+      process.exit(1);
+    }
+
+    console.log(chalk.green.bold(`✔ Fingerprint matches`));
+
+    await pauseForUserInput("Press ENTER to regenerate and verify the proof...");
+
+    // Define the paths to the wasm, zkey, and verification key files
+    const wasm = resolve(
+      __dirname,
+      "../circom/build/circuits/db/index_js/index.wasm"
+    );
+    const zkey = resolve(
+      __dirname,
+      "../circom/build/circuits/db/index_0001.zkey"
+    );
+    const vkey = resolve(
+      __dirname,
+      "../circom/build/circuits/db/verification_key.json"
+    );
+
+    // Create a new instance of the DB class (ZKDB)
+    const zkdb = new DB({ wasm, zkey });
+
+    // Initialize the zkdb database
+    await zkdb.init();
+    await zkdb.addCollection();
+    await zkdb.insert(0, "Jack", fullRecord);
+
+    // Regenerate the proof
+    const { proof, publicSignals } = await zkdb.genSignalProof({
+      json: fullRecord,
+      col_id: 0,
+      path: "gamer",
+      id: "Jack",
+    });
+
+    console.log(chalk.green.bold(`✔ Proof regenerated successfully`));
+
+    // Load the verification key from a file
+    const vKey = JSON.parse(fs.readFileSync(vkey));
+
+    // Verify the proof
+    const isValid = await snarkjs.groth16.verify(vKey, publicSignals, proof);
+
+    if (isValid) {
+      console.log(chalk.green.bold(`✔ Proof verified successfully`));
+    } else {
+      console.log("Proof verification failed.");
+      process.exit(1);
+    }
+
+    // Print the JSON without the zkProof
+    const { _id, zkProof, fingerprint, ...regeneratedJson } = fullRecord;
+
+    console.log(chalk.bold(`✔ Regenerated JSON:`));
+    console.log(chalk.green.bold(JSON.stringify(regeneratedJson, null, 2)));
+
     process.exit(0);
   } else {
     console.log("Invalid operation. Please try again.");
