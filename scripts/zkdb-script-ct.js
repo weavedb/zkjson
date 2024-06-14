@@ -212,7 +212,6 @@ async function main() {
     const recordForFingerprint = { gamer, strikes, place, weapon, place2 };
 
     console.log(chalk.green.bold(`✔ Gamer found in database`));
-    console.log(recordForFingerprint);
 
     // Regenerate the fingerprint
     const regeneratedFingerprint = createFingerprint(recordForFingerprint);
@@ -220,9 +219,10 @@ async function main() {
     if (regeneratedFingerprint !== fullRecord.fingerprint) {
       console.log("Fingerprint does not match.");
       process.exit(1);
+    } else {
+      console.log(chalk.green.bold(`✔ Fingerprint matches`));
+      console.log(recordForFingerprint);
     }
-
-    console.log(chalk.green.bold(`✔ Fingerprint matches`));
 
     await pauseForUserInput("Press ENTER to regenerate and verify the proof...");
 
