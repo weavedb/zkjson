@@ -15,7 +15,7 @@ const {
   encodeQuery,
   decodeQuery,
   DB,
-} = require("../../sdk");
+} = require("../sdk");
 const {
   insert,
   slice,
@@ -37,15 +37,15 @@ const {
   remove,
   bn,
   digits,
-} = require("../sdk/uint");
-const { parse } = require("../sdk/parse");
+} = require("../../sdk/uint");
+const { parse } = require("../../sdk/parse");
 const { expect } = require("chai");
 const { groth16 } = require("snarkjs");
 const fs = require('fs');
 const snarkjs = require("snarkjs");
 const crypto = require('crypto');
 
-require('dotenv').config({ path: resolve(__dirname, '../.env') });
+require('dotenv').config({ path: resolve(__dirname, '../../.env') });
 require('events').EventEmitter.defaultMaxListeners = 15;
 
 async function pauseForUserInput(message) {
@@ -124,15 +124,15 @@ async function main() {
     // Define the paths to the wasm, zkey, and verification key files
     const wasm = resolve(
       __dirname,
-      "../circom/build/circuits/db/index_js/index.wasm"
+      "../../circom/build/circuits/db/index_js/index.wasm"
     );
     const zkey = resolve(
       __dirname,
-      "../circom/build/circuits/db/index_0001.zkey"
+      "../../circom/build/circuits/db/index_0001.zkey"
     );
     const vkey = resolve(
       __dirname,
-      "../circom/build/circuits/db/verification_key.json"
+      "../../circom/build/circuits/db/verification_key.json"
     );
 
     // Create a new instance of the DB class (ZKDB)
@@ -212,6 +212,7 @@ async function main() {
     const recordForFingerprint = { gamer, strikes, place, weapon, place2 };
 
     console.log(chalk.green.bold(`✔ Gamer found in database`));
+    console.log(recordForFingerprint);
 
     // Regenerate the fingerprint
     const regeneratedFingerprint = createFingerprint(recordForFingerprint);
@@ -219,25 +220,24 @@ async function main() {
     if (regeneratedFingerprint !== fullRecord.fingerprint) {
       console.log("Fingerprint does not match.");
       process.exit(1);
-    } else {
-      console.log(chalk.green.bold(`✔ Fingerprint matches`));
-      console.log(recordForFingerprint);
     }
+
+    console.log(chalk.green.bold(`✔ Fingerprint matches`));
 
     await pauseForUserInput("Press ENTER to regenerate and verify the proof...");
 
     // Define the paths to the wasm, zkey, and verification key files
     const wasm = resolve(
       __dirname,
-      "../circom/build/circuits/db/index_js/index.wasm"
+      "../../circom/build/circuits/db/index_js/index.wasm"
     );
     const zkey = resolve(
       __dirname,
-      "../circom/build/circuits/db/index_0001.zkey"
+      "../../circom/build/circuits/db/index_0001.zkey"
     );
     const vkey = resolve(
       __dirname,
-      "../circom/build/circuits/db/verification_key.json"
+      "../../circom/build/circuits/db/verification_key.json"
     );
 
     // Create a new instance of the DB class (ZKDB)

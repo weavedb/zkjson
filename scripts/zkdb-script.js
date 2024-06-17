@@ -15,7 +15,7 @@ const {
   encodeQuery,
   decodeQuery,
   DB,
-} = require("../sdk");
+} = require("../../sdk");
 const {
   insert,
   slice,
@@ -37,15 +37,15 @@ const {
   remove,
   bn,
   digits,
-} = require("../sdk/uint");
-const { parse } = require("../sdk/parse");
+} = require("../../sdk/uint");
+const { parse } = require("../../sdk/parse");
 const { expect } = require("chai");
 const { groth16 } = require("snarkjs");
 const fs = require('fs');
 const snarkjs = require("snarkjs");
 const crypto = require('crypto');
 
-require('dotenv').config({ path: resolve(__dirname, '../.env') });
+require('dotenv').config({ path: resolve(__dirname, '../../.env') });
 
 async function delay(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));

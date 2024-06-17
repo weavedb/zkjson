@@ -27,9 +27,9 @@ describe("MyRollup", function () {
 
   it("should verify rollup transactions", async function () {
     db = new DB({
-      level: 100,
-      size_path: 5,
-      size_val: 5,
+      level: 168,
+      size_path: 4,
+      size_val: 8,
       size_json: 256,
       size_txs: 10,
       level_col: 8,
