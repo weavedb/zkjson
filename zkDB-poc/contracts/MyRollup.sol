@@ -19,9 +19,13 @@ contract MyRollup is ZKRollup {
     committer = _committer;
   }
   
-  function validateQuery(uint[] memory path, uint[] memory zkp) private view returns(uint[] memory){
+  function validateQuery(uint[] memory path, uint[] memory zkp) public view returns(uint[] memory){
     verify(zkp, VerifierDB.verifyProof.selector, verifierDB);
     return _validateQueryRU(path, zkp, SIZE_PATH, SIZE_VAL);    
+  }
+
+  function validateProof (uint[] memory zkp) public view returns (bool) {
+    return verify(zkp, VerifierDB.verifyProof.selector, verifierDB);
   }
 
   function qInt (uint[] memory path, uint[] memory zkp) public view returns (int) {

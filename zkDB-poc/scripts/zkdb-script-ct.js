@@ -41,75 +41,12 @@ const {
 const fs = require('fs');
 const snarkjs = require("snarkjs");
 const crypto = require('crypto');
-
+require("@nomiclabs/hardhat-ethers");
 
 
 require('dotenv').config({ path: resolve(__dirname, '../../.env') });
 require('events').EventEmitter.defaultMaxListeners = 15;
 
-async function pauseForUserInput(message) {
-  const { default: inquirer } = await import('inquirer');
-  await inquirer.prompt([
-    {
-      type: 'input',
-      name: 'continue',
-      message: message
-    }
-  ]);
-}
-
-async function initializeZKDB() {
-  const wasm = resolve(
-    __dirname,
-    "../../circom/build/circuits/db/index_js/index.wasm"
-  );
-  const zkey = resolve(
-    __dirname,
-    "../../circom/build/circuits/db/index_0001.zkey"
-  );
-
-  const zkdb = new DB({ wasm, zkey });
-  await zkdb.init();
-  await zkdb.addCollection();
-  return zkdb;
-}
-
-async function onChainVerification(proof, publicSignals) {
-  const [committer] = await ethers.getSigners();
-  const VerifierRU = await ethers.getContractFactory("Groth16VerifierRU");
-  const verifierRU = await VerifierRU.deploy();
-  await verifierRU.deployed();
-  
-  const VerifierDB = await ethers.getContractFactory("Groth16VerifierDB");
-  const verifierDB = await VerifierDB.deploy();
-  await verifierDB.deployed();
-
-  const MyRU = await ethers.getContractFactory("MyRollup");
-  const myru = await MyRU.deploy(verifierRU.address, verifierDB.address, committer.address);
-  await myru.deployed();
-
-  const proofFormatted = {
-    pi_a: [proof.pi_a[0].toString(), proof.pi_a[1].toString()],
-    pi_b: [
-      [proof.pi_b[0][0].toString(), proof.pi_b[0][1].toString()],
-      [proof.pi_b[1][0].toString(), proof.pi_b[1][1].toString()]
-    ],
-    pi_c: [proof.pi_c[0].toString(), proof.pi_c[1].toString()]
-  };
-
-  try {
-    const result = await verifierDB.verifyProof(
-      proofFormatted.pi_a,
-      proofFormatted.pi_b,
-      proofFormatted.pi_c,
-      publicSignals.map(signal => signal.toString())
-    );
-    return result;
-  } catch (error) {
-    console.error("On-chain verification failed:", error);
-    return false;
-  }
-}
 
 async function main() {
   // Dynamically import inquirer and chalk
@@ -127,6 +64,67 @@ async function main() {
 
   // Connect to the database
   const db = client.db(dbName);
+
+  async function pauseForUserInput(message) {
+    const { default: inquirer } = await import('inquirer');
+    await inquirer.prompt([
+      {
+        type: 'input',
+        name: 'continue',
+        message: message
+      }
+    ]);
+  }
+  
+  async function initializeZKDB() {
+    const wasm = resolve(
+      __dirname,
+      "../../circom/build/circuits/db/index_js/index.wasm"
+    );
+    const zkey = resolve(
+      __dirname,
+      "../../circom/build/circuits/db/index_0001.zkey"
+    );
+  
+    const zkdb = new DB({ wasm, zkey });
+    await zkdb.init();
+    await zkdb.addCollection();
+    return zkdb;
+  }
+  
+  async function onChainVerification(zkdb, fullRecord) {
+    const [committer] = await ethers.getSigners();
+    const VerifierRU = await ethers.getContractFactory("Groth16VerifierRU");
+    const verifierRU = await VerifierRU.deploy();
+    await verifierRU.deployed();
+    
+    const VerifierDB = await ethers.getContractFactory("Groth16VerifierDB");
+    const verifierDB = await VerifierDB.deploy();
+    await verifierDB.deployed();
+  
+    const MyRU = await ethers.getContractFactory("MyRollup");
+    const myru = await MyRU.deploy(verifierRU.address, verifierDB.address, committer.address);
+    await myru.deployed();
+  
+    const zkp = await zkdb.genProof({
+      json: fullRecord,
+      col_id: 0,
+      path: "gamer",
+      id: "Jack",
+    });
+  
+    try {
+      const result = await myru.validateProof(zkp);
+      if (!result) {
+        console.error("On-chain verification failed.");
+      }else{
+        return result;
+      }
+    } catch (error) {
+        console.error("On-chain verification failed:", error);
+        return false;
+    }
+  }
 
   const zkdb = await initializeZKDB();
 
@@ -216,7 +214,7 @@ async function main() {
     if (verificationAnswer.verificationType === 'On Chain') {
       await pauseForUserInput("Press ENTER to verify the proof on-chain...");
 
-      const isValidOnChain = await onChainVerification(proof, publicSignals);
+      const isValidOnChain = await onChainVerification(zkdb, json);
 
       if (isValidOnChain) {
         console.log(chalk.green.bold(`✔ On-chain proof verified successfully`));
@@ -323,7 +321,7 @@ async function main() {
     if (verificationAnswer.verificationType === 'On Chain' || verificationAnswer.verificationType === 'Both') {
       await pauseForUserInput("Press ENTER to verify the proof on-chain...");
 
-      const isValidOnChain = await onChainVerification(proof, publicSignals, process.env.CONTRACT_ADDRESS);
+      const isValidOnChain = await onChainVerification(zkdb, json);
 
       if (isValidOnChain) {
         console.log(chalk.green.bold(`✔ On-chain proof verified successfully`));

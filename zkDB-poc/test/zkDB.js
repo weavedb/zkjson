@@ -55,7 +55,14 @@ describe("MyRollup", function () {
     // query Bob's age
     const zkp2 = await db.genProof({ json: people[0], col_id, path: "age", id: "Bob" })
     expect((await myru.qInt([col_id, toIndex("Bob"), ...path("age")], zkp2)).toNumber()).to.eql(10)
-	
+    
+    // validate the query
+    const validationResult = await myru.validateQuery([col_id, toIndex("Bob"), ...path("age")], zkp2);
+    expect(validationResult[0].toNumber()).to.eql(2); // Assuming "2" indicates success
+
+    // validate the proof
+    expect(await myru.validateProof(zkp2)).to.eql(true)
+    
     // query Beth's name
     const zkp3 = await db.genProof({ json: people[3], col_id, path: "name", id: "Beth" })
     expect(await myru.qString([col_id, toIndex("Beth"), ...path("name")], zkp3)).to.eql("Beth")
