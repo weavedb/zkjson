@@ -224,6 +224,25 @@ async function main() {
       }
     }
 
+    if (verificationAnswer.verificationType === 'Both') {
+      await pauseForUserInput("Press ENTER to verify the proof with both methods...");
+
+      // Load the verification key from a file
+      const vkey = JSON.parse(fs.readFileSync(resolve(__dirname, "../../circom/build/circuits/db/verification_key.json")));
+
+      // Verify the proof off-chain
+      const isValid = await snarkjs.groth16.verify(vkey, publicSignals, proof);
+
+      const isValidOnChain = await onChainVerification(zkdb, json);
+
+      if (isValidOnChain && isValid) {
+        console.log(chalk.green.bold(`✔ On-chain proof verified successfully`));
+      } else {
+        console.log("On-chain proof verification failed.");
+        process.exit(1);
+      }
+    }
+
     await pauseForUserInput("Press ENTER to save the final JSON in the database...");
 
     // Combine json with zkp to create finalJson
