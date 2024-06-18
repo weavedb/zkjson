@@ -49,6 +49,7 @@ require('events').EventEmitter.defaultMaxListeners = 15;
 
 
 async function main() {
+
   // Dynamically import inquirer and chalk
   const { default: inquirer } = await import('inquirer');
   const { default: chalk } = await import('chalk');
@@ -59,12 +60,15 @@ async function main() {
 
   // Create a new MongoClient
   const client = new MongoClient(url);
-  client.setMaxListeners(30); // Set max listeners on the client instance
+
+  // Set max listeners on the client instance
+  client.setMaxListeners(30); 
   await client.connect();
 
   // Connect to the database
   const db = client.db(dbName);
 
+  // Pause for user input
   async function pauseForUserInput(message) {
     const { default: inquirer } = await import('inquirer');
     await inquirer.prompt([
@@ -75,7 +79,7 @@ async function main() {
       }
     ]);
   }
-  
+  // Initialize the zkDB
   async function initializeZKDB() {
     const wasm = resolve(
       __dirname,
@@ -85,13 +89,15 @@ async function main() {
       __dirname,
       "../../circom/build/circuits/db/index_0001.zkey"
     );
-  
+
+  // Initialize the zkDB with the wasm and zkey files
     const zkdb = new DB({ wasm, zkey });
     await zkdb.init();
     await zkdb.addCollection();
     return zkdb;
   }
   
+  // On-chain verification
   async function onChainVerification(zkdb, fullRecord) {
     const [committer] = await ethers.getSigners();
     const VerifierRU = await ethers.getContractFactory("Groth16VerifierRU");
@@ -106,6 +112,7 @@ async function main() {
     const myru = await MyRU.deploy(verifierRU.address, verifierDB.address, committer.address);
     await myru.deployed();
   
+    // Generate the proof
     const zkp = await zkdb.genProof({
       json: fullRecord,
       col_id: 0,
@@ -114,6 +121,7 @@ async function main() {
     });
   
     try {
+      // Validate the proof on-chain
       const result = await myru.validateProof(zkp);
       if (!result) {
         console.error("On-chain verification failed.");
@@ -126,8 +134,7 @@ async function main() {
     }
   }
 
-  const zkdb = await initializeZKDB();
-
+  // Create a fingerprint for the JSON information
   function createFingerprint(json) {
     const jsonString = JSON.stringify(json);
     const hash = crypto.createHash('sha256');
@@ -135,6 +142,9 @@ async function main() {
     const fingerprint = hash.digest('hex');
     return fingerprint;
   }
+
+  // Initialize the zkDB instance
+  const zkdb = await initializeZKDB();
 
   const operationAnswer = await inquirer.prompt([
     {
@@ -194,6 +204,7 @@ async function main() {
       }
     ]);
 
+    // Verify the proof off-chain
     if (verificationAnswer.verificationType === 'Off Chain') {
       await pauseForUserInput("Press ENTER to verify the proof off-chain...");
 
@@ -210,7 +221,7 @@ async function main() {
         process.exit(1);
       }
     }
-
+    // Verify the proof on-chain
     if (verificationAnswer.verificationType === 'On Chain') {
       await pauseForUserInput("Press ENTER to verify the proof on-chain...");
 
@@ -224,6 +235,7 @@ async function main() {
       }
     }
 
+    // Verify the proof with both methods
     if (verificationAnswer.verificationType === 'Both') {
       await pauseForUserInput("Press ENTER to verify the proof with both methods...");
 
@@ -254,9 +266,6 @@ async function main() {
 
     if (insertResult.acknowledged) {
       console.log("Storing in storage layer...");
-
-      await pauseForUserInput("Press ENTER to complete the process...");
-
       console.log(chalk.green.bold(`✔ Process completed and JSON saved in Storage layer`));
       console.log("Final JSON with proof included:", finalJson);
     } else {
@@ -265,6 +274,8 @@ async function main() {
     }
 
     process.exit(0);
+
+    // Query the database
   } else if (operationAnswer.operation === 'query') {
     const gamerAnswer = await inquirer.prompt([
       {
@@ -274,7 +285,10 @@ async function main() {
       }
     ]);
 
+    // collection1 is the collection in the database
     const collection1 = db.collection('counterstrike');
+
+    // Find the gamer in the database
     const fullRecord = await collection1.findOne({ "gamer": gamerAnswer.gamer });
 
     if (!fullRecord) {
@@ -311,6 +325,7 @@ async function main() {
     if (verificationAnswer.verificationType === 'Off Chain') {
       await pauseForUserInput("Press ENTER to regenerate and verify the proof off-chain...");
 
+      //TODO: Remove this insert line
       await zkdb.insert(0, "Jack", fullRecord);
 
       // Regenerate the proof
@@ -337,9 +352,11 @@ async function main() {
       }
     }
 
+    // Verify the proof on-chain
     if (verificationAnswer.verificationType === 'On Chain') {
       await pauseForUserInput("Press ENTER to verify the proof on-chain...");
 
+      //TODO: Remove this insert line
       await zkdb.insert(0, "Jack", fullRecord);
 
       const isValidOnChain = await onChainVerification(zkdb, fullRecord);
@@ -352,9 +369,11 @@ async function main() {
       }
     }
 
+    // Verify the proof with both methods
     if (verificationAnswer.verificationType === 'Both') {
       await pauseForUserInput("Press ENTER to verify the proof on-chain...");
 
+      //TODO: Remove this insert line
       await zkdb.insert(0, "Jack", fullRecord);
 
       // Regenerate the proof
@@ -365,8 +384,6 @@ async function main() {
         id: "Jack",
       });
 
-      console.log(chalk.green.bold(`✔ Proof regenerated successfully`));
-
       // Load the verification key from a file
       const vkey = JSON.parse(fs.readFileSync(resolve(__dirname, "../../circom/build/circuits/db/verification_key.json")));
 
@@ -376,9 +393,9 @@ async function main() {
       const isValidOnChain = await onChainVerification(zkdb, fullRecord);
 
       if (isValidOnChain && isValid) {
-        console.log(chalk.green.bold(`✔ On-chain proof verified successfully`));
+        console.log(chalk.green.bold(`✔ Proof verified successfully`));
       } else {
-        console.log("On-chain proof verification failed.");
+        console.log("Proof verification failed.");
         process.exit(1);
       }
     }
