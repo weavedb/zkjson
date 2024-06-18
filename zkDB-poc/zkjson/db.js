@@ -4,7 +4,7 @@ const { is, indexOf, range, isNil } = require("ramda")
 const { pad, toSignal, encode, toIndex } = require("./encoder")
 const Collection = require("./collection")
 
-class DB {
+class ZKJsonDB {
   constructor({
     size_val = 8,
     size_path = 4,
@@ -356,4 +356,4 @@ class DB {
   }
 }
 
-module.exports = DB
+module.exports = ZKJsonDB

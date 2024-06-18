@@ -38,12 +38,11 @@ const {
   bn,
   digits,
 } = require("../../sdk/uint");
-const { parse } = require("../../sdk/parse");
-const { expect } = require("chai");
-const { groth16 } = require("snarkjs");
 const fs = require('fs');
 const snarkjs = require("snarkjs");
 const crypto = require('crypto');
+
+
 
 require('dotenv').config({ path: resolve(__dirname, '../../.env') });
 require('events').EventEmitter.defaultMaxListeners = 15;
@@ -57,6 +56,59 @@ async function pauseForUserInput(message) {
       message: message
     }
   ]);
+}
+
+async function initializeZKDB() {
+  const wasm = resolve(
+    __dirname,
+    "../../circom/build/circuits/db/index_js/index.wasm"
+  );
+  const zkey = resolve(
+    __dirname,
+    "../../circom/build/circuits/db/index_0001.zkey"
+  );
+
+  const zkdb = new DB({ wasm, zkey });
+  await zkdb.init();
+  await zkdb.addCollection();
+  return zkdb;
+}
+
+async function onChainVerification(proof, publicSignals) {
+  const [committer] = await ethers.getSigners();
+  const VerifierRU = await ethers.getContractFactory("Groth16VerifierRU");
+  const verifierRU = await VerifierRU.deploy();
+  await verifierRU.deployed();
+  
+  const VerifierDB = await ethers.getContractFactory("Groth16VerifierDB");
+  const verifierDB = await VerifierDB.deploy();
+  await verifierDB.deployed();
+
+  const MyRU = await ethers.getContractFactory("MyRollup");
+  const myru = await MyRU.deploy(verifierRU.address, verifierDB.address, committer.address);
+  await myru.deployed();
+
+  const proofFormatted = {
+    pi_a: [proof.pi_a[0].toString(), proof.pi_a[1].toString()],
+    pi_b: [
+      [proof.pi_b[0][0].toString(), proof.pi_b[0][1].toString()],
+      [proof.pi_b[1][0].toString(), proof.pi_b[1][1].toString()]
+    ],
+    pi_c: [proof.pi_c[0].toString(), proof.pi_c[1].toString()]
+  };
+
+  try {
+    const result = await verifierDB.verifyProof(
+      proofFormatted.pi_a,
+      proofFormatted.pi_b,
+      proofFormatted.pi_c,
+      publicSignals.map(signal => signal.toString())
+    );
+    return result;
+  } catch (error) {
+    console.error("On-chain verification failed:", error);
+    return false;
+  }
 }
 
 async function main() {
@@ -75,6 +127,8 @@ async function main() {
 
   // Connect to the database
   const db = client.db(dbName);
+
+  const zkdb = await initializeZKDB();
 
   function createFingerprint(json) {
     const jsonString = JSON.stringify(json);
@@ -121,26 +175,6 @@ async function main() {
 
     await pauseForUserInput("Press ENTER to generate and verify the proof...");
 
-    // Define the paths to the wasm, zkey, and verification key files
-    const wasm = resolve(
-      __dirname,
-      "../../circom/build/circuits/db/index_js/index.wasm"
-    );
-    const zkey = resolve(
-      __dirname,
-      "../../circom/build/circuits/db/index_0001.zkey"
-    );
-    const vkey = resolve(
-      __dirname,
-      "../../circom/build/circuits/db/verification_key.json"
-    );
-
-    // Create a new instance of the DB class (ZKDB)
-    const zkdb = new DB({ wasm, zkey });
-
-    // Initialize the zkdb database
-    await zkdb.init();
-    await zkdb.addCollection();
     await zkdb.insert(0, "Jack", json);
 
     // Generate the proof
@@ -153,19 +187,43 @@ async function main() {
 
     console.log(chalk.green.bold(`✔ Proof generated successfully`));
 
-    await pauseForUserInput("Press ENTER to verify the proof...");
+    const verificationAnswer = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'verificationType',
+        message: 'Would you like to verify it On Chain, Off Chain or Both?',
+        choices: ['On Chain', 'Off Chain', 'Both']
+      }
+    ]);
 
-    // Load the verification key from a file
-    const vKey = JSON.parse(fs.readFileSync(vkey));
+    if (verificationAnswer.verificationType === 'Off Chain') {
+      await pauseForUserInput("Press ENTER to verify the proof off-chain...");
 
-    // Verify the proof
-    const isValid = await snarkjs.groth16.verify(vKey, publicSignals, proof);
+      // Load the verification key from a file
+      const vkey = JSON.parse(fs.readFileSync(resolve(__dirname, "../../circom/build/circuits/db/verification_key.json")));
 
-    if (isValid) {
-      console.log(chalk.green.bold(`✔ Proof verified successfully`));
-    } else {
-      console.log("Proof verification failed.");
-      process.exit(1);
+      // Verify the proof off-chain
+      const isValid = await snarkjs.groth16.verify(vkey, publicSignals, proof);
+
+      if (isValid) {
+        console.log(chalk.green.bold(`✔ Off-chain proof verified successfully`));
+      } else {
+        console.log("Off-chain proof verification failed.");
+        process.exit(1);
+      }
+    }
+
+    if (verificationAnswer.verificationType === 'On Chain') {
+      await pauseForUserInput("Press ENTER to verify the proof on-chain...");
+
+      const isValidOnChain = await onChainVerification(proof, publicSignals);
+
+      if (isValidOnChain) {
+        console.log(chalk.green.bold(`✔ On-chain proof verified successfully`));
+      } else {
+        console.log("On-chain proof verification failed.");
+        process.exit(1);
+      }
     }
 
     await pauseForUserInput("Press ENTER to save the final JSON in the database...");
@@ -224,51 +282,55 @@ async function main() {
 
     console.log(chalk.green.bold(`✔ Fingerprint matches`));
 
-    await pauseForUserInput("Press ENTER to regenerate and verify the proof...");
+    const verificationAnswer = await inquirer.prompt([
+      {
+        type: 'list',
+        name: 'verificationType',
+        message: 'Would you like to verify it On Chain, Off Chain or Both?',
+        choices: ['On Chain', 'Off Chain', 'Both']
+      }
+    ]);
 
-    // Define the paths to the wasm, zkey, and verification key files
-    const wasm = resolve(
-      __dirname,
-      "../../circom/build/circuits/db/index_js/index.wasm"
-    );
-    const zkey = resolve(
-      __dirname,
-      "../../circom/build/circuits/db/index_0001.zkey"
-    );
-    const vkey = resolve(
-      __dirname,
-      "../../circom/build/circuits/db/verification_key.json"
-    );
+    if (verificationAnswer.verificationType === 'Off Chain' || verificationAnswer.verificationType === 'Both') {
+      await pauseForUserInput("Press ENTER to regenerate and verify the proof off-chain...");
 
-    // Create a new instance of the DB class (ZKDB)
-    const zkdb = new DB({ wasm, zkey });
+      await zkdb.insert(0, "Jack", fullRecord);
 
-    // Initialize the zkdb database
-    await zkdb.init();
-    await zkdb.addCollection();
-    await zkdb.insert(0, "Jack", fullRecord);
+      // Regenerate the proof
+      const { proof, publicSignals } = await zkdb.genSignalProof({
+        json: fullRecord,
+        col_id: 0,
+        path: "gamer",
+        id: "Jack",
+      });
 
-    // Regenerate the proof
-    const { proof, publicSignals } = await zkdb.genSignalProof({
-      json: fullRecord,
-      col_id: 0,
-      path: "gamer",
-      id: "Jack",
-    });
+      console.log(chalk.green.bold(`✔ Proof regenerated successfully`));
 
-    console.log(chalk.green.bold(`✔ Proof regenerated successfully`));
+      // Load the verification key from a file
+      const vkey = JSON.parse(fs.readFileSync(resolve(__dirname, "../../circom/build/circuits/db/verification_key.json")));
 
-    // Load the verification key from a file
-    const vKey = JSON.parse(fs.readFileSync(vkey));
+      // Verify the proof off-chain
+      const isValid = await snarkjs.groth16.verify(vkey, publicSignals, proof);
 
-    // Verify the proof
-    const isValid = await snarkjs.groth16.verify(vKey, publicSignals, proof);
+      if (isValid) {
+        console.log(chalk.green.bold(`✔ Off-chain proof verified successfully`));
+      } else {
+        console.log("Off-chain proof verification failed.");
+        process.exit(1);
+      }
+    }
 
-    if (isValid) {
-      console.log(chalk.green.bold(`✔ Proof verified successfully`));
-    } else {
-      console.log("Proof verification failed.");
-      process.exit(1);
+    if (verificationAnswer.verificationType === 'On Chain' || verificationAnswer.verificationType === 'Both') {
+      await pauseForUserInput("Press ENTER to verify the proof on-chain...");
+
+      const isValidOnChain = await onChainVerification(proof, publicSignals, process.env.CONTRACT_ADDRESS);
+
+      if (isValidOnChain) {
+        console.log(chalk.green.bold(`✔ On-chain proof verified successfully`));
+      } else {
+        console.log("On-chain proof verification failed.");
+        process.exit(1);
+      }
     }
 
     // Print the JSON without the zkProof
