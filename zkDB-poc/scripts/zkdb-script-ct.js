@@ -264,8 +264,8 @@ async function main() {
     }
 
     // Extract the necessary fields for fingerprint calculation
-    const { gamer, strikes, place, weapon, place2 } = fullRecord;
-    const recordForFingerprint = { gamer, strikes, place, weapon, place2 };
+    const { "gamer": gamer, "strikes": strikes, "place": place, "weapon": weapon, "place2": place2 } = fullRecord;
+    const recordForFingerprint = { "gamer": gamer, "strikes": strikes, "place": place, "weapon": weapon, "place2": place2 };
 
     console.log(chalk.green.bold(`✔ Gamer found in database`));
     console.log(recordForFingerprint);
@@ -321,7 +321,9 @@ async function main() {
     if (verificationAnswer.verificationType === 'On Chain') {
       await pauseForUserInput("Press ENTER to verify the proof on-chain...");
 
-      const isValidOnChain = await onChainVerification(zkdb, json);
+      await zkdb.insert(0, "Jack", fullRecord);
+
+      const isValidOnChain = await onChainVerification(zkdb, fullRecord);
 
       if (isValidOnChain) {
         console.log(chalk.green.bold(`✔ On-chain proof verified successfully`));
@@ -352,7 +354,7 @@ async function main() {
       // Verify the proof off-chain
       const isValid = await snarkjs.groth16.verify(vkey, publicSignals, proof);
 
-      const isValidOnChain = await onChainVerification(zkdb, json);
+      const isValidOnChain = await onChainVerification(zkdb, fullRecord);
 
       if (isValidOnChain && isValid) {
         console.log(chalk.green.bold(`✔ On-chain proof verified successfully`));
