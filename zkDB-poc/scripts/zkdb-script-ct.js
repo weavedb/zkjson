@@ -59,14 +59,14 @@ async function main() {
   const dbName = process.env.MONGO_DB;
 
   // Create a new MongoClient
-  const client = new MongoClient(url);
+  //const client = new MongoClient(url);
 
   // Set max listeners on the client instance
-  client.setMaxListeners(30); 
-  await client.connect();
+  //client.setMaxListeners(30); 
+  //await client.connect();
 
   // Connect to the database
-  const db = client.db(dbName);
+  //const db = client.db(dbName);
 
   // Pause for user input
   async function pauseForUserInput(message) {
@@ -79,23 +79,22 @@ async function main() {
       }
     ]);
   }
-  // Initialize the zkDB
   async function initializeZKDB() {
-    const wasm = resolve(
-      __dirname,
-      "../../circom/build/circuits/db/index_js/index.wasm"
-    );
-    const zkey = resolve(
-      __dirname,
-      "../../circom/build/circuits/db/index_0001.zkey"
-    );
-
-  // Initialize the zkDB with the wasm and zkey files
-    const zkdb = new DB({ wasm, zkey });
+    const wasm = resolve(__dirname, "../../circom/build/circuits/db/index_js/index.wasm");
+    const zkey = resolve(__dirname, "../../circom/build/circuits/db/index_0001.zkey");
+  
+    // Initialize the zkDB with the wasm, zkey files, and MongoDB details
+    const zkdb = new DB({
+      wasm,
+      zkey,
+      mongoUrl: process.env.MONGO_URL,
+      dbName: process.env.MONGO_DB
+    });
     await zkdb.init();
     await zkdb.addCollection();
     return zkdb;
   }
+  
   
   // On-chain verification
   async function onChainVerification(zkdb, fullRecord) {
@@ -261,7 +260,7 @@ async function main() {
     const finalJson = { ...json, zkProof: proof };
 
     // Insert finalJson into the database
-    const collection1 = db.collection('counterstrike');
+    const collection1 = zkdb.db.collection('counterstrike');
     const insertResult = await collection1.insertOne(finalJson);
 
     if (insertResult.acknowledged) {
@@ -286,7 +285,7 @@ async function main() {
     ]);
 
     // collection1 is the collection in the database
-    const collection1 = db.collection('counterstrike');
+    const collection1 = zkdb.db.collection('counterstrike');
 
     // Find the gamer in the database
     const fullRecord = await collection1.findOne({ "gamer": gamerAnswer.gamer });
