@@ -38,8 +38,7 @@ class DB {
 
   async init() {
     // Connect to MongoDB
-    console.log('Connecting to MongoDB with URL:', this.mongoUrl);
-    this.client = await MongoClient.connect(this.mongoUrl, { useNewUrlParser: true, useUnifiedTopology: true });
+    this.client = await MongoClient.connect(this.mongoUrl);
     this.db = this.client.db(this.dbName);
     this.collections = this.db.collection('collections');
     this.documents = this.db.collection('documents');
