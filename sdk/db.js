@@ -69,13 +69,14 @@ class DB {
     return this._getVal(j, p.split("."))
   }
 
-  async genProof({ json, col_id, path, id }) {
+  async genProof({ json, col_id, path, id, query }) {
     const inputs = await this.getInputs({
       id,
       col_id,
       json,
       path,
       val: this.getVal(json, path),
+      query,
     })
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       inputs,
@@ -254,7 +255,7 @@ class DB {
     }
   }
 
-  async getInputs({ id, col_id, json, path, val }) {
+  async getInputs({ id, col_id, json, path, val, query }) {
     const col_root = this.tree.F.toObject(this.tree.root).toString()
     const col_res = await this.getCol(col_id)
 
@@ -265,7 +266,7 @@ class DB {
     col_siblings = col_siblings.map(s => s.toString())
     const col_key = col_id
     const col = this.getColTree(col_id)
-    const col_inputs = await col.getInputs({ id, json, path, val })
+    const col_inputs = await col.getInputs({ id, json, path, val, query })
     return {
       path: col_inputs.path,
       val: col_inputs.val,

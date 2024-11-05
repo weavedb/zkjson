@@ -56,7 +56,7 @@ describe("MyRollup", function () {
     })
     await db.init()
     col_id = await db.addCollection()
-    const people = [{ name: "Bob" }]
+    const people = [{ name: "Bob", age: 5 }]
     let txs = people.map(v => {
       return [col_id, v.name, v]
     })
@@ -78,5 +78,21 @@ describe("MyRollup", function () {
     expect(
       await myru.qString([col_id, toIndex("Bob"), ...path("name")], zkp2),
     ).to.eql("Bob")
+
+    const zkp3 = await db.genProof({
+      json: people[0],
+      col_id,
+      path: "age",
+      id: "Bob",
+      query: ["$gt", 3],
+    })
+
+    expect(
+      await myru.qCond(
+        [col_id, toIndex("Bob"), ...path("age")],
+        zkp3.slice(13, 14),
+        zkp3,
+      ),
+    ).to.eql(true)
   })
 })
