@@ -14,8 +14,8 @@ class Collection {
       size_json: this.size_json,
     })
   }
-  async getInputs({ id, json, path, val }) {
-    const doc_inputs = await this.doc.getInputs({ json, path, val })
+  async getInputs({ id, json, path, val, query }) {
+    const doc_inputs = await this.doc.getInputs({ json, path, val, query })
     const res = await this.get(id)
     let siblings = res.siblings
     for (let i = 0; i < siblings.length; i++)

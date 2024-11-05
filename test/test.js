@@ -14,7 +14,9 @@ const {
   encodeQuery,
   decodeQuery,
   DB,
+  Doc,
 } = require("../sdk")
+
 const {
   insert,
   slice,
@@ -51,25 +53,36 @@ describe("zkJSON", function () {
       __dirname,
       "../circom/build/circuits/db/index_0001.zkey",
     )
-
+    const bob = { name: "Bob", age: 5 }
+    const alice = { name: "Alice", age: 10 }
     const zkdb = new DB({ wasm, zkey })
     await zkdb.init()
     await zkdb.addCollection()
-    await zkdb.insert(0, "Bob", { name: "Bob" })
+    await zkdb.insert(0, "Bob", bob)
     const zkp = await zkdb.genProof({
-      json: { name: "Bob" },
+      json: bob,
       col_id: 0,
       path: "name",
       id: "Bob",
     })
     await zkdb.addCollection()
-    await zkdb.insert(1, "Alice", { name: "Alice" })
+    await zkdb.insert(1, "Alice", alice)
     const zkp2 = await zkdb.genProof({
-      json: { name: "Alice" },
+      json: alice,
       col_id: 1,
-      path: "name",
+      path: "age",
       id: "Alice",
+      query: ["$gt", 5],
     })
+    expect(zkp2[8]).to.eql("1")
+    const zkp3 = await zkdb.genProof({
+      json: alice,
+      col_id: 1,
+      path: "age",
+      id: "Alice",
+      query: ["$lt", 5],
+    })
+    expect(zkp3[8]).to.eql("0")
   })
   it("should operate on uints 3", () => {
     let len = 256
@@ -278,7 +291,6 @@ describe("zkJSON", function () {
     ]
     for (const v of vals) {
       const encoded = encodeQuery(v)
-      //console.log(encoded)
       expect(decodeQuery(encoded)).to.eql(v)
     }
   })

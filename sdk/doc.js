@@ -46,8 +46,8 @@ module.exports = class Doc {
     if (p === "") return j
     return this._getVal(j, p.split("."))
   }
-  async genProof(json, path) {
-    const inputs = await this.getInputs(json, path)
+  async genProof({ json, path, query }) {
+    const inputs = await this.getInputs({ json, path, query })
     const { proof, publicSignals } = await snarkjs.groth16.fullProve(
       inputs,
       this.wasm,
