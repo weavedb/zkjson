@@ -270,7 +270,7 @@ function _decode(arr) {
         }
       } else if (plen2 != 0) {
         const plen3 = plen2
-        const key = []
+        let key = []
         for (let i2 = 0; i2 < plen3; i2++) key.push(arr.shift())
         keys.push([plen2, ...key])
       }
