@@ -405,178 +405,6 @@ function buildDic(data) {
     } else {
       // Try element-by-element compression.
       const repA = compressElementByElement(key)
-      const costA = computeCost(repA)
-
-      // Also try full segmentation.
-      const segRes = segmentKey(key)
-      if (segRes !== null) {
-        const repB = [segRes.seg] // Represent segmentation as a pointer.
-        const costB = segRes.cost
-        compressed = costB < costA ? repB : repA
-      } else compressed = repA
-    }
-    dict.push({ original: key, compressed })
-  }
-
-  // --- Step 4. Return the dictionary and key map.
-  // "dictionary" is an array of compressed keys.
-  // "keyMap" is the array of original keys (in the same, deterministic order).
-  return {
-    dictionary: dict.map(entry => {
-      return entry.compressed.length === 1 && !is(Array, entry.compressed[0])
-        ? entry.compressed[0]
-        : entry.compressed
-    }),
-    keyMap: dict.map(entry => entry.original),
-  }
-}
-
-function buildDic(data) {
-  // --- Step 1. (Optional) Save original input order if needed.
-  data.forEach((entry, idx) => (entry._origIdx = idx))
-
-  // --- Step 2. Sort the data in "dictionary order."
-  // Primary: by key array length (shorter arrays come first).
-  // Secondary: for keys of equal length, by the total character length (ascending)
-  //   so that, for example, ["jane"] (4 chars) comes before ["alice"] (5 chars).
-  // Tertiary: if still equal, compare element-by-element using natural order.
-  data.sort((a, b) => {
-    const keyA = a.key
-    const keyB = b.key
-
-    // Primary: Compare array lengths.
-    if (keyA.length !== keyB.length) return keyA.length - keyB.length
-
-    // Secondary: Compare total character lengths (ascending).
-    const totalA = keyA.reduce((acc, x) => acc + x.toString().length, 0)
-    const totalB = keyB.reduce((acc, x) => acc + x.toString().length, 0)
-    if (totalA !== totalB) return totalA - totalB
-    // Tertiary: Compare element-by-element using natural order.
-    for (let i = 0; i < keyA.length; i++) {
-      const elA = keyA[i]
-      const elB = keyB[i]
-
-      if (typeof elA === typeof elB) {
-        if (typeof elA === "number") {
-          if (elA !== elB) return elA - elB
-        } else if (typeof elA === "string") {
-          const cmp = elA.localeCompare(elB, undefined, { numeric: true })
-          if (cmp !== 0) return cmp
-        } else {
-          // Fallback: compare string representations.
-          const cmp = elA
-            .toString()
-            .localeCompare(elB.toString(), undefined, { numeric: true })
-          if (cmp !== 0) return cmp
-        }
-      } else {
-        // If types differ, compare string representations.
-        const cmp = elA
-          .toString()
-          .localeCompare(elB.toString(), undefined, { numeric: true })
-        if (cmp !== 0) return cmp
-      }
-    }
-
-    return 0
-  })
-
-  // --- Step 3. Build the dictionary.
-  // Each dictionary entry will be stored as an object with:
-  // - original: the original key (an array)
-  // - compressed: the computed compressed representation.
-  const dict = []
-
-  // Helper: For a given string, look for a previously defined simple key (an array of length 1).
-  function getPointerIndex(str) {
-    for (let i = 0; i < dict.length; i++) {
-      if (dict[i].original.length === 1 && dict[i].original[0] === str) return i
-    }
-    return -1
-  }
-
-  // Helper: Element-by-element compression.
-  // For each element in a composite key, if it is a string that already exists as a simple key,
-  // replace one or more consecutive occurrences with a pointer.
-  // A single occurrence becomes [dictIndex]; a group becomes [dictIndex, 0].
-  function compressElementByElement(key) {
-    const rep = []
-    let i = 0
-    while (i < key.length) {
-      const el = key[i]
-      if (typeof el === "string") {
-        const ptrIndex = getPointerIndex(el)
-        if (ptrIndex !== -1) {
-          let j = i
-          while (j < key.length && key[j] === el) {
-            j++
-          }
-          const groupLen = j - i
-          rep.push(groupLen === 1 ? [ptrIndex] : [ptrIndex, 0])
-          i = j
-          continue
-        }
-      }
-      rep.push(el)
-      i++
-    }
-    return rep
-  }
-
-  // Helper: Compute a "cost" for a given representation.
-  // Each literal (number or string) counts as 1; a pointer array counts as the number of numbers it holds.
-  function computeCost(rep) {
-    let cost = 0
-    for (const token of rep) cost += Array.isArray(token) ? token.length : 1
-    return cost
-  }
-
-  // Helper: Full segmentation compression.
-  // Try to segment the entire key as a concatenation of one or more previously defined dictionary entries.
-  // Uses dynamic programming over the key array.
-  // Returns an object { cost, seg } where seg is an array of dictionary indices.
-  function segmentKey(key) {
-    const n = key.length
-    const dp = Array(n + 1).fill(null)
-    dp[n] = { cost: 0, seg: [] }
-
-    for (let i = n - 1; i >= 0; i--) {
-      let best = null
-      // Try every dictionary entry.
-      for (let d = 0; d < dict.length; d++) {
-        const candidate = dict[d].original
-        const m = candidate.length
-        if (i + m <= n) {
-          let match = true
-          for (let k = 0; k < m; k++) {
-            if (key[i + k] !== candidate[k]) {
-              match = false
-              break
-            }
-          }
-          if (match && dp[i + m] !== null) {
-            const candidateCost = 1 + dp[i + m].cost // cost 1 for using this pointer.
-            if (best === null || candidateCost < best.cost) {
-              best = { cost: candidateCost, seg: [d].concat(dp[i + m].seg) }
-            }
-          }
-        }
-      }
-      dp[i] = best
-    }
-    return dp[0]
-  }
-
-  // Process each entry (in the sorted, deterministic order).
-  for (const entry of data) {
-    const key = entry.key
-    let compressed
-    if (key.length === 1) {
-      // For simple keys, copy as-is.
-      compressed = key.slice()
-    } else {
-      // Try element-by-element compression.
-      const repA = compressElementByElement(key)
       let bestCost = computeCost(repA)
       let bestRep = repA
 
@@ -714,15 +542,15 @@ function mapDic(dic, len) {
     while (dlen > 0) {
       let type = dic.shift()
       let elms = []
-      if (type == 3) {
+      if (type == 7) {
         let slen = dic.shift()
-        elms.push(type)
+        elms.push(slen)
         for (let i = 0; i < slen; i++) elms.push(dic.shift())
         _elms.push(elms)
-      } else if (type == 2) {
+      } else if (type == 3) {
         elms = concat(elms, [0, 0, dic.shift()])
         _elms.push(elms)
-      } else if (type == 5) {
+      } else if (type == 9) {
         for (let v2 of _map[dic.shift()]) _elms.push(v2)
       }
       dlen--
@@ -743,25 +571,23 @@ function encodeDic(dict) {
       for (let v2 of v) {
         if (is(Array, v2)) {
           len += v2.length
-          for (let v3 of v2) {
-            elms = concat(elms, [5, v3])
-          }
+          for (let v3 of v2) elms = concat(elms, [9, v3])
         } else {
           len += 1
           if (is(String, v2)) {
-            elms.push(3)
+            elms.push(7)
             elms.push(v2.length)
             elms = concat(
               elms,
               v2.split("").map(c => c.charCodeAt(0)),
             )
           } else {
-            elms = concat(elms, [2, v2])
+            elms = concat(elms, [3, v2])
           }
         }
       }
     } else {
-      elms.push(3)
+      elms.push(7)
       elms.push(v.length)
       elms = concat(
         elms,
@@ -772,6 +598,7 @@ function encodeDic(dict) {
   }
   return enc
 }
+
 function encode(json, nodic = false) {
   let dic = null
   let dictionary, keyMap
