@@ -142,7 +142,7 @@ Now we flatten the paths but also prefix them with how many nested keys each pat
   [ 2, 3, 103, 104, 105, 0, 0, 2 ], 7 ]
 ]
 ```
-If the top level is a non-object value such as `1` and `null`, the flattened path is always `[ 1, 0, 1 ]`.
+If the top level is a non-object value such as `1` and `null`, the flattened path is always `[ 0 ]`.
 
 Let's numerify the values in a similar fashion. There are only 6 valid data types in JSON ( `null` / `boolean` / `number` / `string` / `array` / `object` ), and since the paths are flattened, we need to handle only 4 primitive types. We assign a type number to each.
 
