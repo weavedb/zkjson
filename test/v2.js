@@ -2,6 +2,8 @@ const { describe, it } = require("node:test")
 const assert = require("assert")
 
 const {
+  encodeVal,
+  encodePath,
   compress,
   decompress,
   toUint8,
@@ -11,11 +13,11 @@ const {
   encode,
   decode,
 } = require("../sdk/encoder-v2.js")
-const { map } = require("ramda")
+const { clone, map, equals } = require("ramda")
 
 describe("zkJSON v2", function () {
-  it("should convert to uint8array", () => {
-    const data = {
+  it("should encode and decode", () => {
+    let data = {
       user: {
         id: 12345,
         name: "Alice",
@@ -45,14 +47,20 @@ describe("zkJSON v2", function () {
         },
       ],
     }
-
+    data = {
+      a: 1,
+      c: false,
+      b: { e: null, d: "four" },
+      f: 3.14159, // todo: fix js fraction issue
+      ghi: [5, 6, 7],
+    }
     const ec = encode(data)
     const ec2 = encode(data, true)
     console.log("json", JSON.stringify(data).length)
     console.log("dic", ec.length, compress(ec).length, toSignal(ec).length)
     console.log("nodic", ec2.length, compress(ec2).length, toSignal(ec2).length)
-    console.log("decoded", decode(ec))
-    //assert.deepEqual(decode(ec), data)
+    console.log("decoded", decode(clone(ec)))
+    assert.deepEqual(decode(ec), data)
     return
   })
 })

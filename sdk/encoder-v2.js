@@ -460,7 +460,7 @@ function listKeys(v, key = [], keys = []) {
       listKeys(v2, append(i, key), keys)
       i++
     }
-  } else if (typeof v == "object") {
+  } else if (typeof v === "object" && v !== null) {
     for (const k in v) listKeys(v[k], append(k, key), keys)
   } else {
     keys.push(key)
@@ -516,7 +516,8 @@ function applyDic(arr, dic) {
   })
 }
 
-function encodePaths(data) {
+function encodePaths(data, index = false) {
+  let i = 0
   for (let v of data) {
     let path = []
     for (let v2 of v[0]) {
@@ -530,6 +531,8 @@ function encodePaths(data) {
       }
     }
     v[0] = path
+    if (index) v.push(i)
+    i++
   }
   return data
 }
@@ -599,7 +602,8 @@ function encodeDic(dict) {
   return enc
 }
 
-function encode(json, nodic = false) {
+function encode(_json, nodic = false) {
+  let json = clone(_json)
   let dic = null
   let dictionary, keyMap
   if (nodic !== true) {
@@ -607,10 +611,9 @@ function encode(json, nodic = false) {
     if (dictionary.length > 0) dic = encodeDic(dictionary)
   }
   let enc = _encode(json)
-  if (dic) enc = applyDic(enc, keyMap)
-
-  enc = encodePaths(enc)
-  enc.sort((a, b) => {
+  let _enc = clone(enc)
+  _enc = encodePaths(_enc, true)
+  _enc.sort((a, b) => {
     const isUndefined = v => typeof v == "undefined"
     const max = Math.max(a[0].length, b[0].length)
     if (max > 0) {
@@ -636,10 +639,14 @@ function encode(json, nodic = false) {
     }
     return 0
   })
+  if (dic) enc = applyDic(enc, keyMap)
+  enc = encodePaths(enc)
+  let enc2 = []
+  for (let v of _enc) enc2.push(enc[v[2]])
   const _dic = dic ? [1, 0, 2, dictionary.length, ...dic] : []
   return concat(
     _dic,
-    enc.reduce((arr, v) => arr.concat([...flattenPath(v[0]), ...v[1]]), []),
+    enc2.reduce((arr, v) => arr.concat([...flattenPath(v[0]), ...v[1]]), []),
   )
 }
 
@@ -766,7 +773,8 @@ function decodeVal(arr) {
   return val
 }
 
-function decode(arr) {
+function decode(_arr) {
+  let arr = clone(_arr)
   const decoded = _decode(arr)
   let json =
     decoded[0]?.[0]?.[0]?.[0] == 0 && decoded[0]?.[0]?.[0]?.[1] == 0 ? [] : {}
