@@ -17,5 +17,8 @@
     "ramda": "^0.29.1",
     "uuid": "^9.0.1",
     "yargs": "^17.7.2"
+  },
+  "devDependencies": {
+    "@msgpack/msgpack": "^3.0.1"
   }
 }
