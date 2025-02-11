@@ -1,7 +1,9 @@
 const { describe, it } = require("node:test")
 const assert = require("assert")
-
+const { encode: enc, decode: dec } = require("@msgpack/msgpack")
 const {
+  get,
+  decodeVal,
   encodeVal,
   encodePath,
   compress,
@@ -27,7 +29,7 @@ describe("zkJSON v2", function () {
           notifications: true,
           language: "en",
         },
-        frien: [
+        friends: [
           { id: 67890, name: "Bob" },
           { id: 54321, name: "Charlie" },
         ],
@@ -47,20 +49,48 @@ describe("zkJSON v2", function () {
         },
       ],
     }
-    data = {
-      a: 1,
-      c: false,
-      b: { e: null, d: "four" },
-      f: 3.14159, // todo: fix js fraction issue
-      ghi: [5, 6, 7],
-    }
     const ec = encode(data)
-    const ec2 = encode(data, true)
-    console.log("json", JSON.stringify(data).length)
-    console.log("dic", ec.length, compress(ec).length, toSignal(ec).length)
-    console.log("nodic", ec2.length, compress(ec2).length, toSignal(ec2).length)
-    console.log("decoded", decode(clone(ec)))
-    assert.deepEqual(decode(ec), data)
+    console.log("decoded", decode(ec))
+    const p = encodePath("user.friends[0].name")
+    console.log("p", p)
+    console.log(get(p, ec))
+    assert.equal(decodeVal(get(p, ec)), "Bob")
+
+    const str = JSON.stringify(data)
+
+    const start3 = Date.now()
+    for (let i = 0; i < 100_000; i++) {
+      const a = data.user.friends[0].name
+    }
+    console.log("[memory]", Date.now() - start3)
+
+    const start = Date.now()
+    for (let i = 0; i < 100_000; i++) {
+      const json = JSON.parse(str)
+      const a = json.user.friends[0].name
+    }
+    console.log("[JSON.parse]", Date.now() - start)
+
+    const start2 = Date.now()
+    for (let i = 0; i < 100_000; i++) {
+      const a = get(p, ec)
+    }
+    console.log("[zkJSON get]", Date.now() - start2)
+
+    const start4 = Date.now()
+    for (let i = 0; i < 100_000; i++) {
+      const dc = decode(ec)
+      const a = dc.user.friends[0].name
+    }
+    console.log("[zkjson decode]", Date.now() - start4)
+
+    const msg = enc(data)
+    const start5 = Date.now()
+    for (let i = 0; i < 100_000; i++) {
+      const dc = dec(msg)
+      const a = dc.user.friends[0].name
+    }
+    console.log("[msgpack decode]", Date.now() - start5)
     return
   })
 })

@@ -475,6 +475,7 @@ function isPrefix(path, prefix) {
   }
   return true
 }
+
 function applyDicToPath(path, sortedDic) {
   // Base case: if the path is empty, nothing to replace.
   if (path.length === 0) return []
@@ -566,6 +567,7 @@ function mapDic(dic, len) {
 
 function encodeDic(dict) {
   let enc = []
+  let offsets = []
   for (let v of dict) {
     let len = 1
     let elms = []
@@ -597,18 +599,24 @@ function encodeDic(dict) {
         v.split("").map(c => c.charCodeAt(0)),
       )
     }
+    offsets.push(elms.length + 1)
     enc = concat(enc, [len, ...elms])
   }
-  return enc
+  return { offsets, enc }
 }
 
 function encode(_json, nodic = false) {
   let json = clone(_json)
   let dic = null
+  let dic_offsets = null
   let dictionary, keyMap
   if (nodic !== true) {
     ;({ dictionary, keyMap } = genDic(json))
-    if (dictionary.length > 0) dic = encodeDic(dictionary)
+    if (dictionary.length > 0) {
+      const res = encodeDic(dictionary)
+      dic = res.enc
+      dic_offsets = res.offsets
+    }
   }
   let enc = _encode(json)
   let _enc = clone(enc)
@@ -643,17 +651,30 @@ function encode(_json, nodic = false) {
   enc = encodePaths(enc)
   let enc2 = []
   for (let v of _enc) enc2.push(enc[v[2]])
-  const _dic = dic ? [1, 0, 2, dictionary.length, ...dic] : []
-  return concat(
-    _dic,
+  let ret = concat(
+    dic ?? [],
     enc2.reduce((arr, v) => arr.concat([...flattenPath(v[0]), ...v[1]]), []),
   )
+  ret.unshift(ret.length + 1)
+  if (dic_offsets) {
+    ret.push(dictionary.length)
+    for (let v of dic_offsets) ret.push(v)
+  } else {
+    ret.push(0)
+  }
+  for (let v of enc2) ret.push(flatten(v[0]).length + flatten(v[1]).length + 1)
+  console.log(dictionary)
+  return ret
 }
 
 function _decode(arr) {
   let vals = []
   let dic = []
-  while (arr.length > 0) {
+  let isDic = arr[arr[0]]
+  let offset = arr.shift()
+  let len = arr.length
+  if (isDic > 0) dic = mapDic(arr, isDic)
+  while (len - offset + 1 < arr.length) {
     let plen = arr.shift()
     let keys = []
     let val = null
@@ -739,6 +760,7 @@ function encodeVal(v) {
 }
 
 function decodeVal(arr) {
+  if (!is(Array, arr)) return
   const type = arr[0]
   const _val = arr[1]
   let val = null
@@ -1030,7 +1052,112 @@ function fromUint8(arr) {
   return num.toString()
 }
 
+function get(path, data) {
+  let dic = []
+  let offset = data[0]
+  let cur = offset
+  let isDic = data[cur++]
+  let offsets = { dic: [], data: [] }
+  let p = 1
+  if (isDic > 0) {
+    offsets.dic[0] = 1
+    for (let i2 = 0; i2 < isDic; i2++) {
+      p += data[cur + i2]
+      offsets.dic.push(p)
+    }
+  } else {
+    offsets.data[0] = 0
+  }
+  cur += isDic
+  while (cur < data.length) {
+    offsets.data.push(p)
+    p += data[cur]
+    cur++
+  }
+  for (let i3 = 0; i3 < offsets.data.length; i3++) {
+    let c = offsets.data[i3]
+    let index = 0
+    let klen = data[c++]
+    let ok = true
+    index++
+    for (let i2 = 0; i2 < klen; i2++) {
+      const type = data[c++]
+      if (type === 0) {
+        const subtype = data[c++]
+        if (subtype === 3) {
+          // no check
+          const ref = data[c++]
+          let d = offsets.dic[ref]
+          let d2 = offsets.dic[ref + 1]
+
+          const getDic = x => {
+            let len = data[x++]
+            let res = []
+            for (let i = 0; i < len; i++) {
+              let dtype = data[x++]
+              if (dtype === 9) {
+                res = concat(res, getDic(offsets.dic[data[x++]]))
+              } else if (dtype === 7) {
+                let slen = data[x++]
+                res.push(slen)
+                for (let i2 = 0; i2 < slen; i2++) {
+                  res.push(data[x++])
+                }
+              } else {
+                res.push(0)
+                res.push(0)
+                res.push(data[x++])
+              }
+            }
+            return res
+          }
+          const dic = getDic(d, d2)
+          for (let v3 of dic) {
+            if (path[index++] !== v3) {
+              ok = false
+              break
+            }
+          }
+        } else if (subtype === 0) {
+          // check
+          if (path[index++] !== type) {
+            ok = false
+            break
+          }
+          if (path[index++] !== subtype) {
+            ok = false
+            break
+          }
+          if (path[index++] !== data[c++]) {
+            ok = false
+            break
+          }
+        }
+      } else {
+        const slen = type
+        if (path[index++] !== slen) {
+          ok = false
+          break
+        }
+        for (let i3 = 0; i3 < slen; i3++) {
+          if (path[index++] !== data[c++]) {
+            ok = false
+            break
+          }
+        }
+      }
+    }
+    if (!ok) continue
+    if (index === path.length) {
+      return data.slice(c, offsets.data[i3 + 1])
+      break
+    }
+  }
+  return
+}
+
 module.exports = {
+  get,
   encode,
   decode,
   encodePath,

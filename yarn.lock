@@ -357,6 +357,11 @@
     fastfile "0.0.20"
     ffjavascript "^0.2.48"
 
+"@msgpack/msgpack@^3.0.1":
+  version "3.0.1"
+  resolved "https://registry.yarnpkg.com/@msgpack/msgpack/-/msgpack-3.0.1.tgz#9aa13f83ad575f8435e24fe4bff609c256214d91"
+  integrity sha512-9qysoVTITLcOFIIJeXbdtUgvvY25ojUp+WWfLc0O4H4KKWeamUNAqkjS5mej/PnVDnH70llWKNa7pzv5U4TqVQ==
+
 aes-js@3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/aes-js/-/aes-js-3.0.0.tgz#e21df10ad6c2053295bcbb8dab40b09dbea87e4d"
