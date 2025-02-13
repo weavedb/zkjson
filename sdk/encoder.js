@@ -1,4 +1,4 @@
-const { isNil, includes, splitEvery, flatten } = require("ramda")
+const { clone, isNil, includes, splitEvery, flatten } = require("ramda")
 const ops = {
   $eq: 10,
   $ne: 11,
@@ -342,7 +342,7 @@ function decodeVal(arr) {
 }
 
 function decode(arr) {
-  const decoded = _decode(arr)
+  const decoded = _decode(clone(arr))
   let json =
     decoded[0]?.[0]?.[0]?.[0] == 0 && decoded[0]?.[0]?.[0]?.[1] == 0 ? [] : {}
   for (const v of decoded) {
