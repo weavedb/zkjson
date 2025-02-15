@@ -1,5 +1,6 @@
 const { describe, it } = require("node:test")
 const assert = require("assert")
+const { createJSON } = require("./utils.js")
 const { encode: enc, decode: dec } = require("@msgpack/msgpack")
 const {
   to128,
@@ -17,8 +18,11 @@ const {
   encode,
   decode,
 } = require("../sdk/encoder-v2.js")
+const { encode_x, u8 } = require("../sdk/encoder-v2-1.js")
 
+const { range } = require("ramda")
 const { encode: encode1, decode: decode1 } = require("../sdk/encoder.js")
+
 let data = {
   user: {
     id: 12345,
@@ -51,6 +55,43 @@ let data = {
 }
 
 describe("zkJSON v2", function () {
+  it.only("should encode and decode", () => {
+    let data0 = createJSON()
+    console.log()
+    console.log(data0)
+    console.log()
+    let u = new u8(1000)
+    const res0 = encode_x(data0, u)
+    const msg = enc(data0)
+    console.log()
+    console.log(
+      "size: [json]",
+      Buffer.from(JSON.stringify(data0), "utf8").length,
+      "[msg]",
+      Buffer.from(msg).length,
+      "[zkj]",
+      Buffer.from(res0).length,
+    )
+    console.log()
+
+    const num = 100000
+    const start = Date.now()
+    let res = null
+    for (let i = 0; i < num; i++) res = encode_x(data0, u)
+    const dur = Date.now() - start
+    const start0 = Date.now()
+    for (let i = 0; i < num; i++) enc(data0)
+    const dur0 = Date.now() - start0
+    console.log("speed: [msg]", dur0, "[zkj]", dur)
+    console.log()
+    console.log("[msg]", msg)
+    console.log("[zkj]", res0)
+    console.log()
+    return
+    console.log(decode(res))
+    console.log(encode(data0, { offset: false, sort: false, dict: false }))
+  })
+
   it("should encode and decode", () => {
     console.log("size comparison..............................................")
     console.log("[json size]", Buffer.from(JSON.stringify(data), "utf8").length)
