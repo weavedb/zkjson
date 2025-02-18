@@ -174,12 +174,16 @@ module.exports = class decoder {
             const moved = this.uint()
             const int = this.uint()
             const neg = num === 0 ? 1 : -1
-            this.nums.push((int / Math.pow(10, moved)) * neg)
+            this.nums.push((int / Math.pow(10, moved - 1)) * neg)
           } else {
             const moved = num > 4 ? num - 4 : num
-            const int = this.uint()
             const neg = num > 4 ? -1 : 1
-            this.nums.push((int / Math.pow(10, moved)) * neg)
+            if (moved === 1) {
+              this.nums.push(neg === -1 ? {} : [])
+            } else {
+              const int = this.uint()
+              this.nums.push((int / Math.pow(10, moved - 1)) * neg)
+            }
           }
         }
       }
@@ -223,7 +227,6 @@ module.exports = class decoder {
     let init = [[], []]
     const get = i => {
       const type = this.types[i]
-      console.log(type)
       let val = null
       if (type === 7) {
         let len = this.lh128()

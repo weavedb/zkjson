@@ -359,7 +359,7 @@ function _encode_x(
     else u.tcount++
     if (moved > 0) {
       u.push_float(v < 0, moved)
-      if (moved > 3) u.push_int(moved)
+      if (moved > 3) u.push_int(moved + 1)
     }
     u.push_int((v < 0 ? -1 : 1) * v * Math.pow(10, moved))
     return type
@@ -383,23 +383,37 @@ function _encode_x(
     for (let i = 0; i < len; i++) u.to128(v.charCodeAt(i))
     return 7
   } else if (Array.isArray(v)) {
-    const _prev = u.dcount
-    pushPathNum(u, index, prev, 0)
-    let i = 0
-    for (const v2 of v) {
-      prev_type = _encode_x(v2, u, plen + 1, _prev, prev_type, i)
-      i++
+    if (v.length === 0) {
+      if (prev !== null) u.push_dlink(prev + 1, 1)
+      u.push_type(prev_type)
+      u.push_float(false, 1)
+      return 6
+    } else {
+      const _prev = u.dcount
+      pushPathNum(u, index, prev, 0)
+      let i = 0
+      for (const v2 of v) {
+        prev_type = _encode_x(v2, u, plen + 1, _prev, prev_type, i)
+        i++
+      }
     }
     return prev_type
   } else if (typeof v === "object") {
-    pushPathNum(u, 0, prev, 1) // dcount = 1, prev + 1 = 2
-    const __prev = u.dcount
-    for (const k in v) {
-      const _prev = u.dcount
-      pushPathStr(u, k, __prev - 1)
-      prev_type = _encode_x(v[k], u, plen + 1, _prev, prev_type)
+    if (Object.keys(v).length === 0) {
+      if (prev !== null) u.push_dlink(prev + 1, 1)
+      u.push_type(prev_type)
+      u.push_float(true, 1)
+      return 6
+    } else {
+      pushPathNum(u, 0, prev, 1) // dcount = 1, prev + 1 = 2
+      const __prev = u.dcount
+      for (const k in v) {
+        const _prev = u.dcount
+        pushPathStr(u, k, __prev - 1)
+        prev_type = _encode_x(v[k], u, plen + 1, _prev, prev_type)
+      }
+      return prev_type
     }
-    return prev_type
   }
 }
 

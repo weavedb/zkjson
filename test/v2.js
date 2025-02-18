@@ -43,12 +43,7 @@ let data = {
 describe("zkJSON v2", function () {
   it.only("should encode and decode", () => {
     let data0 = createJSON()
-    data0 = {
-      a: [
-        { b: 1, g: 5, c: [3, 4] },
-        { f: "abc", g: [1, 2, { b: 3 }, null, false] },
-      ],
-    }
+    data0 = { a: [], b: { c: {} }, e: [3, 4, {}] }
     console.log()
     console.log(data0)
     console.log()
@@ -57,10 +52,10 @@ describe("zkJSON v2", function () {
     let d = new decoder()
     console.log()
     const decoded = decode_x(res0, d)
-    assert.deepEqual(decoded, data0)
     console.log(decoded)
     console.log("decoded", JSON.stringify(decoded))
     console.log()
+    assert.deepEqual(decoded, data0)
     return
     const msg = enc(data0)
     console.log()
