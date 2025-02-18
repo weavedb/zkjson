@@ -3,31 +3,24 @@ function bits(n) {
 }
 
 function tobits(arr, cursor = 0) {
-  // Convert the input array to a continuous string of 8-bit binary segments.
   let bitStr = ""
   for (let i = 0; i < arr.length; i++) {
     bitStr += arr[i].toString(2).padStart(8, "0")
   }
-  // Slice off the bits before the cursor.
   let remaining = bitStr.slice(cursor)
 
   let result = []
-  // Determine how many bits remain in the current (partial) byte.
   let offset = cursor % 8
   if (offset !== 0) {
-    // The first chunk is the remaining bits of that byte:
-    let firstChunkSize = 8 - offset // e.g. if cursor=18 then offset=2, firstChunkSize=6.
+    let firstChunkSize = 8 - offset
     result.push(remaining.slice(0, firstChunkSize))
     remaining = remaining.slice(firstChunkSize)
   }
-  // Break the remaining bits into full 8-bit chunks.
   while (remaining.length >= 8) {
     result.push(remaining.slice(0, 8))
     remaining = remaining.slice(8)
   }
-  // If any bits remain, add them as the last chunk.
   if (remaining.length > 0) result.push(remaining)
-
   return result
 }
 
@@ -60,9 +53,6 @@ module.exports = class decoder {
     return n
   }
   decode(v) {
-    console.log("decoding........................................")
-    console.log(v)
-    console.log(tobits(v))
     this.o = v
     this.c = 0
     this.nc = 0
@@ -82,7 +72,7 @@ module.exports = class decoder {
     this.getIndexes()
     this.movePads()
     this.getKeys()
-    //this.build()
+    this.build()
   }
   getLen() {
     this.len = this.short()
@@ -97,9 +87,6 @@ module.exports = class decoder {
     console.log("keys", this.keys)
   }
   getDlinks() {
-    console.log()
-    console.log("get dlinks............................")
-    this.bits()
     let ind = 1
     let i = 0
     while (i < this.len) {
@@ -114,19 +101,13 @@ module.exports = class decoder {
     }
   }
   getKeyLens() {
-    console.log()
-    console.log("get keylens............................")
-    this.bits()
-    if (this.drefs.length === 0) return
+    if (this.drefs.length === 0 && this.len === 0) return
     for (let i = 0; i < this.drefs.length + 1; i++) {
       const int = this.short()
       this.keylens.push(int)
     }
   }
   getIndexes() {
-    console.log()
-    console.log("get indexes............................")
-    this.bits()
     for (const v of this.keylens) {
       if (v > 1) continue
       const int = this.short()
@@ -135,9 +116,6 @@ module.exports = class decoder {
   }
 
   getTypes() {
-    console.log()
-    console.log("get types............................")
-    this.bits()
     let i2 = -1
     let len = Math.max(1, this.vrefs.length)
     for (let i = 0; i < len; i++) {
@@ -159,9 +137,6 @@ module.exports = class decoder {
     return x === 3 ? this.lh128() : this.n(x === 2 ? 6 : x === 1 ? 4 : 3)
   }
   getNums() {
-    console.log()
-    console.log("get nums.............")
-    this.bits()
     for (let v of this.types) {
       if (v >= 4 && v <= 6) {
         const num = this.uint()
@@ -188,9 +163,6 @@ module.exports = class decoder {
     }
   }
   getKeys() {
-    console.log()
-    console.log("get keys....................................")
-    this.bits()
     let ind = 0
     for (let i = 0; i < this.keylens.length; i++) {
       const len = this.keylens[i]
@@ -222,7 +194,6 @@ module.exports = class decoder {
     }
   }
   build() {
-    let init = [[], []]
     const get = i => {
       const type = this.types[i]
       let val = null
@@ -243,60 +214,127 @@ module.exports = class decoder {
     if (this.vrefs.length === 0) return (this.json = get(0))
     this.json = null
     let i = 0
+    let init = [[], []]
+    let type = key => (typeof key === "string" ? 2 : key[0])
+    let set = k => (init[k[0]][k[1]] = true)
+    let ex = k => init[k[0]][k[1]] === true
     for (let v of this.vrefs) {
       let keys = []
       this.getKey(v, keys)
       const val = get(i)
-      console.log()
-      console.log("[keys]", keys, val, "------------------------------------")
+      i++
       let json = this.json
       for (let i2 = 0; i2 < keys.length; i2++) {
         let k = keys[i2]
-        console.log("[key]", k)
-        if (Array.isArray(k)) {
-          if (typeof init[k[0]][k[1]] === "undefined") {
-            init[k[0]][k[1]] = true
-            if (json === null) {
-              if (k[0] === 0) this.json = []
-              else if (k[0] === 1) this.json = {}
-              json = this.json
+        if (json === null) {
+          let t = type(k)
+          set(k)
+          if (t === 0) {
+            this.json = []
+            json = this.json
+            if (i2 === keys.length - 1) {
+              json[0] = val
+              break
+            }
+            if (i2 === keys.length - 2) {
+              const k2 = keys[i2 + 1]
+              if (type(k2) === 0) {
+                json.push([val])
+                break
+              }
             } else {
-              if (Array.isArray(json)) {
-                if (k[0] === 0) json.push([])
-                if (k[0] === 1) json.push({})
+              const k2 = keys[i2 + 1]
+              if (type(k2) === 0) {
+                set(k2)
+                json.push([])
+                json = json[json.length - 1]
+              } else if (type(k2) === 1) {
+                set(k2)
+                json.push({})
                 json = json[json.length - 1]
               }
             }
           } else {
-            if (Array.isArray(json)) {
-              if (i2 === keys.length - 1) json.push(val)
-              else json = json[json.length - 1]
+            this.json = {}
+            json = this.json
+            if (i2 === keys.length - 2) {
+              const k2 = keys[i2 + 1]
+              json[k2] = val
+              break
             }
           }
-        } else if (i2 !== keys.length - 1) {
-          if (typeof json[k] !== "undefined") {
-            json = json[k]
-            let k2 = keys[i2 + 1]
-            if (Array.isArray(k2) && i2 + 1 !== keys.length - 1) i2++
+          if (i2 !== keys.length - 2) continue
+        } else if (i2 === 0) {
+          const k2 = keys[i2 + 1]
+          const t1 = type(k)
+          if (t1 === 0) {
+            const t2 = type(k2)
+            if (t2 === 0) {
+              if (!ex(k2)) set(k2) && json.push([])
+              json = json[json.length - 1]
+            } else if (t2 === 1) {
+              if (!ex(k2)) set(k2) && json.push({})
+              json = json[json.length - 1]
+            }
+          }
+          continue
+        }
+        if (i2 === keys.length - 2) {
+          const jtype = Array.isArray(json) ? 0 : 1
+          const ctype = type(k)
+          const k2 = keys[i2 + 1]
+          const ntype = type(k2)
+          if (ctype === 0 && ntype === 0) {
+            if (!ex(k2)) set(k2) && json.push([])
+            json = json[json.length - 1]
+            json.push(val)
+            break
+          } else if (ctype === 1 && ntype === 2) {
+            json[k2] = val
+            break
+          } else if (jtype === 1 && ctype === 2) {
+            if (ntype === 0) {
+              json[k] ??= []
+              json[k].push(val)
+            }
+            break
           } else {
-            let k2 = keys[i2 + 1]
-            if (typeof k2 === "string") {
-              json[k] = {}
-            } else if (Array.isArray(k2)) {
-              if (k2[0] === 0) {
-                json[k] = []
-              } else if (k2[0] === 1) {
-                json[k] = {}
-              }
-              init[k2[0]][k2[1]] = true
-              if (i2 + 1 !== keys.length - 1) i2++
-            }
-            json = json[k]
+            //console.log("impossible 4")
           }
-        } else json[k] = val
-        console.log("[json]", json, this.json)
+        } else {
+          const jtype = Array.isArray(json) ? 0 : 1
+          const ctype = type(k)
+          const k2 = keys[i2 + 1]
+          const ntype = type(k2)
+          if (jtype === 1 && ctype === 2) {
+            if (ntype === 0) {
+              json[k] ??= []
+              json = json[k]
+            } else if (ntype === 1) {
+              json[k] ??= {}
+              json = json[k]
+            } else {
+              //console.log("impossible 5")
+            }
+          } else if (jtype === 0 && ctype === 1) {
+            // console.log("impossible 6")
+          } else if (jtype === 0 && ctype === 0) {
+            if (ntype === 0) {
+              if (!ex(k2)) set(k2) && json.push([])
+              json = json[json.length - 1]
+            } else if (ntype === 1) {
+              if (!ex(k2)) set(k2) && json.push({})
+              json = json[json.length - 1]
+            } else {
+              // console.log("impossible 7")
+            }
+          } else if (jtype === 1 && ctype === 1) {
+            // nothing
+          } else {
+            //console.log("impossible 8")
+          }
+        }
       }
-      i++
     }
   }
 }
