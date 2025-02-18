@@ -2,9 +2,9 @@ const { describe, it } = require("node:test")
 const assert = require("assert")
 const { createJSON } = require("./utils.js")
 const { encode: enc, decode: dec } = require("@msgpack/msgpack")
-const { get, encode, decode } = require("../sdk/encoder-v2.js")
-const { decode_x, encode_x, u8 } = require("../sdk/encoder-v2-1.js")
-const decoder = require("../sdk/decoder.js")
+const { get, encode, decode } = require("../sdk/encoder-v1_5.js")
+const { decode_x, encode_x, u8 } = require("../sdk/encoder-v2.js")
+const decoder = require("../sdk/decoder-v2.js")
 const { range } = require("ramda")
 const { encode: encode1, decode: decode1 } = require("../sdk/encoder.js")
 
@@ -41,7 +41,53 @@ let data = {
 
 // empty object
 describe("zkJSON v2", function () {
-  it.only("should encode and decode", () => {
+  it.only("should benchmark", () => {
+    const count = 100000
+    let d = new decoder()
+    let u = new u8(1000)
+    data = createJSON()
+
+    console.log("[json size]", Buffer.from(JSON.stringify(data), "utf8").length)
+    const msg = enc(data)
+    console.log("[msgpack size]", Buffer.from(msg).length)
+    const _e = encode_x(data, u)
+    console.log("[zkjson v2 size]", Buffer.from(_e).length)
+    console.log()
+    const start0 = Date.now()
+    for (let i = 0; i < count; i++) enc(data)
+    console.log("[msgpack encode]", Date.now() - start0)
+    const start1 = Date.now()
+    for (let i = 0; i < count; i++) encode_x(data, u)
+    console.log("[zkjson encode]", Date.now() - start1)
+    console.log()
+
+    const start2 = Date.now()
+    for (let i = 0; i < count; i++) dec(msg)
+    console.log("[msgpack decode]", Date.now() - start2)
+    const start3 = Date.now()
+    for (let i = 0; i < count; i++) decode_x(_e, d)
+    console.log("[zkjson decode]", Date.now() - start3)
+    console.log()
+
+    console.log(data)
+    console.log()
+  })
+  it("should encode and decode random json", () => {
+    let d = new decoder()
+    let u = new u8(1000)
+    for (let v of range(0, 1000)) {
+      let data0 = createJSON()
+      const res0 = encode_x(data0, u)
+      const decoded = decode_x(res0, d)
+      /*
+      console.log(decoded)
+      console.log("..............................")
+      console.log(data0)
+      console.log(decoded)*/
+      assert.deepEqual(decoded, data0)
+    }
+  })
+  it("should encode and decode", () => {
     let data0 = createJSON()
     data0 = -3.223432
     console.log()
