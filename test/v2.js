@@ -2,24 +2,9 @@ const { describe, it } = require("node:test")
 const assert = require("assert")
 const { createJSON } = require("./utils.js")
 const { encode: enc, decode: dec } = require("@msgpack/msgpack")
-const {
-  to128,
-  from128,
-  get,
-  decodeVal,
-  encodeVal,
-  encodePath,
-  compress,
-  decompress,
-  toUint8,
-  fromUint8,
-  fromSignal,
-  toSignal,
-  encode,
-  decode,
-} = require("../sdk/encoder-v2.js")
-const { encode_x, u8 } = require("../sdk/encoder-v2-1.js")
-
+const { get, encode, decode } = require("../sdk/encoder-v2.js")
+const { decode_x, encode_x, u8 } = require("../sdk/encoder-v2-1.js")
+const decoder = require("../sdk/decoder.js")
 const { range } = require("ramda")
 const { encode: encode1, decode: decode1 } = require("../sdk/encoder.js")
 
@@ -54,14 +39,29 @@ let data = {
   ],
 }
 
+// empty object
 describe("zkJSON v2", function () {
   it.only("should encode and decode", () => {
     let data0 = createJSON()
+    data0 = {
+      a: [
+        { b: 1, g: 5, c: [3, 4] },
+        { f: "abc", g: [1, 2, { b: 3 }, null, false] },
+      ],
+    }
     console.log()
     console.log(data0)
     console.log()
-    let u = new u8(1000)
+    let u = new u8(1000, true)
     const res0 = encode_x(data0, u)
+    let d = new decoder()
+    console.log()
+    const decoded = decode_x(res0, d)
+    assert.deepEqual(decoded, data0)
+    console.log(decoded)
+    console.log("decoded", JSON.stringify(decoded))
+    console.log()
+    return
     const msg = enc(data0)
     console.log()
     console.log(
@@ -73,11 +73,11 @@ describe("zkJSON v2", function () {
       Buffer.from(res0).length,
     )
     console.log()
+    return
 
     const num = 100000
     const start = Date.now()
-    let res = null
-    for (let i = 0; i < num; i++) res = encode_x(data0, u)
+    for (let i = 0; i < num; i++) encode_x(data0, u)
     const dur = Date.now() - start
     const start0 = Date.now()
     for (let i = 0; i < num; i++) enc(data0)
@@ -88,7 +88,7 @@ describe("zkJSON v2", function () {
     console.log("[zkj]", res0)
     console.log()
     return
-    console.log(decode(res))
+    console.log(decode(res0))
     console.log(encode(data0, { offset: false, sort: false, dict: false }))
   })
 
