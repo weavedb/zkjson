@@ -117,6 +117,7 @@ module.exports = class decoder {
     console.log()
     console.log("get keylens............................")
     this.bits()
+    if (this.drefs.length === 0) return
     for (let i = 0; i < this.drefs.length + 1; i++) {
       const int = this.short()
       this.keylens.push(int)
@@ -138,16 +139,15 @@ module.exports = class decoder {
     console.log("get types............................")
     this.bits()
     let i2 = -1
-    for (let i = 0; i < this.vrefs.length; i++) {
+    let len = Math.max(1, this.vrefs.length)
+    for (let i = 0; i < len; i++) {
       let type = this.n(3)
       if (type === 0) {
         const count = this.short()
         i += count - 1
         let type2 = this.n(3)
         for (let i2 = 0; i2 < count; i2++) this.types.push(type2)
-      } else {
-        this.types.push(type)
-      }
+      } else this.types.push(type)
     }
   }
   short() {
@@ -165,11 +165,9 @@ module.exports = class decoder {
     for (let v of this.types) {
       if (v >= 4 && v <= 6) {
         const num = this.uint()
-        if (v === 4) {
-          this.nums.push(num)
-        } else if (v === 5) {
-          this.nums.push(-num)
-        } else if (v === 6) {
+        if (v === 4) this.nums.push(num)
+        else if (v === 5) this.nums.push(-num)
+        else if (v === 6) {
           if (num === 0 || num === 4) {
             const moved = this.uint()
             const int = this.uint()
@@ -235,13 +233,14 @@ module.exports = class decoder {
           val += String.fromCharCode(Number(this.lh128()))
         }
       } else if (type === 4) val = this.nums[this.nc++]
-      else if (type === 5) val = -this.nums[this.nc++]
+      else if (type === 5) val = this.nums[this.nc++]
       else if (type === 6) val = this.nums[this.nc++]
       else if (type === 1) val = null
       else if (type === 2) val = true
       else if (type === 3) val = false
       return val
     }
+    if (this.vrefs.length === 0) return (this.json = get(0))
     this.json = null
     let i = 0
     for (let v of this.vrefs) {

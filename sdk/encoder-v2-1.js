@@ -342,14 +342,7 @@ function getPrecision(v) {
 }
 
 // 0: repeat, 1: null, 2: true, 3: false, 4: uint, 5: neg, 6: float, 7: str
-function _encode_x(
-  v,
-  u,
-  plen = 0,
-  prev = null,
-  prev_type = null,
-  index = null,
-) {
+function _encode_x(v, u, plen = 0, prev = null, prev_type = null) {
   if (typeof v === "number") {
     if (prev !== null) u.push_dlink(prev + 1, 1)
     // need various num types
@@ -358,8 +351,8 @@ function _encode_x(
     if (prev_type !== null && prev_type !== 4) u.push_type(prev_type)
     else u.tcount++
     if (moved > 0) {
-      u.push_float(v < 0, moved)
-      if (moved > 3) u.push_int(moved + 1)
+      u.push_float(v < 0, moved + 1)
+      if (moved > 2) u.push_int(moved + 1)
     }
     u.push_int((v < 0 ? -1 : 1) * v * Math.pow(10, moved))
     return type
@@ -393,7 +386,7 @@ function _encode_x(
       pushPathNum(u, index, prev, 0)
       let i = 0
       for (const v2 of v) {
-        prev_type = _encode_x(v2, u, plen + 1, _prev, prev_type, i)
+        prev_type = _encode_x(v2, u, plen + 1, _prev, prev_type)
         i++
       }
     }
