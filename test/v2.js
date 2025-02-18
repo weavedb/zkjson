@@ -43,7 +43,7 @@ let data = {
 describe("zkJSON v2", function () {
   it.only("should encode and decode", () => {
     let data0 = createJSON()
-    data0 = { a: [], b: { c: {} }, e: [3, 4, {}] }
+    data0 = -3.223432
     console.log()
     console.log(data0)
     console.log()
