@@ -1,4 +1,35 @@
 const { bits, tobits } = require("./utils.js")
+function add(arr, currBitLen, value, valueWidth) {
+  const mask = valueWidth >= 32 ? 0xffffffff : (1 << valueWidth) - 1
+  value &= mask
+  const used = currBitLen & 31
+
+  const free = used === 0 ? 32 : 32 - used
+  if (valueWidth <= free) {
+    if (used === 0) arr.push(value)
+    else arr[arr.length - 1] = (arr[arr.length - 1] << valueWidth) | value
+    return currBitLen + valueWidth
+  }
+  const high = value >>> (valueWidth - free)
+  if (used === 0) arr.push(high)
+  else arr[arr.length - 1] = (arr[arr.length - 1] << free) | high
+  currBitLen += free
+  let remaining = valueWidth - free
+  if (remaining <= 32) {
+    arr.push(value & ((1 << remaining) - 1))
+    return currBitLen + remaining
+  }
+  while (remaining > 32) {
+    arr.push((value >>> (remaining - 32)) & 0xffffffff)
+    currBitLen += 32
+    remaining -= 32
+  }
+  if (remaining > 0) {
+    arr.push(value & ((1 << remaining) - 1))
+    currBitLen += remaining
+  }
+  return currBitLen
+}
 
 class u8 {
   constructor(size = 1000, log = false) {
@@ -6,158 +37,133 @@ class u8 {
     this.log = log
     this.obj = new Uint8Array(size)
     this.dic = new Uint8Array(size)
-  }
-  add(arr, currBitLen, value, valueWidth) {
-    const mask = valueWidth >= 32 ? 0xffffffff : (1 << valueWidth) - 1
-    value &= mask
-    const used = currBitLen & 31
-
-    const free = used === 0 ? 32 : 32 - used
-    if (valueWidth <= free) {
-      if (used === 0) arr.push(value)
-      else arr[arr.length - 1] = (arr[arr.length - 1] << valueWidth) | value
-      return currBitLen + valueWidth
-    }
-    const high = value >>> (valueWidth - free)
-    if (used === 0) arr.push(high)
-    else arr[arr.length - 1] = (arr[arr.length - 1] << free) | high
-    currBitLen += free
-    let remaining = valueWidth - free
-    if (remaining <= 32) {
-      arr.push(value & ((1 << remaining) - 1))
-      return currBitLen + remaining
-    }
-    while (remaining > 32) {
-      arr.push((value >>> (remaining - 32)) & 0xffffffff)
-      currBitLen += 32
-      remaining -= 32
-    }
-    if (remaining > 0) {
-      arr.push(value & ((1 << remaining) - 1))
-      currBitLen += remaining
-    }
-    return currBitLen
-  }
-  add2(tar, val, vlen) {
-    let b = this.b[tar]
-    val &= vlen >= 32 ? 0xffffffff : (1 << vlen) - 1
-    const used = b.len & 31
-    const free = used === 0 ? 32 : 32 - used
-    if (vlen <= free) {
-      if (used === 0) b.arr.push(val)
-      else b.arr[b.arr.length - 1] = (b.arr[b.arr.length - 1] << vlen) | val
-      b.len += vlen
-      return
-    }
-    const high = val >>> (vlen - free)
-    if (used === 0) b.arr.push(high)
-    else b.arr[b.arr.length - 1] = (b.arr[b.arr.length - 1] << free) | high
-    b.len += free
-    let rest = vlen - free
-    if (rest <= 32) {
-      b.arr.push(val & ((1 << rest) - 1))
-      b.len += rest
-      return
-    }
-    while (rest > 32) {
-      b.arr.push((val >>> (rest - 32)) & 0xffffffff)
-      b.len += 32
-      rest -= 32
-    }
-    if (rest > 0) {
-      b.arr.push(val & ((1 << rest) - 1))
-      b.len += rest
-    }
-  }
-
-  flush_dlink() {
-    const dc = this.dlink_cache
-    if (dc !== null) {
-      if (dc[2] < 3) {
-        for (let i = 0; i < dc[2]; i++) this._push_dlink(dc[1], dc[0], dc[3][i])
-      } else {
-        const count = dc[0] === 1 ? this.dcount : this.dcount2
-        const d = bits(count + 1)
-        this.add2("dlinks", dc[0], 1)
-        this.add2("dlinks", 0, d)
-
-        // length push as short
-        this.short("dlinks", dc[2])
-
-        // value as uint
-        this.uint("dlinks", dc[1])
-        this.dcount2 += dc[2]
-      }
-    }
+    this.len = 0
+    this.tlen = 0
+    this.dlen = 0
+    this.jlen = 0
+    this.dcount = 0
+    this.rcount = 0
+    this.tcount = 0
+    this.dlinks = []
+    this.dlinks_len = 0
+    this.types = []
+    this.types_len = 0
+    this.keys = []
+    this.keys_len = 0
+    this.indexes = []
+    this.indexes_len = 0
+    this.dc = []
+    this.dc_len = 0
+    this.nums = []
+    this.nums_len = 0
+    this.dvals = []
+    this.dvals_len = 0
+    this.oid = 0
+    this.iid = 0
   }
   push_dlink(v, flag = 0) {
-    let dc = this.dlink_cache
-    if (dc === null) this.dlink_cache = [flag, v, 1, [this.dcount]]
-    else if (dc[0] === flag && dc[1] === v) {
-      dc[2] += 1
-      dc[3].push(this.dcount)
-    } else {
-      if (dc[2] === 1) this._push_dlink(dc[1], dc[0], dc[3][0])
-      else this.flush_dlink()
-      this.dlink_cache = [flag, v, 1, [this.dcount]]
-    }
+    const d = bits(this.dcount + 1)
+    this.dlinks_len = add(this.dlinks, this.dlinks_len, flag, 1)
+    this.dlinks_len = add(this.dlinks, this.dlinks_len, v, d)
     if (flag === 1) this.rcount++
-    else this.dcount2++
-  }
-  _push_dlink(v, flag = 0, count) {
-    this.add2("dlinks", flag, 1)
-    this.add2("dlinks", v, bits(count + 1))
   }
   push_type(v) {
     let count = this.tcount
     if (count > 3) {
-      this.add2("types", 0, 3)
-      if (count < 16) this.short("types", count)
-      else this.lh128("types", count)
-      this.add2("types", v, 3)
-    } else for (let i = 0; i < count; i++) this.add2("types", v, 3)
+      this.types_len = add(this.types, this.types_len, 0, 3)
+      if (count < 16) {
+        const d = count < 4 ? 2 : bits(count)
+        this.types_len = add(this.types, this.types_len, d - 2, 2)
+        this.types_len = add(this.types, this.types_len, count, d)
+      } else {
+        this.types_len = add(this.types, this.types_len, 3, 2)
+        while (count >= 128) {
+          this.types_len = add(
+            this.types,
+            this.types_len,
+            (count & 0x7f) | 0x80,
+            8,
+          )
+          count >>>= 7
+        }
+        this.types_len = add(this.types, this.types_len, count, 8)
+      }
+      this.types_len = add(this.types, this.types_len, v, 3)
+    } else {
+      for (let i = 0; i < count; i++) {
+        this.types_len = add(this.types, this.types_len, v, 3)
+      }
+    }
     this.tcount = 1
   }
   push_keylen(v) {
-    if (v < 16) this.short("keys", v)
-    else this.lh128("keys", v)
+    if (v < 16) {
+      const d = v < 4 ? 2 : bits(v)
+      this.keys_len = add(this.keys, this.keys_len, d - 2, 2)
+      this.keys_len = add(this.keys, this.keys_len, v, d)
+    } else {
+      this.keys_len = add(this.keys, this.keys_len, 3, 2)
+      while (v >= 128) {
+        this.keys_len = add(this.keys, this.keys_len, (v & 0x7f) | 0x80, 8)
+        v >>>= 7
+      }
+      this.keys_len = add(this.keys, this.keys_len, v, 8)
+    }
   }
   push_index(v) {
-    if (v < 16) this.short("indexes", v)
-    else this.lh128("indexes", v)
+    if (v < 16) {
+      const d = v < 4 ? 2 : bits(v)
+      this.indexes_len = add(this.indexes, this.indexes_len, d - 2, 2)
+      this.indexes_len = add(this.indexes, this.indexes_len, v, d)
+    } else {
+      this.indexes_len = add(this.indexes, this.indexes_len, 3, 2)
+      while (v >= 128) {
+        this.indexes_len = add(
+          this.indexes,
+          this.indexes_len,
+          (v & 0x7f) | 0x80,
+          8,
+        )
+        v >>>= 7
+      }
+      this.indexes_len = add(this.indexes, this.indexes_len, v, 8)
+    }
   }
 
   push_int(v) {
-    this.uint("nums", v)
+    if (v < 64) {
+      const d = v < 8 ? 3 : v < 16 ? 4 : 6
+      const flag = v < 8 ? 0 : v < 16 ? 1 : 2
+      this.nums_len = add(this.nums, this.nums_len, flag, 2)
+      this.nums_len = add(this.nums, this.nums_len, v, d)
+    } else {
+      this.nums_len = add(this.nums, this.nums_len, 3, 2)
+      while (v >= 128) {
+        this.nums_len = add(this.nums, this.nums_len, (v & 0x7f) | 0x80, 8)
+        v >>>= 7
+      }
+      this.nums_len = add(this.nums, this.nums_len, v, 8)
+    }
   }
   push_float(neg, v) {
     if (v < 4) this.push_int(neg ? 4 + v : v)
     else this.push_int(neg ? 4 : 0)
   }
 
-  uint(tar, v) {
-    if (v < 64) {
-      const d = v < 8 ? 3 : v < 16 ? 4 : 6
-      const flag = v < 8 ? 0 : v < 16 ? 1 : 2
-      this.add2(tar, flag, 2)
-      this.add2(tar, v, d)
-    } else this.lh128(tar, v)
-  }
-
-  lh128(tar, v) {
-    this.add2(tar, 3, 2)
-    while (v >= 128) {
-      this.add2(tar, (v & 0x7f) | 0x80, 8)
-      v >>>= 7
-    }
-    this.add2(tar, v, 8)
-  }
-  short(tar, v) {
+  calc_dcount() {
+    const v = this.rcount
     if (v < 16) {
       const d = v < 4 ? 2 : bits(v)
-      this.add2(tar, d - 2, 2)
-      this.add2(tar, v, d)
-    } else this.lh128(tar, v)
+      this.dc_len = add(this.dc, this.dc_len, d - 2, 2)
+      this.dc_len = add(this.dc, this.dc_len, v, d)
+    } else {
+      this.dc_len = add(this.dc, this.dc_len, 3, 2)
+      while (v >= 128) {
+        this.dc_len = add(this.dc, this.dc_len, (v & 0x7f) | 0x80, 8)
+        v >>>= 7
+      }
+      this.dc_len = add(this.dc, this.dc_len, v, 8)
+    }
   }
   reset() {
     this.len = 0
@@ -165,24 +171,24 @@ class u8 {
     this.dlen = 0
     this.jlen = 0
     this.dcount = 0
-    this.dcount2 = 0
     this.rcount = 0
     this.tcount = 0
-
+    this.dlinks = []
+    this.dlinks_len = 0
+    this.types = []
     this.types_len = 0
+    this.keys = []
+    this.keys_len = 0
+    this.indexes = []
+    this.indexes_len = 0
+    this.dc = []
+    this.dc_len = 0
+    this.nums = []
+    this.nums_len = 0
+    this.dvals = []
+    this.dvals_len = 0
     this.oid = 0
     this.iid = 0
-    this.dlink_cache = null
-    this.types = []
-
-    this.b = {
-      dlinks: { len: 0, arr: [] },
-      keys: { len: 0, arr: [] },
-      types: { len: 0, arr: [] },
-      nums: { len: 0, arr: [] },
-      indexes: { len: 0, arr: [] },
-      dc: { len: 0, arr: [] },
-    }
   }
   push_d(v) {
     this.dic[this.dlen++] = v
@@ -212,31 +218,29 @@ class u8 {
   }
 
   dump() {
-    this.flush_dlink()
-    this.short("dc", this.rcount)
+    this.calc_dcount()
     let total = 0
     if (this.log) {
-      console.log(total, `rcount(${this.rcount})`, this.b.dc.arr, this.b.dc.len)
-      total += this.b.dc.len
-      console.log(total, "dlinks", this.b.dlinks.arr, this.b.dlinks.len)
-      total += this.b.dlinks.len
-      console.log(total, "keylens", this.b.keys.arr, this.b.keys.len)
-      total += this.b.keys.len
-      console.log(total, "types", this.b.types.arr, this.b.types.len)
-      total += this.b.types.len
-      console.log(total, "nums", this.b.nums.arr, this.b.nums.len)
-      total += this.b.nums.len
-      console.log(total, "indexes", this.b.indexes.arr, this.b.indexes.len)
-      total += this.b.indexes.len
+      console.log(total, "rcount", this.dc, this.dc_len, this.rcount)
+      total += this.dc_len
+      console.log(total, "dlinks", this.dlinks, this.dlinks_len)
+      total += this.dlinks_len
+      console.log(total, "keylens", this.keys, this.keys_len)
+      total += this.keys_len
+      console.log(total, "types", this.types, this.types_len)
+      total += this.types_len
+      console.log(total, "nums", this.nums, this.nums_len)
+      total += this.nums_len
+      console.log(total, "indexes", this.indexes, this.indexes_len)
+      total += this.indexes_len
     }
-
     const _total =
-      this.b.dc.len +
-      this.b.dlinks.len +
-      this.b.types.len +
-      this.b.keys.len +
-      this.b.nums.len +
-      this.b.indexes.len
+      this.dc_len +
+      this.dlinks_len +
+      this.types_len +
+      this.keys_len +
+      this.nums_len +
+      this.indexes_len
 
     const pad_len = (8 - (_total % 8)) % 8
     if (this.log) {
@@ -285,13 +289,12 @@ class u8 {
         remaining -= bitsForThis
       }
     }
-    writeBits(this.b.dc.arr, this.b.dc.len)
-    writeBits(this.b.dlinks.arr, this.b.dlinks.len)
-    writeBits(this.b.keys.arr, this.b.keys.len)
-    writeBits(this.b.types.arr, this.b.types.len)
-    writeBits(this.b.nums.arr, this.b.nums.len)
-    writeBits(this.b.indexes.arr, this.b.indexes.len)
-
+    writeBits(this.dc, this.dc_len)
+    writeBits(this.dlinks, this.dlinks_len)
+    writeBits(this.keys, this.keys_len)
+    writeBits(this.types, this.types_len)
+    writeBits(this.nums, this.nums_len)
+    writeBits(this.indexes, this.indexes_len)
     if (pad_len > 0) writeBits([0], pad_len)
     if (this.log) {
       console.log()
@@ -299,9 +302,6 @@ class u8 {
       total += this.dlen * 8
       console.log()
       console.log(total, "obj", this.obj.subarray(0, this.len))
-      total += this.len * 8
-      console.log()
-      console.log(total, "bits", total / 8, "bytes")
       console.log()
     }
     arr.set(this.dic.subarray(0, this.dlen), bit_len)

@@ -4,6 +4,7 @@ const { createJSON } = require("./utils.js")
 const { encode: enc, decode: dec } = require("@msgpack/msgpack")
 const { get, encode, decode } = require("../sdk/encoder-v1_5.js")
 const { decode_x, encode_x, u8 } = require("../sdk/encoder-v2.js")
+const { decode_x: y2, encode_x: x2, u8: u2 } = require("../sdk/encoder-v2.1.js")
 const decoder = require("../sdk/decoder-v2.js")
 const { range } = require("ramda")
 const { encode: encode1, decode: decode1 } = require("../sdk/encoder.js")
@@ -41,10 +42,29 @@ let data = {
 
 // empty object
 describe("zkJSON v2", function () {
+  it("should encode with v2", () => {
+    console.log()
+    data = range(0, 10)
+    console.log()
+    let d = new decoder()
+    let u = new u8(1000, true)
+    const _e = encode_x(data, u)
+    console.log(_e)
+    const msg = enc(data)
+    console.log(msg)
+    console.log()
+    console.log("[msgpack size]", Buffer.from(msg).length)
+    console.log("[zkjson v2 size]", Buffer.from(_e).length)
+    console.log()
+    console.log("decoded:", decode_x(_e, d))
+    d.show()
+  })
   it.only("should benchmark", () => {
     const count = 100000
     let d = new decoder()
     let u = new u8(1000)
+
+    let _u2 = new u2(1000)
     data = createJSON()
 
     console.log("[json size]", Buffer.from(JSON.stringify(data), "utf8").length)
@@ -52,13 +72,19 @@ describe("zkJSON v2", function () {
     console.log("[msgpack size]", Buffer.from(msg).length)
     const _e = encode_x(data, u)
     console.log("[zkjson v2 size]", Buffer.from(_e).length)
+    const _e2 = x2(data, _u2)
+    console.log("[zkjson v2-1 size]", Buffer.from(_e2).length)
+
     console.log()
     const start0 = Date.now()
     for (let i = 0; i < count; i++) enc(data)
     console.log("[msgpack encode]", Date.now() - start0)
     const start1 = Date.now()
     for (let i = 0; i < count; i++) encode_x(data, u)
-    console.log("[zkjson encode]", Date.now() - start1)
+    console.log("[zkjson v2 encode]", Date.now() - start1)
+    const start1_1 = Date.now()
+    for (let i = 0; i < count; i++) x2(data, _u2)
+    console.log("[zkjson v2-1 encode]", Date.now() - start1_1)
     console.log()
 
     const start2 = Date.now()
@@ -79,11 +105,6 @@ describe("zkJSON v2", function () {
       let data0 = createJSON()
       const res0 = encode_x(data0, u)
       const decoded = decode_x(res0, d)
-      /*
-      console.log(decoded)
-      console.log("..............................")
-      console.log(data0)
-      console.log(decoded)*/
       assert.deepEqual(decoded, data0)
     }
   })
