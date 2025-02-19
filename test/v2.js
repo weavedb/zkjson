@@ -42,24 +42,26 @@ let data = {
 
 // empty object
 describe("zkJSON v2", function () {
-  it("should encode with v2", () => {
+  it.only("should encode with v2", () => {
     console.log()
-    data = range(0, 10)
+    data = createJSON()
+    console.log(data)
     console.log()
     let d = new decoder()
     let u = new u8(1000, true)
     const _e = encode_x(data, u)
-    console.log(_e)
+
     const msg = enc(data)
-    console.log(msg)
-    console.log()
-    console.log("[msgpack size]", Buffer.from(msg).length)
-    console.log("[zkjson v2 size]", Buffer.from(_e).length)
-    console.log()
     console.log("decoded:", decode_x(_e, d))
     d.show()
+    console.log()
+    console.log(_e)
+    console.log(msg)
+    console.log()
+    console.log("[zkjson v2 size]", Buffer.from(_e).length)
+    console.log("[msgpack size]", Buffer.from(msg).length)
   })
-  it.only("should benchmark", () => {
+  it("should benchmark", () => {
     const count = 100000
     let d = new decoder()
     let u = new u8(1000)

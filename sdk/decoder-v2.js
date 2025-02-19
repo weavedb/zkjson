@@ -154,7 +154,9 @@ module.exports = class decoder {
     let ind = 0
     for (let i = 0; i < this.keylens.length; i++) {
       const len = this.keylens[i]
-      if (len < 3) {
+      if (len === 2) {
+        this.keys.push("")
+      } else if (len < 3) {
         this.keys.push(this.indexes[ind++])
         continue
       } else {
