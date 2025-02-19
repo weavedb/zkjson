@@ -1,28 +1,4 @@
-function bits(n) {
-  return n === 0 ? 1 : 32 - Math.clz32(n)
-}
-
-function tobits(arr, cursor = 0) {
-  let bitStr = ""
-  for (let i = 0; i < arr.length; i++) {
-    bitStr += arr[i].toString(2).padStart(8, "0")
-  }
-  let remaining = bitStr.slice(cursor)
-
-  let result = []
-  let offset = cursor % 8
-  if (offset !== 0) {
-    let firstChunkSize = 8 - offset
-    result.push(remaining.slice(0, firstChunkSize))
-    remaining = remaining.slice(firstChunkSize)
-  }
-  while (remaining.length >= 8) {
-    result.push(remaining.slice(0, 8))
-    remaining = remaining.slice(8)
-  }
-  if (remaining.length > 0) result.push(remaining)
-  return result
-}
+const { bits, tobits } = require("./utils.js")
 
 module.exports = class decoder {
   constructor() {
@@ -79,12 +55,15 @@ module.exports = class decoder {
   }
   show() {
     console.log()
-    console.log("len", this.len, "drefs", this.drefs, "vrefs", this.vrefs)
+    console.log("len", this.len)
+    console.log("drefs", this.drefs)
+    console.log("vrefs", this.vrefs)
     console.log("keylens", this.keylens)
     console.log("types", this.types)
     console.log("nums", this.nums)
     console.log("indexes", this.indexes)
     console.log("keys", this.keys)
+    console.log()
   }
   getDlinks() {
     let ind = 1
@@ -92,12 +71,21 @@ module.exports = class decoder {
     while (i < this.len) {
       const flag = this.n(1)
       const x = this.n(bits(ind + 1))
-      if (flag === 0) this.drefs.push(x)
-      else {
-        this.vrefs.push(x)
+      if (x === 0) {
+        const len = this.short()
+        const val = this.uint()
+        for (let i2 = 0; i2 < len; i2++) {
+          if (flag === 0) this.drefs.push(val)
+          else this.vrefs.push(val)
+        }
+        if (flag === 1) i += len
+        else if (flag === 0) ind += len
+      } else {
+        if (flag === 0) this.drefs.push(x)
+        else this.vrefs.push(x)
+        if (flag === 1) i++
+        else if (flag === 0) ind++
       }
-      if (flag === 1) i++
-      else if (flag === 0) ind++
     }
   }
   getKeyLens() {
@@ -216,6 +204,7 @@ module.exports = class decoder {
     let i = 0
     let init = [[], []]
     let type = key => (typeof key === "string" ? 2 : key[0])
+
     let set = k => (init[k[0]][k[1]] = true)
     let ex = k => init[k[0]][k[1]] === true
     for (let v of this.vrefs) {
@@ -268,6 +257,15 @@ module.exports = class decoder {
           const k2 = keys[i2 + 1]
           const t1 = type(k)
           if (t1 === 0) {
+            if (keys.length === 1) {
+              json.push(val)
+              break
+            } else if (keys.length === 2) {
+              if (!ex(k2)) set(k2) && json.push([])
+              json = json[json.length - 1]
+              json.push(val)
+              break
+            }
             const t2 = type(k2)
             if (t2 === 0) {
               if (!ex(k2)) set(k2) && json.push([])
@@ -275,6 +273,11 @@ module.exports = class decoder {
             } else if (t2 === 1) {
               if (!ex(k2)) set(k2) && json.push({})
               json = json[json.length - 1]
+            }
+          } else if (t1 === 1) {
+            if (keys.length === 2) {
+              json[k2] = val
+              break
             }
           }
           continue
