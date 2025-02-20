@@ -40,6 +40,7 @@ module.exports = class decoder {
     this.c = 0
     this.nc = 0
     this.len = 0
+    this.num_cache = null
     this.drefs = []
     this.vrefs = []
     this.keylens = []
@@ -180,25 +181,66 @@ module.exports = class decoder {
     const x = this.n(2)
     return x === 3 ? this.lh128() : this.n(x === 2 ? 6 : x === 1 ? 4 : 3)
   }
+  dint(prev = 0) {
+    if (this.num_cache !== null) {
+      let n = this.num_cache.diff ? prev + this.num_cache.n : this.num_cache.n
+      this.num_cache.len -= 1
+      if (this.num_cache.len === 0) this.num_cache = null
+      return n
+    }
+    const x = this.n(2)
+    const diff = x === 0
+    let num = x === 3 ? this.lh128() : this.n(x === 2 ? 6 : x === 1 ? 4 : 3)
+    if (num === 7) {
+      const len = this.short()
+      const x2 = this.n(2)
+      let diff = x2 === 0
+      let n = null
+      if (x2 === 3) {
+        n = this.lh28()
+      } else {
+        const d = x2 === 0 ? 3 : x2 === 1 ? 4 : 6
+        n = this.n(d)
+      }
+      if (diff) {
+        if (n > 3) n -= diff - 3
+        else n = prev + n
+      }
+      num = n
+      this.num_cache = { len: len - 1, n, diff }
+      return n
+    } else if (diff) {
+      if (num > 3) num -= diff - 3
+      else num = prev + num
+    }
+    return num
+  }
   getNums() {
+    this.bits()
+    let prev = 0
     for (let v of this.types) {
       if (v >= 4 && v <= 6) {
-        const num = this.uint()
+        let num = this.dint(prev)
+        prev = num
+        console.log(v, num)
         if (v === 4) this.nums.push(num)
         else if (v === 5) this.nums.push(-num)
         else if (v === 6) {
+          // handle this too
           if (num === 0 || num === 4) {
-            const moved = this.uint()
-            const int = this.uint()
+            const moved = this.dint(prev)
+            prev = moved
+            const int = this.dint(prev)
+            prev = int
             const neg = num === 0 ? 1 : -1
             this.nums.push((int / Math.pow(10, moved - 1)) * neg)
           } else {
             const moved = num > 4 ? num - 4 : num
             const neg = num > 4 ? -1 : 1
-            if (moved === 1) {
-              this.nums.push(neg === -1 ? {} : [])
-            } else {
-              const int = this.uint()
+            if (moved === 1) this.nums.push(neg === -1 ? {} : [])
+            else {
+              const int = this.dint(prev)
+              prev = int
               this.nums.push((int / Math.pow(10, moved - 1)) * neg)
             }
           }
