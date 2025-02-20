@@ -1,4 +1,11 @@
-const { bits, tobits } = require("./utils.js")
+const {
+  strmap_rev,
+  base64_rev,
+  bits,
+  tobits,
+  strmap,
+  base64,
+} = require("./utils.js")
 
 module.exports = class decoder {
   constructor() {
@@ -32,6 +39,7 @@ module.exports = class decoder {
     this.o = v
     this.c = 0
     this.nc = 0
+    this.len = 0
     this.drefs = []
     this.vrefs = []
     this.keylens = []
@@ -40,15 +48,63 @@ module.exports = class decoder {
     this.keys = []
     this.indexes = []
     this.json = {}
-    this.getLen()
-    this.getDlinks()
-    this.getKeyLens()
-    this.getTypes()
-    this.getNums()
-    this.getIndexes()
-    this.movePads()
-    this.getKeys()
-    this.build()
+    this.single = this.n(1) === 1
+    if (this.single) {
+      this.getSingle()
+    } else {
+      this.getLen()
+      this.getDlinks()
+      this.getKeyLens()
+      this.getTypes()
+      this.getNums()
+      this.getIndexes()
+      this.movePads()
+      this.getKeys()
+      this.build()
+    }
+  }
+  getSingle() {
+    const vals = [null, true, false, "", [], {}]
+    const isNum = this.n(1)
+    if (isNum) {
+      const num = this.n(6)
+      this.json = num
+      if (num < 63) {
+      } else {
+        this.json += this.lh128()
+      }
+    } else {
+      const code = this.n(6)
+      if (code < 6) {
+        this.json = vals[code]
+      } else if (code < 9) {
+        if (code === 7 || code === 8) {
+          const moved = this.uint()
+          const n = this.uint()
+          const neg = code === 7 ? 1 : -1
+          this.json = (n / Math.pow(10, moved)) * neg
+        } else {
+          const n = this.uint()
+          this.json = -n
+        }
+      } else if (code < 61) {
+        this.json = strmap_rev[(code - 9).toString()]
+      } else if (code === 61) {
+        this.json = String.fromCharCode(Number(this.lh128()))
+      } else if (code === 62) {
+        const len = this.short()
+        this.json = ""
+        for (let i = 0; i < len; i++) {
+          this.json += base64_rev[this.n(6).toString()]
+        }
+      } else if (code === 63) {
+        const len = this.short()
+        this.json = ""
+        for (let i = 0; i < len; i++) {
+          this.json += String.fromCharCode(Number(this.lh128()))
+        }
+      }
+    }
   }
   getLen() {
     this.len = this.short()

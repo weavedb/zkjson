@@ -1,5 +1,4 @@
-const { bits, tobits } = require("./utils.js")
-
+const { bits, tobits, strmap, base64 } = require("./utils.js")
 class u8 {
   constructor(size = 1000, log = false) {
     this.size = size
@@ -7,38 +6,7 @@ class u8 {
     this.obj = new Uint8Array(size)
     this.dic = new Uint8Array(size)
   }
-  add(arr, currBitLen, value, valueWidth) {
-    const mask = valueWidth >= 32 ? 0xffffffff : (1 << valueWidth) - 1
-    value &= mask
-    const used = currBitLen & 31
-
-    const free = used === 0 ? 32 : 32 - used
-    if (valueWidth <= free) {
-      if (used === 0) arr.push(value)
-      else arr[arr.length - 1] = (arr[arr.length - 1] << valueWidth) | value
-      return currBitLen + valueWidth
-    }
-    const high = value >>> (valueWidth - free)
-    if (used === 0) arr.push(high)
-    else arr[arr.length - 1] = (arr[arr.length - 1] << free) | high
-    currBitLen += free
-    let remaining = valueWidth - free
-    if (remaining <= 32) {
-      arr.push(value & ((1 << remaining) - 1))
-      return currBitLen + remaining
-    }
-    while (remaining > 32) {
-      arr.push((value >>> (remaining - 32)) & 0xffffffff)
-      currBitLen += 32
-      remaining -= 32
-    }
-    if (remaining > 0) {
-      arr.push(value & ((1 << remaining) - 1))
-      currBitLen += remaining
-    }
-    return currBitLen
-  }
-  add2(tar, val, vlen) {
+  add(tar, val, vlen) {
     let b = this.b[tar]
     val &= vlen >= 32 ? 0xffffffff : (1 << vlen) - 1
     const used = b.len & 31
@@ -78,8 +46,8 @@ class u8 {
       } else {
         const count = dc[0] === 1 ? this.dcount : this.dcount2
         const d = bits(count + 1)
-        this.add2("dlinks", dc[0], 1)
-        this.add2("dlinks", 0, d)
+        this.add("dlinks", dc[0], 1)
+        this.add("dlinks", 0, d)
 
         // length push as short
         this.short("dlinks", dc[2])
@@ -105,17 +73,17 @@ class u8 {
     else this.dcount2++
   }
   _push_dlink(v, flag = 0, count) {
-    this.add2("dlinks", flag, 1)
-    this.add2("dlinks", v, bits(count + 1))
+    this.add("dlinks", flag, 1)
+    this.add("dlinks", v, bits(count + 1))
   }
   push_type(v) {
     let count = this.tcount
     if (count > 3) {
-      this.add2("types", 0, 3)
+      this.add("types", 0, 3)
       if (count < 16) this.short("types", count)
       else this.lh128("types", count)
-      this.add2("types", v, 3)
-    } else for (let i = 0; i < count; i++) this.add2("types", v, 3)
+      this.add("types", v, 3)
+    } else for (let i = 0; i < count; i++) this.add("types", v, 3)
     this.tcount = 1
   }
   push_keylen(v) {
@@ -139,27 +107,34 @@ class u8 {
     if (v < 64) {
       const d = v < 8 ? 3 : v < 16 ? 4 : 6
       const flag = v < 8 ? 0 : v < 16 ? 1 : 2
-      this.add2(tar, flag, 2)
-      this.add2(tar, v, d)
+      this.add(tar, flag, 2)
+      this.add(tar, v, d)
     } else this.lh128(tar, v)
   }
-
-  lh128(tar, v) {
-    this.add2(tar, 3, 2)
+  lh128_2(tar, v) {
     while (v >= 128) {
-      this.add2(tar, (v & 0x7f) | 0x80, 8)
+      this.add(tar, (v & 0x7f) | 0x80, 8)
       v >>>= 7
     }
-    this.add2(tar, v, 8)
+    this.add(tar, v, 8)
+  }
+  lh128(tar, v) {
+    this.add(tar, 3, 2)
+    while (v >= 128) {
+      this.add(tar, (v & 0x7f) | 0x80, 8)
+      v >>>= 7
+    }
+    this.add(tar, v, 8)
   }
   short(tar, v) {
     if (v < 16) {
       const d = v < 4 ? 2 : bits(v)
-      this.add2(tar, d - 2, 2)
-      this.add2(tar, v, d)
+      this.add(tar, d - 2, 2)
+      this.add(tar, v, d)
     } else this.lh128(tar, v)
   }
   reset() {
+    this.single = true
     this.len = 0
     this.tlen = 0
     this.dlen = 0
@@ -212,8 +187,11 @@ class u8 {
   }
 
   dump() {
-    this.flush_dlink()
-    this.short("dc", this.rcount)
+    if (!this.single) {
+      this.flush_dlink()
+      this.add("dc", this.single ? 1 : 0, 1)
+      this.short("dc", this.rcount)
+    }
     let total = 0
     if (this.log) {
       console.log(total, `rcount(${this.rcount})`, this.b.dc.arr, this.b.dc.len)
@@ -326,10 +304,74 @@ function pushPathNum(u, v2, prev = null, keylen) {
   u.push_index(id)
   u.dcount++
 }
-
 function encode_x(v, u) {
   u.reset()
-  u.push_type(_encode_x(v, u))
+  if (v === null) {
+    u.add("dc", 1, 1)
+    u.add("dc", 0, 7)
+    u.single = true
+  } else if (typeof v !== "object") {
+    u.add("dc", 1, 1)
+    if (v === true) u.add("dc", 1, 7)
+    else if (v === false) u.add("dc", 2, 7)
+    else if (v === "") u.add("dc", 3, 7)
+    else if (typeof v === "number") {
+      const moved = v % 1 === v ? 0 : getPrecision(v)
+      const type = moved === 0 ? (v < 0 ? 5 : 4) : v < 0 ? 7 : 6
+      if (type === 4) {
+        u.add("dc", 1, 1)
+        if (v < 63) {
+          u.add("dc", v, 6)
+        } else {
+          u.add("dc", 63, 6)
+          u.lh128_2("dc", v - 63)
+        }
+      } else {
+        u.add("dc", 0, 1)
+        u.add("dc", type + 1, 6)
+        if (moved > 0) u.uint("dc", moved)
+        u.uint("dc", (v < 0 ? -1 : 1) * v * Math.pow(10, moved))
+      }
+    } else if (typeof v === "string") {
+      u.add("dc", 0, 1)
+      if (v.length === 1 && typeof strmap[v] !== "undefined") {
+        u.add("dc", strmap[v] + 9, 6)
+      } else if (v.length === 1) {
+        u.add("dc", 61, 6)
+        u.lh128_2("dc", v.charCodeAt(0))
+      } else {
+        let is64 = true
+        for (let i = 0; i < v.length; i++) {
+          if (typeof base64[v[i]] === "undefined") {
+            is64 = false
+            break
+          }
+        }
+        if (is64) {
+          u.add("dc", 62, 6)
+          u.short("dc", v.length)
+          for (let i = 0; i < v.length; i++) {
+            u.add("dc", base64[v[i]], 6)
+          }
+        } else {
+          u.add("dc", 63, 6)
+          u.short("dc", v.length)
+          for (let i = 0; i < v.length; i++) u.lh128_2("dc", v.charCodeAt(i))
+        }
+      }
+    }
+    u.single = true
+  } else if (Array.isArray(v) && v.length === 0) {
+    u.add("dc", 1, 1)
+    u.add("dc", 4, 7)
+    u.single = true
+  } else if (Object.keys(v).length === 0) {
+    u.add("dc", 1, 1)
+    u.add("dc", 5, 7)
+    u.single = true
+  } else {
+    u.push_type(_encode_x(v, u))
+  }
   return u.dump()
 }
 
@@ -353,7 +395,7 @@ function _encode_x(
   if (typeof v === "number") {
     if (prev !== null) u.push_dlink(prev + 1, 1)
     // need various num types
-    let moved = v % 1 === v ? 0 : getPrecision(v)
+    const moved = v % 1 === v ? 0 : getPrecision(v)
     const type = moved === 0 ? (v < 0 ? 5 : 4) : 6
     if (prev_type !== null && prev_type !== 4) u.push_type(prev_type)
     else u.tcount++
