@@ -59,6 +59,12 @@ class u8 {
     }
   }
   push_dlink(v, flag = 0) {
+    /*if (typeof this.prev_link === "undefined") {
+      console.log("dlink", v, "diff", 0)
+    } else {
+      console.log("flag", flag, "dlink", v, "diff", v - this.prev_link)
+    }*/
+    this.prev_link = v
     let dc = this.dlink_cache
     if (dc === null) this.dlink_cache = [flag, v, 1, [this.dcount]]
     else if (dc[0] === flag && dc[1] === v) {
@@ -96,17 +102,77 @@ class u8 {
   }
 
   push_int(v) {
-    this.uint("nums", v)
+    let diff = 0
+    if (this.prev_num === null) diff = v
+    else diff = v - this.prev_num
+    this.prev_num = v
+    if (diff < 0) diff = Math.abs(diff) + 3
+    const isDiff = diff < 8
+    this.dint(isDiff ? diff : v, isDiff)
   }
   push_float(neg, v) {
     if (v < 4) this.push_int(neg ? 4 + v : v)
     else this.push_int(neg ? 4 : 0)
   }
 
+  flush_nums() {
+    const dc = this.nums_cache
+    if (dc !== null) {
+      if (dc[2] < 3) {
+        for (let i = 0; i < dc[2]; i++) this._dint(dc[1], dc[0])
+      } else {
+        this.flag_len += 2
+        this.add("nums", 0, 2)
+        this.add("nums", 7, 3)
+        this.short("nums", dc[2])
+        if (dc[0]) {
+          this.add("nums", 0, 2)
+          this.add("nums", dc[1], 3)
+        } else if (dc[1] < 64) {
+          const d = dc[1] < 16 ? 4 : 6
+          const flag = dc[1] < 16 ? 1 : 2
+          this.flag_len += 2
+          this.add("nums", flag, 2)
+          this.add("nums", dc[1], d)
+        } else this.lh128("nums", dc[1])
+      }
+    }
+  }
+
+  dint(v, diff = false) {
+    let dc = this.nums_cache
+    if (dc === null) this.nums_cache = [diff, v, 1]
+    else if (dc[0] === diff && dc[1] === v) {
+      dc[2] += 1
+    } else {
+      if (dc[2] === 1) this._dint(dc[1], dc[0])
+      else this.flush_nums()
+      this.nums_cache = [diff, v, 1]
+    }
+  }
+  _dint(v, diff) {
+    const tar = "nums"
+    // 1 bit diff mode can be set 1 or 2 or 3
+    if (diff) {
+      this.flag_len += 2
+      this.add(tar, 0, 2)
+      this.add(tar, v, 3)
+    } else if (v < 64) {
+      const d = v < 16 ? 4 : 6
+      const flag = v < 16 ? 1 : 2
+      //console.log("flag.....1", flag)
+      this.flag_len += 2
+      this.add(tar, flag, 2)
+      this.add(tar, v, d)
+    } else this.lh128(tar, v)
+  }
+
   uint(tar, v) {
     if (v < 64) {
       const d = v < 8 ? 3 : v < 16 ? 4 : 6
       const flag = v < 8 ? 0 : v < 16 ? 1 : 2
+      //console.log("flag.....1", flag)
+      this.flag_len += 2
       this.add(tar, flag, 2)
       this.add(tar, v, d)
     } else this.lh128(tar, v)
@@ -120,6 +186,8 @@ class u8 {
   }
   lh128(tar, v) {
     this.add(tar, 3, 2)
+    //console.log("flag.....2", 3)
+    this.flag_len += 2
     while (v >= 128) {
       this.add(tar, (v & 0x7f) | 0x80, 8)
       v >>>= 7
@@ -129,11 +197,17 @@ class u8 {
   short(tar, v) {
     if (v < 16) {
       const d = v < 4 ? 2 : bits(v)
+      //console.log("flag.....3", d - 2)
+      this.flag_len += 2
       this.add(tar, d - 2, 2)
       this.add(tar, v, d)
     } else this.lh128(tar, v)
   }
   reset() {
+    this.prev_num = 0
+    this.nums_count = 0
+    this.prev_link = 0
+    this.flag_len = 0
     this.single = true
     this.len = 0
     this.tlen = 0
@@ -148,6 +222,7 @@ class u8 {
     this.oid = 0
     this.iid = 0
     this.dlink_cache = null
+    this.nums_cache = null
     this.types = []
 
     this.b = {
@@ -187,8 +262,10 @@ class u8 {
   }
 
   dump() {
+    //console.log("total flag", this.flag_len)
     if (!this.single) {
       this.flush_dlink()
+      this.flush_nums()
       this.add("dc", this.single ? 1 : 0, 1)
       this.short("dc", this.rcount)
     }
@@ -221,6 +298,7 @@ class u8 {
       console.log(total, "pad", 0, pad_len)
       total += pad_len
     }
+
     const bit_len = (_total + pad_len) / 8
     const len = bit_len + this.len + this.dlen
     const arr = new Uint8Array(len)
@@ -304,12 +382,12 @@ function pushPathNum(u, v2, prev = null, keylen) {
   u.push_index(id)
   u.dcount++
 }
+
 function encode_x(v, u) {
   u.reset()
   if (v === null) {
     u.add("dc", 1, 1)
     u.add("dc", 0, 7)
-    u.single = true
   } else if (typeof v !== "object") {
     u.add("dc", 1, 1)
     if (v === true) u.add("dc", 1, 7)
@@ -360,16 +438,14 @@ function encode_x(v, u) {
         }
       }
     }
-    u.single = true
   } else if (Array.isArray(v) && v.length === 0) {
     u.add("dc", 1, 1)
     u.add("dc", 4, 7)
-    u.single = true
   } else if (Object.keys(v).length === 0) {
     u.add("dc", 1, 1)
     u.add("dc", 5, 7)
-    u.single = true
   } else {
+    u.single = false
     u.push_type(_encode_x(v, u))
   }
   return u.dump()
@@ -393,16 +469,23 @@ function _encode_x(
   index = null,
 ) {
   if (typeof v === "number") {
+    // dlink
     if (prev !== null) u.push_dlink(prev + 1, 1)
-    // need various num types
+
+    // [1] need various num types
     const moved = v % 1 === v ? 0 : getPrecision(v)
     const type = moved === 0 ? (v < 0 ? 5 : 4) : 6
+
+    // [2] push type
     if (prev_type !== null && prev_type !== 4) u.push_type(prev_type)
     else u.tcount++
     if (moved > 0) {
+      // [3] push float
       u.push_float(v < 0, moved + 1)
+      // [4] push int
       if (moved > 2) u.push_int(moved + 1)
     }
+    // [5] push int again
     u.push_int((v < 0 ? -1 : 1) * v * Math.pow(10, moved))
     return type
   } else if (typeof v === "boolean") {

@@ -42,11 +42,41 @@ let data = {
 
 // empty object
 describe("zkJSON v2", function () {
-  it.only("should encode with v2", () => {
+  it.only("should compare sizes", () => {
+    let d = new decoder()
+    let u = new u8(1000)
+    let wins = 0
+    console.log()
+    for (let v of range(1, 101)) {
+      console.log()
+      data = createJSON()
+      const _e = encode_x(data, u)
+      const msg = enc(data)
+      let jsize = Buffer.from(JSON.stringify(data), "utf8").length
+      let msize = Buffer.from(msg).length
+      let zksize = Buffer.from(_e).length
+      console.log(
+        v,
+        "[j]",
+        jsize,
+        "[z]",
+        zksize,
+        "[m]",
+        msize,
+        "[d]",
+        zksize - msize,
+        "==========================================",
+      )
+      console.log(data)
+      if (msize > zksize) wins++
+    }
+    console.log()
+    console.log("[wins]", wins)
+    console.log()
+  })
+  it("should encode with v2", () => {
     console.log()
     data = createJSON()
-    data = 3.14
-    console.log(data)
     console.log()
     let d = new decoder()
     let u = new u8(1000, true)
@@ -59,6 +89,7 @@ describe("zkJSON v2", function () {
     console.log("zk", _e)
     console.log("msg", msg)
     console.log()
+    console.log("[json size]", Buffer.from(JSON.stringify(data), "utf8").length)
     console.log("[zkjson v2 size]", Buffer.from(_e).length)
     console.log("[msgpack size]", Buffer.from(msg).length)
   })
@@ -101,6 +132,7 @@ describe("zkJSON v2", function () {
     console.log(data)
     console.log()
   })
+
   it("should encode and decode random json", () => {
     let d = new decoder()
     let u = new u8(1000)
@@ -111,6 +143,7 @@ describe("zkJSON v2", function () {
       assert.deepEqual(decoded, data0)
     }
   })
+
   it("should encode and decode", () => {
     let data0 = createJSON()
     data0 = -3.223432
