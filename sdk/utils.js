@@ -23,7 +23,31 @@ function bits(n) {
   return n === 0 ? 1 : 32 - Math.clz32(n)
 }
 
+let str = "abcdefghijklmnopqrstuvwxyz".toUpperCase()
+str += str.toLowerCase()
+let strmap = {}
+let i = 0
+for (const s of str.split("")) strmap[s] = i++
+let strmap_rev = {}
+i = 0
+for (const s of str.split("")) {
+  strmap_rev[i.toString()] = s
+  i++
+}
+let base64 = {}
+let base64_rev = {}
+str += "0123456789-_"
+i = 0
+for (const s of str.split("")) {
+  base64_rev[i.toString()] = s
+  base64[s] = i++
+}
+
 module.exports = {
   bits,
   tobits,
+  strmap,
+  base64,
+  base64_rev,
+  strmap_rev,
 }

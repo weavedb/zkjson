@@ -45,6 +45,7 @@ describe("zkJSON v2", function () {
   it.only("should encode with v2", () => {
     console.log()
     data = createJSON()
+    data = 3.14
     console.log(data)
     console.log()
     let d = new decoder()
@@ -55,8 +56,8 @@ describe("zkJSON v2", function () {
     console.log("decoded:", decode_x(_e, d))
     d.show()
     console.log()
-    console.log(_e)
-    console.log(msg)
+    console.log("zk", _e)
+    console.log("msg", msg)
     console.log()
     console.log("[zkjson v2 size]", Buffer.from(_e).length)
     console.log("[msgpack size]", Buffer.from(msg).length)
