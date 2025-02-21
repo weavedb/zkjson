@@ -42,7 +42,7 @@ let data = {
 
 // empty object
 describe("zkJSON v2", function () {
-  it.only("should compare sizes", () => {
+  it("should compare sizes", () => {
     let d = new decoder()
     let u = new u8(1000)
     let wins = 0
@@ -77,6 +77,37 @@ describe("zkJSON v2", function () {
   it("should encode with v2", () => {
     console.log()
     data = createJSON()
+    data = {
+      lNW0A4: {
+        Z: [82, "p7Ai1t6nu"],
+        "4c0Hh": { Hiad: false, JL: false },
+        "2I3Oy": ["AKqlOA", null, true],
+        pnPxZ: ["b1XhxsgY", "cr8sI1K"],
+      },
+      M: [
+        [42, "h", "q35qIQB", 11],
+        [71],
+        [false, 2, null, "XYYFC"],
+        { ufW: 87, fUn: "9Ud", mtb5: null, "1w5": null },
+      ],
+      l: [
+        [40],
+        { 1: null, tcKH: "h7txg", nxzmLS: null, pF: false },
+        [false, null, false, 100],
+        ["L0GpFi", "i"],
+      ],
+    }
+    data = {}
+    for (let v of range(0, 100)) {
+      data[v] = true
+    }
+    data = [[{ a: "a", b: "b" }]]
+    data = { g: { d: 3 }, b: [2] }
+    data = { eVV: { J: ["0wZ", null, null], t: { Z: null } } }
+    data = [4]
+    data = { a: [{ b: 7 }] }
+    data = [1, 3]
+
     console.log()
     let d = new decoder()
     let u = new u8(1000, true)
@@ -93,7 +124,7 @@ describe("zkJSON v2", function () {
     console.log("[zkjson v2 size]", Buffer.from(_e).length)
     console.log("[msgpack size]", Buffer.from(msg).length)
   })
-  it("should benchmark", () => {
+  it.only("should benchmark", () => {
     const count = 100000
     let d = new decoder()
     let u = new u8(1000)

@@ -40,8 +40,11 @@ module.exports = class decoder {
     this.c = 0
     this.nc = 0
     this.len = 0
+    this.key_length = 0
     this.num_cache = null
-    this.drefs = []
+    this.vflags = []
+    this.kflags = []
+    this.krefs = []
     this.vrefs = []
     this.keylens = []
     this.types = []
@@ -50,11 +53,13 @@ module.exports = class decoder {
     this.indexes = []
     this.json = {}
     this.single = this.n(1) === 1
-    if (this.single) {
-      this.getSingle()
-    } else {
+    if (this.single) this.getSingle()
+    else {
       this.getLen()
-      this.getDlinks()
+      this.getVflags()
+      this.getVlinks()
+      this.getKflags()
+      this.getKlinks()
       this.getKeyLens()
       this.getTypes()
       this.getNums()
@@ -113,7 +118,6 @@ module.exports = class decoder {
   show() {
     console.log()
     console.log("len", this.len)
-    console.log("drefs", this.drefs)
     console.log("vrefs", this.vrefs)
     console.log("keylens", this.keylens)
     console.log("types", this.types)
@@ -122,36 +126,140 @@ module.exports = class decoder {
     console.log("keys", this.keys)
     console.log()
   }
-  getDlinks() {
-    let ind = 1
+  getVflags() {
     let i = 0
     while (i < this.len) {
       const flag = this.n(1)
-      const x = this.n(bits(ind + 1))
-      if (x === 0) {
-        const len = this.short()
-        const val = this.uint()
-        for (let i2 = 0; i2 < len; i2++) {
-          if (flag === 0) this.drefs.push(val)
-          else this.vrefs.push(val)
+      this.vflags.push(flag)
+      i++
+    }
+  }
+  getKflags() {
+    let i = 0
+    while (i < this.key_length - 1) {
+      const flag = this.n(1)
+      this.kflags.push(flag)
+      i++
+    }
+  }
+
+  getKlinks() {
+    let i = 0
+    let count = 1
+    let prev = 0
+    while (i < this.kflags.length) {
+      if (this.kflags[i] === 1) {
+        let val = this.n(3)
+        if (val === 0) {
+          let len = this.short()
+          val = this.n(3)
+          let i3 = i
+          for (let i2 = 0; i2 < len; i2++) {
+            const diff = this.kflags[i3 + i2]
+            prev = this.addKlink(diff === 1, val, prev)
+            i++
+          }
+        } else {
+          prev = this.addKlink(true, val, prev)
+          i++
         }
-        if (flag === 1) i += len
-        else if (flag === 0) ind += len
       } else {
-        if (flag === 0) this.drefs.push(x)
-        else this.vrefs.push(x)
-        if (flag === 1) i++
-        else if (flag === 0) ind++
+        let val = 0
+        do {
+          val = this.n(count)
+          if (val === 0) count += 1
+        } while (val === 0)
+
+        if (val === 0) {
+          let len = this.short()
+          val = this.n(count)
+          let i3 = i
+          for (let i2 = 0; i2 < len; i2++) {
+            const diff = this.kflags[i3 + i2]
+            prev = this.addKlink(diff === 1, val, prev)
+            i++
+          }
+        } else {
+          prev = this.addKlink(false, val, prev)
+          i++
+        }
       }
     }
   }
+
+  addVlink(diff, val, prev) {
+    val -= 1
+    if (diff) {
+      if (val > 3) val = prev - (val - 3)
+      else val += prev
+    }
+    this.vrefs.push(val)
+    if (this.key_length < val) this.key_length = val
+    prev = val
+    return prev
+  }
+  addKlink(diff, val, prev) {
+    val -= 1
+    if (diff) {
+      if (val > 3) val = prev - (val - 3)
+      else val += prev
+    }
+    this.krefs.push(val)
+    prev = val
+    return prev
+  }
+
+  getVlinks() {
+    let i = 0
+    let count = 1
+    let prev = 0
+    while (i < this.vflags.length) {
+      if (this.vflags[i] === 1) {
+        let val = this.n(3)
+        if (val === 0) {
+          let len = this.short()
+          val = this.n(3)
+          let i3 = i
+          for (let i2 = 0; i2 < len; i2++) {
+            const diff = this.vflags[i3 + i2]
+            prev = this.addVlink(diff === 1, val, prev)
+            i++
+          }
+        } else {
+          prev = this.addVlink(true, val, prev)
+          i++
+        }
+      } else {
+        let val = 0
+        do {
+          val = this.n(count)
+          if (val === 0) count += 1
+        } while (val === 0)
+        if (val === 0) {
+          let len = this.short()
+          val = this.n(count)
+          let i3 = i
+          for (let i2 = 0; i2 < len; i2++) {
+            const diff = this.vflags[i3 + i2]
+            prev = this.addVlink(diff === 1, val, prev)
+            i++
+          }
+        } else {
+          prev = this.addVlink(false, val, prev)
+          i++
+        }
+      }
+    }
+  }
+
   getKeyLens() {
-    if (this.drefs.length === 0 && this.len === 0) return
-    for (let i = 0; i < this.drefs.length + 1; i++) {
+    if (this.krefs.length === 0 && this.len === 0) return
+    for (let i = 0; i < this.krefs.length + 1; i++) {
       const int = this.short()
       this.keylens.push(int)
     }
   }
+
   getIndexes() {
     for (const v of this.keylens) {
       if (v > 1) continue
@@ -191,38 +299,35 @@ module.exports = class decoder {
     const x = this.n(2)
     const diff = x === 0
     let num = x === 3 ? this.lh128() : this.n(x === 2 ? 6 : x === 1 ? 4 : 3)
-    if (num === 7) {
+    if (num === 7 && diff) {
       const len = this.short()
       const x2 = this.n(2)
       let diff = x2 === 0
       let n = null
-      if (x2 === 3) {
-        n = this.lh28()
-      } else {
+      if (x2 === 3) n = this.lh128()
+      else {
         const d = x2 === 0 ? 3 : x2 === 1 ? 4 : 6
         n = this.n(d)
       }
       if (diff) {
-        if (n > 3) n -= diff - 3
+        if (num > 3) n = prev - (n - 3)
         else n = prev + n
       }
       num = n
       this.num_cache = { len: len - 1, n, diff }
       return n
     } else if (diff) {
-      if (num > 3) num -= diff - 3
+      if (num > 3) num = prev - (num - 3)
       else num = prev + num
     }
     return num
   }
   getNums() {
-    this.bits()
     let prev = 0
     for (let v of this.types) {
       if (v >= 4 && v <= 6) {
         let num = this.dint(prev)
         prev = num
-        console.log(v, num)
         if (v === 4) this.nums.push(num)
         else if (v === 5) this.nums.push(-num)
         else if (v === 6) {
@@ -277,8 +382,8 @@ module.exports = class decoder {
     if (typeof k === "number") keys.unshift([this.keylens[i - 1], k])
     else keys.unshift(k)
     if (i > 1) {
-      const d = this.drefs[i - 2]
-      if (d > 0) this.getKey(this.drefs[d - 1], keys)
+      const d = this.krefs[i - 2]
+      if (d > 0) this.getKey(this.krefs[d - 1], keys)
     }
   }
   build() {

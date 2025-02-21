@@ -1,4 +1,5 @@
 const { bits, tobits, strmap, base64 } = require("./utils.js")
+
 class u8 {
   constructor(size = 1000, log = false) {
     this.size = size
@@ -37,51 +38,149 @@ class u8 {
       b.len += rest
     }
   }
+  push_vflag(flag) {
+    this.add("vflags", flag, 1)
+  }
+  push_kflag(flag) {
+    this.add("kflags", flag, 1)
+  }
 
-  flush_dlink() {
-    const dc = this.dlink_cache
-    if (dc !== null) {
-      if (dc[2] < 3) {
-        for (let i = 0; i < dc[2]; i++) this._push_dlink(dc[1], dc[0], dc[3][i])
+  get_diff(v, prev) {
+    let diff = prev === null ? v : v - prev
+    let isDiff = false
+    if (diff < 0) {
+      diff = Math.abs(diff) + 3
+      isDiff = diff < 7
+    } else {
+      isDiff = diff < 4
+    }
+    const v2 = isDiff ? diff : v
+    return [isDiff, diff, v2]
+  }
+
+  push_vlink(v) {
+    let [isDiff, diff, v2] = this.get_diff(v, this.prev_link)
+    this.prev_link = v
+    this.push_vflag(isDiff ? 1 : 0)
+    this._push_vlink(v2, isDiff, this.dcount)
+    this.rcount++
+  }
+  push_klink(v) {
+    let [isDiff, diff, v2] = this.get_diff(v, this.prev_klink)
+    this.prev_klink = v
+    this.push_kflag(isDiff ? 1 : 0)
+    this._push_klink(v2, isDiff, this.dcount)
+    this.dcount2++
+  }
+
+  push_dlink(v, flag = 0) {
+    if (flag === 1) this.push_vlink(v)
+    else this.push_klink(v)
+  }
+
+  set_newbits(count) {
+    const new_bits = bits(count + 1)
+    if (new_bits > this.prev_bits) {
+      const diff = new_bits - this.prev_bits
+      for (let i = 0; i < diff; i++) {
+        this.add("vlinks", 0, this.prev_bits + i)
+      }
+      this.prev_bits = new_bits
+    }
+    return new_bits
+  }
+  set_newbits_k(count) {
+    const new_bits = bits(count + 1)
+    if (new_bits > this.prev_kbits) {
+      const diff = new_bits - this.prev_kbits
+      for (let i = 0; i < diff; i++) {
+        this.add("klinks", 0, this.prev_kbits + i)
+      }
+      this.prev_kbits = new_bits
+    }
+    return new_bits
+  }
+
+  _flush_vlink(v, diff, count) {
+    if (diff) {
+      this.add("vlinks", v + 1, 3)
+    } else {
+      const nb = this.set_newbits(count)
+      this.add("vlinks", v + 1, nb)
+    }
+  }
+  flush_vlink() {
+    let vc = this.vlink_cache
+    if (vc === null) return
+    if (vc[3] < 4) {
+      for (let i = 0; i < vc[3]; i++)
+        this._flush_vlink(vc[0], vc[1][i], vc[2][i])
+    } else {
+      if (vc[1][0]) {
+        this.add("vlinks", 0, 3)
+        this.short("vlinks", vc[3])
+        this.add("vlinks", vc[0] + 1, 3)
       } else {
-        const count = dc[0] === 1 ? this.dcount : this.dcount2
-        const d = bits(count + 1)
-        this.add("dlinks", dc[0], 1)
-        this.add("dlinks", 0, d)
-
-        // length push as short
-        this.short("dlinks", dc[2])
-
-        // value as uint
-        this.uint("dlinks", dc[1])
-        this.dcount2 += dc[2]
+        const nb = this.set_newbits(vc[2][0])
+        this.add("vlinks", 0, nb)
+        this.short("vlinks", vc[3])
+        this.add("vlinks", vc[0] + 1, nb)
       }
     }
   }
-  push_dlink(v, flag = 0) {
-    /*if (typeof this.prev_link === "undefined") {
-      console.log("dlink", v, "diff", 0)
+  flush_klink() {
+    let vc = this.klink_cache
+    if (vc === null) return
+    if (vc[3] < 4) {
+      for (let i = 0; i < vc[3]; i++)
+        this._flush_klink(vc[0], vc[1][i], vc[2][i])
     } else {
-      console.log("flag", flag, "dlink", v, "diff", v - this.prev_link)
-    }*/
-    this.prev_link = v
-    let dc = this.dlink_cache
-    if (dc === null) this.dlink_cache = [flag, v, 1, [this.dcount]]
-    else if (dc[0] === flag && dc[1] === v) {
-      dc[2] += 1
-      dc[3].push(this.dcount)
-    } else {
-      if (dc[2] === 1) this._push_dlink(dc[1], dc[0], dc[3][0])
-      else this.flush_dlink()
-      this.dlink_cache = [flag, v, 1, [this.dcount]]
+      if (vc[1][0]) {
+        this.add("klinks", 0, 3)
+        this.short("klinks", vc[3])
+        this.add("klinks", vc[0] + 1, 3)
+      } else {
+        const nb = this.set_newbits_k(vc[2][0])
+        this.add("klinks", 0, nb)
+        this.short("klinks", vc[3])
+        this.add("klinks", vc[0] + 1, nb)
+      }
     }
-    if (flag === 1) this.rcount++
-    else this.dcount2++
   }
-  _push_dlink(v, flag = 0, count) {
-    this.add("dlinks", flag, 1)
-    this.add("dlinks", v, bits(count + 1))
+  _flush_klink(v, diff, count) {
+    if (diff) {
+      this.add("klinks", v + 1, 3)
+    } else {
+      const nb = this.set_newbits_k(count)
+      this.add("klinks", v + 1, nb)
+    }
   }
+
+  _push_vlink(v, diff, count) {
+    let vc = this.vlink_cache
+    if (vc === null) this.vlink_cache = [v, [diff], [count], 1]
+    else if (v === vc[0]) {
+      vc[3]++
+      vc[1].push(diff)
+      vc[2].push(count)
+    } else {
+      this.flush_vlink()
+      this.vlink_cache = [v, [diff], [count], 1]
+    }
+  }
+  _push_klink(v, diff, count) {
+    let vc = this.klink_cache
+    if (vc === null) this.klink_cache = [v, [diff], [count], 1]
+    else if (v === vc[0]) {
+      vc[3]++
+      vc[1].push(diff)
+      vc[2].push(count)
+    } else {
+      this.flush_klink()
+      this.klink_cache = [v, [diff], [count], 1]
+    }
+  }
+
   push_type(v) {
     let count = this.tcount
     if (count > 3) {
@@ -102,13 +201,9 @@ class u8 {
   }
 
   push_int(v) {
-    let diff = 0
-    if (this.prev_num === null) diff = v
-    else diff = v - this.prev_num
+    let [isDiff, diff, v2] = this.get_diff(v, this.prev_num)
     this.prev_num = v
-    if (diff < 0) diff = Math.abs(diff) + 3
-    const isDiff = diff < 8
-    this.dint(isDiff ? diff : v, isDiff)
+    this.dint(isDiff ? diff : v2, isDiff)
   }
   push_float(neg, v) {
     if (v < 4) this.push_int(neg ? 4 + v : v)
@@ -160,7 +255,6 @@ class u8 {
     } else if (v < 64) {
       const d = v < 16 ? 4 : 6
       const flag = v < 16 ? 1 : 2
-      //console.log("flag.....1", flag)
       this.flag_len += 2
       this.add(tar, flag, 2)
       this.add(tar, v, d)
@@ -171,7 +265,6 @@ class u8 {
     if (v < 64) {
       const d = v < 8 ? 3 : v < 16 ? 4 : 6
       const flag = v < 8 ? 0 : v < 16 ? 1 : 2
-      //console.log("flag.....1", flag)
       this.flag_len += 2
       this.add(tar, flag, 2)
       this.add(tar, v, d)
@@ -186,7 +279,6 @@ class u8 {
   }
   lh128(tar, v) {
     this.add(tar, 3, 2)
-    //console.log("flag.....2", 3)
     this.flag_len += 2
     while (v >= 128) {
       this.add(tar, (v & 0x7f) | 0x80, 8)
@@ -197,16 +289,18 @@ class u8 {
   short(tar, v) {
     if (v < 16) {
       const d = v < 4 ? 2 : bits(v)
-      //console.log("flag.....3", d - 2)
       this.flag_len += 2
       this.add(tar, d - 2, 2)
       this.add(tar, v, d)
     } else this.lh128(tar, v)
   }
   reset() {
+    this.prev_bits = 1
+    this.prev_kbits = 1
     this.prev_num = 0
     this.nums_count = 0
-    this.prev_link = 0
+    this.prev_link = null
+    this.prev_klink = null
     this.flag_len = 0
     this.single = true
     this.len = 0
@@ -217,16 +311,18 @@ class u8 {
     this.dcount2 = 0
     this.rcount = 0
     this.tcount = 0
-
-    this.types_len = 0
     this.oid = 0
     this.iid = 0
-    this.dlink_cache = null
+    this.vlink_cache = null
+    this.klink_cache = null
     this.nums_cache = null
-    this.types = []
-
     this.b = {
-      dlinks: { len: 0, arr: [] },
+      vlinks: { len: 0, arr: [] },
+      klinks: { len: 0, arr: [] },
+
+      vflags: { len: 0, arr: [] },
+      kflags: { len: 0, arr: [] },
+
       keys: { len: 0, arr: [] },
       types: { len: 0, arr: [] },
       nums: { len: 0, arr: [] },
@@ -262,19 +358,28 @@ class u8 {
   }
 
   dump() {
-    //console.log("total flag", this.flag_len)
     if (!this.single) {
-      this.flush_dlink()
+      this.flush_vlink()
+      this.flush_klink()
       this.flush_nums()
       this.add("dc", this.single ? 1 : 0, 1)
       this.short("dc", this.rcount)
     }
+
     let total = 0
     if (this.log) {
       console.log(total, `rcount(${this.rcount})`, this.b.dc.arr, this.b.dc.len)
       total += this.b.dc.len
-      console.log(total, "dlinks", this.b.dlinks.arr, this.b.dlinks.len)
-      total += this.b.dlinks.len
+      console.log(total, "vflags", this.b.vflags.arr, this.b.vflags.len)
+      total += this.b.vflags.len
+      console.log(total, "vlinks", this.b.vlinks.arr, this.b.vlinks.len)
+      total += this.b.vlinks.len
+
+      console.log(total, "kflags", this.b.kflags.arr, this.b.kflags.len)
+      total += this.b.kflags.len
+      console.log(total, "klinks", this.b.klinks.arr, this.b.klinks.len)
+      total += this.b.klinks.len
+
       console.log(total, "keylens", this.b.keys.arr, this.b.keys.len)
       total += this.b.keys.len
       console.log(total, "types", this.b.types.arr, this.b.types.len)
@@ -287,7 +392,10 @@ class u8 {
 
     const _total =
       this.b.dc.len +
-      this.b.dlinks.len +
+      this.b.vflags.len +
+      this.b.vlinks.len +
+      this.b.kflags.len +
+      this.b.klinks.len +
       this.b.types.len +
       this.b.keys.len +
       this.b.nums.len +
@@ -341,8 +449,13 @@ class u8 {
         remaining -= bitsForThis
       }
     }
+
     writeBits(this.b.dc.arr, this.b.dc.len)
-    writeBits(this.b.dlinks.arr, this.b.dlinks.len)
+    writeBits(this.b.vflags.arr, this.b.vflags.len)
+    writeBits(this.b.vlinks.arr, this.b.vlinks.len)
+    writeBits(this.b.kflags.arr, this.b.kflags.len)
+    writeBits(this.b.klinks.arr, this.b.klinks.len)
+
     writeBits(this.b.keys.arr, this.b.keys.len)
     writeBits(this.b.types.arr, this.b.types.len)
     writeBits(this.b.nums.arr, this.b.nums.len)
