@@ -41,6 +41,9 @@ module.exports = class decoder {
     this.nc = 0
     this.bc = 0
     this.len = 0
+    this.str_len = 0
+    this.str = {}
+    this.str_rev = {}
     this.key_length = 0
     this.num_cache = null
     this.vflags = []
@@ -318,7 +321,7 @@ module.exports = class decoder {
         n = this.n(d)
       }
       if (diff) {
-        if (num > 3) n = prev - (n - 3)
+        if (n > 3) n = prev - (n - 3)
         else n = prev + n
       }
       num = n
@@ -344,7 +347,6 @@ module.exports = class decoder {
         if (v === 4) this.nums.push(num)
         else if (v === 5) this.nums.push(-num)
         else if (v === 6) {
-          // handle this too
           if (num === 0 || num === 4) {
             const moved = this.dint(prev)
             prev = moved
@@ -374,9 +376,14 @@ module.exports = class decoder {
         this.keys.push(this.indexes[ind++])
       } else {
         if (type === 2) {
-          let key = ""
-          for (let i2 = 0; i2 < len - 2; i2++) key += base64_rev[this.n(6)]
-          this.keys.push(key)
+          if (len === 0) {
+            const code = this.short()
+            this.keys.push([code])
+          } else {
+            let key = ""
+            for (let i2 = 0; i2 < len - 2; i2++) key += base64_rev[this.n(6)]
+            this.keys.push(key)
+          }
         } else {
           if (len === 2) {
             this.keys.push("")
@@ -399,11 +406,25 @@ module.exports = class decoder {
   }
   getKey(i, keys) {
     const k = this.keys[i - 1]
-    if (typeof k === "number") keys.unshift([this.keylens[i - 1][0], k])
+    if (Array.isArray(k)) keys.unshift([2, k[0]])
+    else if (typeof k === "number") keys.unshift([this.keylens[i - 1][0], k])
     else keys.unshift(k)
     if (i > 1) {
       const d = this.krefs[i - 2]
       if (d > 0) this.getKey(this.krefs[d - 1], keys)
+    }
+    let i2 = 0
+    for (let k of keys) {
+      if (typeof k === "string") {
+        if (typeof this.str_rev[k] === "undefined") {
+          const _key = (this.str_len++).toString()
+          this.str[_key] = k
+          this.str_rev[k] = _key
+        }
+      } else if (Array.isArray(k) && k[0] === 2) {
+        keys[i2] = this.str[k[1].toString()]
+      }
+      i2++
     }
   }
   build() {
@@ -412,16 +433,27 @@ module.exports = class decoder {
       let val = null
       if (type === 7 || type === 2) {
         let len = this.short()
-        val = ""
-        for (let i2 = 0; i2 < len; i2++) {
-          if (type === 7) {
-            val += String.fromCharCode(Number(this.lh128()))
-          } else {
-            val += base64_rev[this.n(6).toString()]
+        if (type === 2 && len === 0) {
+          const code = this.short().toString()
+          val = this.str[code]
+        } else {
+          val = ""
+          for (let i2 = 0; i2 < len; i2++) {
+            if (type === 7) {
+              val += String.fromCharCode(Number(this.lh128()))
+            } else {
+              val += base64_rev[this.n(6).toString()]
+            }
+          }
+          if (typeof this.str_rev[val] === "undefined") {
+            const _key = (this.str_len++).toString()
+            this.str[_key] = val
+            this.str_rev[val] = _key
           }
         }
-      } else if (type === 4) val = this.nums[this.nc++]
-      else if (type === 5) val = this.nums[this.nc++]
+      } else if (type === 4) {
+        val = this.nums[this.nc++]
+      } else if (type === 5) val = this.nums[this.nc++]
       else if (type === 6) val = this.nums[this.nc++]
       else if (type === 1) val = null
       else if (type === 3) val = this.bools[this.bc++]
@@ -432,7 +464,6 @@ module.exports = class decoder {
     let i = 0
     let init = [[], []]
     let type = key => (typeof key === "string" ? 2 : key[0])
-
     let set = k => (init[k[0]][k[1]] = true)
     let ex = k => init[k[0]][k[1]] === true
     for (let v of this.vrefs) {

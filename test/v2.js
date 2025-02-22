@@ -77,15 +77,18 @@ describe("zkJSON v2", function () {
 
   it("should encode with v2", () => {
     console.log()
-    //data = createJSON()
-    //data = { BI6o9e: "abc" }
+    data = createJSON()
+    data = { a: { b: 54 }, b: [3] }
+
     console.log()
     let d = new decoder()
     let u = new u8(1000, true)
-    data = { "": "", b: { "": { "": "" } } }
     const _e = encode_x(data, u)
     const msg = enc(data)
-    console.log("decoded:", decode_x(_e, d))
+    const decoded = decode_x(_e, d)
+    console.log("decoded:", decoded)
+    console.log(data)
+    //assert.deepEqual(data, decoded)
     d.show()
     console.log()
     console.log("zk", _e)
