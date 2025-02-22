@@ -295,6 +295,8 @@ class u8 {
     } else this.lh128(tar, v)
   }
   reset() {
+    this.str_len = 0
+    this.str = {}
     this.prev_bits = 1
     this.prev_kbits = 1
     this.prev_num = 0
@@ -462,33 +464,37 @@ class u8 {
 // keylen: 0: array, 1: object, ...length
 function pushPathStr(u, v2, prev = null) {
   if (u.dcount > 0) u.push_dlink(prev === null ? 0 : prev + 1)
-  const len = v2.length
-  let ktype = 3
-  let codes = []
-  let codes2 = []
-  if (len !== 0) {
-    let is64 = true
-    for (let i = 0; i < len; i++) {
-      codes2.push(v2.charCodeAt(i))
-      const c = base64[v2[i]]
-      if (typeof c === "undefined") is64 = false
-      else codes.push(c)
+  if (typeof u.str[v2] !== "undefined") {
+    u.add("keys", 2, 2)
+    u.push_keylen(0)
+    u.short("kvals", u.str[v2])
+  } else {
+    u.str[v2] = u.str_len++
+    const len = v2.length
+    let ktype = 3
+    let codes = []
+    let codes2 = []
+    if (len !== 0) {
+      let is64 = true
+      for (let i = 0; i < len; i++) {
+        codes2.push(v2.charCodeAt(i))
+        const c = base64[v2[i]]
+        if (typeof c === "undefined") is64 = false
+        else codes.push(c)
+      }
+      if (is64) ktype = 2
     }
-    if (is64) ktype = 2
+    u.add("keys", ktype, 2)
+    u.push_keylen(len + 2)
+    if (ktype === 3) for (let v of codes2) u.lh128_2("kvals", v)
+    else for (let v of codes) u.add("kvals", v, 6)
   }
-  u.add("keys", ktype, 2)
-  u.push_keylen(len + 2)
-
-  if (ktype === 3) for (let v of codes2) u.lh128_2("kvals", v)
-  else for (let v of codes) u.add("kvals", v, 6)
-
   u.dcount++
 }
 
-function pushPathNum(u, v2, prev = null, keylen) {
+function pushPathNum(u, prev = null, keylen) {
   if (u.dcount > 0) u.push_dlink(prev === null ? 0 : prev + 1)
   u.add("keys", keylen, 2)
-  //u.push_keylen(keylen)
   const id = keylen === 0 ? u.iid++ : u.oid++
   u.push_index(id)
   u.dcount++
@@ -580,23 +586,17 @@ function _encode_x(
   index = null,
 ) {
   if (typeof v === "number") {
-    // dlink
     if (prev !== null) u.push_dlink(prev + 1, 1)
 
-    // [1] need various num types
     const moved = v % 1 === v ? 0 : getPrecision(v)
     const type = moved === 0 ? (v < 0 ? 5 : 4) : 6
 
-    // [2] push type
     if (prev_type !== null && prev_type !== 4) u.push_type(prev_type)
     else u.tcount++
     if (moved > 0) {
-      // [3] push float
       u.push_float(v < 0, moved + 1)
-      // [4] push int
       if (moved > 2) u.push_int(moved + 1)
     }
-    // [5] push int again
     u.push_int((v < 0 ? -1 : 1) * v * Math.pow(10, moved))
     return type
   } else if (typeof v === "boolean") {
@@ -612,32 +612,37 @@ function _encode_x(
     else u.tcount++
     return 1
   } else if (typeof v === "string") {
-    if (prev !== null) u.push_dlink(prev + 1, 1)
-    const len = v.length
-    //u.to128(len)
-    //for (let i = 0; i < len; i++) u.to128(v.charCodeAt(i))
-    u.short("vals", len)
     let ktype = 7
-    let codes = []
-    let codes2 = []
-    let is64 = true
-    if (len === 0) {
-      is64 = false
+    if (prev !== null) u.push_dlink(prev + 1, 1)
+    if (typeof u.str[v] !== "undefined") {
+      ktype = 2
+      u.push_type(prev_type)
+      u.short("vals", 0)
+      u.short("vals", u.str[v])
     } else {
-      for (let i = 0; i < len; i++) {
-        codes2.push(v.charCodeAt(i))
-        const c = base64[v[i]]
-        if (typeof c === "undefined") is64 = false
-        else codes.push(c)
+      u.str[v] = u.str_len++
+      const len = v.length
+      u.short("vals", len)
+      let codes = []
+      let codes2 = []
+      let is64 = true
+      if (len === 0) {
+        is64 = false
+      } else {
+        for (let i = 0; i < len; i++) {
+          codes2.push(v.charCodeAt(i))
+          const c = base64[v[i]]
+          if (typeof c === "undefined") is64 = false
+          else codes.push(c)
+        }
+        if (is64) ktype = 2
       }
-      if (is64) ktype = 2
+      if (prev_type !== null && prev_type !== ktype) u.push_type(prev_type)
+      else u.tcount++
+
+      if (is64) for (let v of codes) u.add("vals", v, 6)
+      else for (let v of codes2) u.lh128_2("vals", v)
     }
-    if (prev_type !== null && prev_type !== ktype) u.push_type(prev_type)
-    else u.tcount++
-
-    if (is64) for (let v of codes) u.add("vals", v, 6)
-    else for (let v of codes2) u.lh128_2("vals", v)
-
     return ktype
   } else if (Array.isArray(v)) {
     if (v.length === 0) {
@@ -647,7 +652,7 @@ function _encode_x(
       return 6
     } else {
       const _prev = u.dcount
-      pushPathNum(u, index, prev, 0)
+      pushPathNum(u, prev, 0)
       let i = 0
       for (const v2 of v) {
         prev_type = _encode_x(v2, u, plen + 1, _prev, prev_type, i)
@@ -662,7 +667,7 @@ function _encode_x(
       u.push_float(true, 1)
       return 6
     } else {
-      pushPathNum(u, 0, prev, 1)
+      pushPathNum(u, prev, 1)
       const __prev = u.dcount
       for (const k in v) {
         const _prev = u.dcount
