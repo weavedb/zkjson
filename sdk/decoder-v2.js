@@ -39,11 +39,13 @@ module.exports = class decoder {
     this.o = v
     this.c = 0
     this.nc = 0
+    this.bc = 0
     this.len = 0
     this.key_length = 0
     this.num_cache = null
     this.vflags = []
     this.kflags = []
+    this.bools = []
     this.krefs = []
     this.vrefs = []
     this.keylens = []
@@ -62,9 +64,9 @@ module.exports = class decoder {
       this.getKlinks()
       this.getKeyLens()
       this.getTypes()
+      this.getBools()
       this.getNums()
       this.getIndexes()
-      this.movePads()
       this.getKeys()
       this.build()
     }
@@ -118,6 +120,7 @@ module.exports = class decoder {
   show() {
     console.log()
     console.log("len", this.len)
+    console.log("krefs", this.krefs)
     console.log("vrefs", this.vrefs)
     console.log("keylens", this.keylens)
     console.log("types", this.types)
@@ -255,14 +258,19 @@ module.exports = class decoder {
   getKeyLens() {
     if (this.krefs.length === 0 && this.len === 0) return
     for (let i = 0; i < this.krefs.length + 1; i++) {
-      const int = this.short()
-      this.keylens.push(int)
+      const type = this.n(2)
+      if (type < 2) {
+        this.keylens.push([type])
+      } else {
+        const int = this.short()
+        this.keylens.push([type, int])
+      }
     }
   }
 
   getIndexes() {
     for (const v of this.keylens) {
-      if (v > 1) continue
+      if (v[0] > 1) continue
       const int = this.short()
       this.indexes.push(int)
     }
@@ -322,6 +330,11 @@ module.exports = class decoder {
     }
     return num
   }
+  getBools() {
+    for (let v of this.types) {
+      if (v === 3) this.bools.push(this.n(1) === 1)
+    }
+  }
   getNums() {
     let prev = 0
     for (let v of this.types) {
@@ -356,18 +369,25 @@ module.exports = class decoder {
   getKeys() {
     let ind = 0
     for (let i = 0; i < this.keylens.length; i++) {
-      const len = this.keylens[i]
-      if (len === 2) {
-        this.keys.push("")
-      } else if (len < 3) {
+      const [type, len] = this.keylens[i]
+      if (type < 2) {
         this.keys.push(this.indexes[ind++])
-        continue
       } else {
-        let key = ""
-        for (let i2 = 0; i2 < len - 2; i2++) {
-          key += String.fromCharCode(Number(this.lh128()))
+        if (type === 2) {
+          let key = ""
+          for (let i2 = 0; i2 < len - 2; i2++) key += base64_rev[this.n(6)]
+          this.keys.push(key)
+        } else {
+          if (len === 2) {
+            this.keys.push("")
+          } else {
+            let key = ""
+            for (let i2 = 0; i2 < len - 2; i2++) {
+              key += String.fromCharCode(Number(this.lh128()))
+            }
+            this.keys.push(key)
+          }
         }
-        this.keys.push(key)
       }
     }
   }
@@ -379,7 +399,7 @@ module.exports = class decoder {
   }
   getKey(i, keys) {
     const k = this.keys[i - 1]
-    if (typeof k === "number") keys.unshift([this.keylens[i - 1], k])
+    if (typeof k === "number") keys.unshift([this.keylens[i - 1][0], k])
     else keys.unshift(k)
     if (i > 1) {
       const d = this.krefs[i - 2]
@@ -390,18 +410,21 @@ module.exports = class decoder {
     const get = i => {
       const type = this.types[i]
       let val = null
-      if (type === 7) {
-        let len = this.lh128()
+      if (type === 7 || type === 2) {
+        let len = this.short()
         val = ""
         for (let i2 = 0; i2 < len; i2++) {
-          val += String.fromCharCode(Number(this.lh128()))
+          if (type === 7) {
+            val += String.fromCharCode(Number(this.lh128()))
+          } else {
+            val += base64_rev[this.n(6).toString()]
+          }
         }
       } else if (type === 4) val = this.nums[this.nc++]
       else if (type === 5) val = this.nums[this.nc++]
       else if (type === 6) val = this.nums[this.nc++]
       else if (type === 1) val = null
-      else if (type === 2) val = true
-      else if (type === 3) val = false
+      else if (type === 3) val = this.bools[this.bc++]
       return val
     }
     if (this.vrefs.length === 0) return (this.json = get(0))

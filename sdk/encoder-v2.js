@@ -4,8 +4,6 @@ class u8 {
   constructor(size = 1000, log = false) {
     this.size = size
     this.log = log
-    this.obj = new Uint8Array(size)
-    this.dic = new Uint8Array(size)
   }
   add(tar, val, vlen) {
     let b = this.b[tar]
@@ -40,6 +38,9 @@ class u8 {
   }
   push_vflag(flag) {
     this.add("vflags", flag, 1)
+  }
+  push_bool(bool) {
+    this.add("bools", bool ? 1 : 0, 1)
   }
   push_kflag(flag) {
     this.add("kflags", flag, 1)
@@ -192,8 +193,7 @@ class u8 {
     this.tcount = 1
   }
   push_keylen(v) {
-    if (v < 16) this.short("keys", v)
-    else this.lh128("keys", v)
+    this.short("keys", v)
   }
   push_index(v) {
     if (v < 16) this.short("indexes", v)
@@ -319,42 +319,17 @@ class u8 {
     this.b = {
       vlinks: { len: 0, arr: [] },
       klinks: { len: 0, arr: [] },
-
       vflags: { len: 0, arr: [] },
       kflags: { len: 0, arr: [] },
-
+      bools: { len: 0, arr: [] },
       keys: { len: 0, arr: [] },
       types: { len: 0, arr: [] },
       nums: { len: 0, arr: [] },
       indexes: { len: 0, arr: [] },
       dc: { len: 0, arr: [] },
+      kvals: { len: 0, arr: [] },
+      vals: { len: 0, arr: [] },
     }
-  }
-  push_d(v) {
-    this.dic[this.dlen++] = v
-  }
-
-  push(v) {
-    this.obj[this.len++] = v
-  }
-  to128_d(n) {
-    while (n >= 128) {
-      this.dic[this.dlen++] = (n & 0x7f) | 0x80
-      n >>>= 7
-    }
-    this.dic[this.dlen++] = n
-  }
-
-  to128(n) {
-    while (n >= 128) {
-      this.obj[this.len++] = (n & 0x7f) | 0x80
-      n >>>= 7
-    }
-    this.obj[this.len++] = n
-  }
-  copy() {
-    this.obj.set(this.temp.subarray(0, this.tlen), this.len)
-    this.len += this.tlen
   }
 
   dump() {
@@ -384,10 +359,17 @@ class u8 {
       total += this.b.keys.len
       console.log(total, "types", this.b.types.arr, this.b.types.len)
       total += this.b.types.len
+      console.log(total, "bools", this.b.bools.arr, this.b.bools.len)
+      total += this.b.bools.len
       console.log(total, "nums", this.b.nums.arr, this.b.nums.len)
       total += this.b.nums.len
       console.log(total, "indexes", this.b.indexes.arr, this.b.indexes.len)
       total += this.b.indexes.len
+
+      console.log(total, "kvals", this.b.kvals.arr, this.b.kvals.len)
+      total += this.b.kvals.len
+      console.log(total, "vals", this.b.vals.arr, this.b.vals.len)
+      total += this.b.vals.len
     }
 
     const _total =
@@ -399,7 +381,10 @@ class u8 {
       this.b.types.len +
       this.b.keys.len +
       this.b.nums.len +
-      this.b.indexes.len
+      this.b.bools.len +
+      this.b.indexes.len +
+      this.b.kvals.len +
+      this.b.vals.len
 
     const pad_len = (8 - (_total % 8)) % 8
     if (this.log) {
@@ -458,39 +443,52 @@ class u8 {
 
     writeBits(this.b.keys.arr, this.b.keys.len)
     writeBits(this.b.types.arr, this.b.types.len)
+    writeBits(this.b.bools.arr, this.b.bools.len)
     writeBits(this.b.nums.arr, this.b.nums.len)
     writeBits(this.b.indexes.arr, this.b.indexes.len)
+    writeBits(this.b.kvals.arr, this.b.kvals.len)
+    writeBits(this.b.vals.arr, this.b.vals.len)
 
     if (pad_len > 0) writeBits([0], pad_len)
     if (this.log) {
       console.log()
-      console.log(total, "dic", this.dic.subarray(0, this.dlen))
-      total += this.dlen * 8
-      console.log()
-      console.log(total, "obj", this.obj.subarray(0, this.len))
-      total += this.len * 8
-      console.log()
       console.log(total, "bits", total / 8, "bytes")
       console.log()
     }
-    arr.set(this.dic.subarray(0, this.dlen), bit_len)
-    arr.set(this.obj.subarray(0, this.len), bit_len + this.dlen)
     return arr
   }
 }
 
+// keylen: 0: array, 1: object, ...length
 function pushPathStr(u, v2, prev = null) {
   if (u.dcount > 0) u.push_dlink(prev === null ? 0 : prev + 1)
   const len = v2.length
+  let ktype = 3
+  let codes = []
+  let codes2 = []
+  if (len !== 0) {
+    let is64 = true
+    for (let i = 0; i < len; i++) {
+      codes2.push(v2.charCodeAt(i))
+      const c = base64[v2[i]]
+      if (typeof c === "undefined") is64 = false
+      else codes.push(c)
+    }
+    if (is64) ktype = 2
+  }
+  u.add("keys", ktype, 2)
   u.push_keylen(len + 2)
-  if (len === 0) u.push_d(1)
-  else for (let i = 0; i < len; i++) u.to128_d(v2.charCodeAt(i))
+
+  if (ktype === 3) for (let v of codes2) u.lh128_2("kvals", v)
+  else for (let v of codes) u.add("kvals", v, 6)
+
   u.dcount++
 }
 
 function pushPathNum(u, v2, prev = null, keylen) {
   if (u.dcount > 0) u.push_dlink(prev === null ? 0 : prev + 1)
-  u.push_keylen(keylen)
+  u.add("keys", keylen, 2)
+  //u.push_keylen(keylen)
   const id = keylen === 0 ? u.iid++ : u.oid++
   u.push_index(id)
   u.dcount++
@@ -603,9 +601,10 @@ function _encode_x(
     return type
   } else if (typeof v === "boolean") {
     if (prev !== null) u.push_dlink(prev + 1, 1)
-    const type = v ? 2 : 3
+    const type = 3
     if (prev_type !== null && prev_type !== type) u.push_type(prev_type)
     else u.tcount++
+    u.push_bool(v)
     return type
   } else if (v === null) {
     if (prev !== null) u.push_dlink(prev + 1, 1)
@@ -614,12 +613,32 @@ function _encode_x(
     return 1
   } else if (typeof v === "string") {
     if (prev !== null) u.push_dlink(prev + 1, 1)
-    if (prev_type !== null && prev_type !== 7) u.push_type(prev_type)
-    else u.tcount++
     const len = v.length
-    u.to128(len)
-    for (let i = 0; i < len; i++) u.to128(v.charCodeAt(i))
-    return 7
+    //u.to128(len)
+    //for (let i = 0; i < len; i++) u.to128(v.charCodeAt(i))
+    u.short("vals", len)
+    let ktype = 7
+    let codes = []
+    let codes2 = []
+    let is64 = true
+    if (len === 0) {
+      is64 = false
+    } else {
+      for (let i = 0; i < len; i++) {
+        codes2.push(v.charCodeAt(i))
+        const c = base64[v[i]]
+        if (typeof c === "undefined") is64 = false
+        else codes.push(c)
+      }
+      if (is64) ktype = 2
+    }
+    if (prev_type !== null && prev_type !== ktype) u.push_type(prev_type)
+    else u.tcount++
+
+    if (is64) for (let v of codes) u.add("vals", v, 6)
+    else for (let v of codes2) u.lh128_2("vals", v)
+
+    return ktype
   } else if (Array.isArray(v)) {
     if (v.length === 0) {
       if (prev !== null) u.push_dlink(prev + 1, 1)
