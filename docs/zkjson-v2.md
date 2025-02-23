@@ -23,3 +23,192 @@ How could beating the current status quo even be possible at all, let alone by a
   
 - **Direct Data Extraction and ZK Compatibility**  
   zkJSON’s structured encoding allows data to be accessed directly without full decoding, making it highly efficient for on-the-fly processing. This is especially important for zero-knowledge circuits (ZK circuits), where only arithmetic operations are allowed, eliminating the need for costly parsing. Additionally, zkJSON’s compact and predictable format enables EVM assembly-level optimizations, reducing gas costs and improving execution efficiency in blockchain environments.
+
+## Bit Level Optimization
+
+[LEB128](https://en.wikipedia.org/wiki/LEB128) is a byte-level optimized integer encoding scheme that represents base-128 numbers using 7-bit chunks per byte. The most significant bit (MSB) serves as a continuation flag, indicating whether additional bytes are needed to fully encode the number. This allows efficient storage of variable-length integers while minimizing wasted space.
+
+For instance,
+
+- 3 : `00000011`
+- 120 : `01111000`
+- 150 : `10010110 00000001` = 22 (`00010110`) + 128 * 10 ** 1 (`00000001`)
+
+However, small numbers in LEB128 waste bits. 3 requires only 2 bits (`11`) but consumes 8 bits in LEB128.
+
+zkJSON eliminates wasted bits by introducing a 2-bit flag to specify the number encoding scheme, followed by the minimal bit representation required for the number:
+
+- `00` : 2 bit integer
+- `01` : 3 bit integer
+- `10` : 4 bit integer
+- `11` : LEB128
+
+For instance, `3` is stored as `0011` (flag: `00`, integer: `11`), using only 4 bits — a 50% reduction compared to LEB128.
+
+If you store 1,000 numbers, zkJSON saves 4 bits per number, resulting in 5,000 bits (500 bytes) of storage savings—a significant improvement in compression efficiency.
+
+Additionally, zkJSON adapts its integer encoding based on context, using three optimized schemes:
+
+- **Short**
+  - `00` : 2 bit integer
+  - `01` : 3 bit integer
+  - `10` : 4 bit integer
+  - `11` : LEB128
+
+- **Uint**
+  - `00` : 3 bit integer
+  - `01` : 4 bit integer
+  - `10` : 6 bit integer
+  - `11` : LEB128
+
+- **LEB128**
+  - no flags requried
+
+This adaptive approach ensures minimal storage overhead while maintaining fast encoding and decoding speeds.
+
+For integers with a known maximum length, zkJSON eliminates the need for additional flags. For example, since zkJSON defines only 8 value types, each type can be represented within 3 bits. In such cases, the 2-bit flag is omitted, and a 3-bit integer encoding is used instead.
+
+This saves 2 bits per number, leading to a total 5-bit reduction compared to LEB128’s minimum 8-bit representation.
+
+Additionally, zkJSON performs a single scan over the data, restructuring it into a columnar format in a deterministic order. This approach eliminates the need for explicit markers or metadata, as bit positions inherently define what each number represents.
+
+## Columnar Restructuring
+
+zkJSON converts JSON data into integer representations and organizes them into column-based chunks during scanning. The encoded data is divided into 12 groups of similar integers, ensuring that related values are packed together. The packing order is crucial, as earlier groups act as metadata for subsequent groups.
+
+### 1. First Bit
+
+The very first bit classifies whether the data is a primitive type including an empty array (`[]`) and an object (`{}`), or a no-empty array or an object. Since primitive types require no additional structural metadata, they follow a separate optimized encoding path, often requiring just 1 byte.
+  - `0` : a non-empty structured object
+  - `1` : a primitive value or an empty array or an empty object
+
+### 2. Value Flags
+
+zkJSON builds a structure map, linking values to keys and keys to their parent objects, while also marking objects and arrays. For instance, with `{ a: 1, b: 2, c: [3, 4] }`, it first discovers an object `{}` then goes through `a` => `1` => `b` => `2` => `c` => `[]` => `3` => `4`, which generates a keymap of `[ -1, 0, 0, 0, 3 ]` and a value map of `[ 1, 2, 4, 4 ]`. The keymap corresponds to `[ "{}", "a", "b", "c", "[]" ]` and the value map correcponds to `[ 1, 2, 4, 4 ]` respectively. The valuemap is converted to deltas if the difference is less than 4, which usually gives us small integers saving bits. So `[ 1, 2, 4, 4 ]` becomes `[ 1, 1, 2, 0 ]`. If a delta decreases, an offset of 4 is added to indicate a negative shift.
+
+- `[ 1, 2, 4, 4 ]` => `[ 1, 1, 2, 0 ]`
+- `[ 1, 2, 4, 2 ]` => `[ 1, 1, 2, -2 ]` => `[ 1, 1, 2, 6 ]`
+- `[ 1, 2, 4, 10 ]` => `[ 1, 1, 2, 10 ]`
+
+Value flags are 1 bit flags to specify if the corresponding item is a delta (`1`) or non-delta (`0`).
+
+- `[ 1, 1, 2, 0 ]` => `1111` (all delta)
+- `[ 1, 1, 2, 6 ]` => `1111` (all delta)
+- `[ 1, 1, 2, 10 ]` => `1110` (delta except for `10`)
+
+For delta-encoded values, zkJSON uses only 3 bits per number (range 0-8), saving multiple bits compared to non-delta values.
+
+### 3. Value Links
+
+Value links represent the value map (`[ 1, 1, 2, 0 ]`), with each integer’s bit-length deterministically determined by combining the value map with the key map. For example, given the key map `[ -1(0), 0(1), 0(2), 0(3), 3(4) ]` and the value map `[ 1(v), 2(v), 4(v), 4(v) ]`, preserving the scanning order results in `[ -1(0), 0(1), 1(v), 0(2), 2(v), 0(3), 3(v), 3(4), 4(v) ]`. Since key indexes are always incremental, `1(v)` can only refer to previous indexes, ensuring it is safe to encode using only 2 bits. However, since `0` is reserved for delta packing, zkJSON increments non-delta values by 1 before encoding, so `[ 1, 2, 4, 4 ]` becomes `[ 2, 3, 5, 5 ]`, and `2(v)` actually consumes 3 bits while remaining fully deterministic. Delta values always consume only 3 bits.
+
+#### Delta Packing
+
+If the same delta pattern occurs more than three times consecutively, zkJSON applies delta packing to eliminate redundant storage. For example, with the value map `[ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]`, delta conversion results in `[ 1, 1, 1, 1, 1, 1, 1, 1, 1 ]`, requiring 27 bits (3 bits per value). Instead of storing repetitive deltas, zkJSON compresses the sequence by indicating delta packing with `0` (3 bits), specifying the length `9` (4 bits), and encoding the delta value `1` (3 bits), resulting in just 10 bits (`000 1001 001`). This saves 17 bits compared to the naive approach.
+
+### 4.Key Flags
+
+Key flags are 1-bit indicators that specify whether a key uses delta encoding, just like value flags.
+
+### 5. Key Links
+
+Key links represent the keymap (`[ -1, 0, 0, 0, 3 ]`), but since the first element is always `-1`, it is removed. Additionally, `0` is reserved for delta packing, so `[ -1, 0, 0, 0, 3 ]` is transformed into `[ 1, 1, 1, 4 ]`, with delta conversion and packing further optimizing it to `[ 1, 0, 0, 3 ]`.
+
+### 6. Key Types
+
+Key types are 2-bit indicators that define the type of each key in the keymap:
+
+- `00` (0) : array
+- `01` (1) : object
+- `10` (2) : base64url string key
+- `11` (3) : string key
+
+For example, given the key map `["{}", "a", "b", "c", "[]"]`, the key types would be `[1, 3, 3, 3, 0]`. `base64url` keys save at least 2 bits per character since they are converted to numbers less than 64 and encoded in just 6 bits each, whereas regular string keys are stored using LEB128. This optimization applies only to keys consisting solely of base64url characters (alphanumeric, `-`, and `_`).
+
+For keys classified as base64url or regular strings (types `2` and `3`), key types are followed by the string length in a compressed format. For example, the key `abc` is stored as `10 00 11` (`10` for base64url, `00` indicating a 2-bit short encoding, and `11` representing a length of 3).
+
+Duplicate string keys and types are replaced with a `0` flag followed by a deterministic index, significantly reducing storage overhead. For instance, in `[ { "name": "Bob" }, { "name": "Alice" } ]`, the second occurrence of `name` is not stored as `base64url` again but instead referenced with `10 000`, pointing to the first occurrence, saving 22 bits (`name` vs `0`, 24 bits vs 2 bits). This method extends to cross-referencing values as well. In `[ { "name": "Bob" }, { "Bob": "name" } ]`, both `name` and `Bob` are replaced with deterministic indexes `0` and `1`, respectively, further reducing redundancy.
+
+### 7. Data Types
+
+zkJSON defines 7 data types, each represented using only 3 bits:
+
+- `1` : `null`
+- `2` : `base64url string`
+- `3` : `bool`
+- `4` : `positive integer`
+- `5` : `negative integer`
+- `6` : `float`
+- `7` : `string`
+
+The value `0` is reserved for type packing. If the same type appears more than three times consecutively, it is compressed using a repeat flag (`0`), a short-length encoding, and the actual type. For example, `[ 3, 3, 3, 3, 3 ]` is compressed into `[ 0, 5, 3 ]`, which is stored as `000 101 011`, saving 6 bits.
+
+### 8. Boolean Values
+
+Boolean values are stored in 1 bit:
+
+- `0` : false
+- `1` : true
+
+### 9. Number Values
+
+ositive and negative integers are stored using a 2-bit flag in a custom number system:
+
+- `0` : delta
+- `1` : 4 bits
+- `2` : 6 bits
+- `3` : LEB128
+
+If a value is delta-encoded (`0` flag), and the next bit is `7`, it indicates delta packing, followed by a short length and a 3-bit delta value. For example, `[ 1, 2, 3, 4, 5 ]` (30 bits) is first transformed into `[ 1, 1, 1, 1, 1 ]` via delta conversion, then further compressed to `00 111 001` using delta packing, saving 22 bits.
+
+Floats are handled differently, using a sign, precision, and integer representation. The first integer combines the sign and precision, adding 4 to the precision when the number is negative. If the precision is greater than 2, the first integer stores `0` for positive numbers and `4` for negative numbers, while the second integer holds the actual precision. The last integer is always the numerical value itself.
+
+For example, `-3.14` is a negative number with precision `2`, which makes the first integer `6` (2 + 4) and the second integer `314` in LEB128 format. So `-3.14` results in `01 0110 11 10011010 00000010` which is 24 bits (3 bytes). In contrast, MessagePack consumes 9 bytes to store `-3.14`.
+
+### 10. Keys
+
+Keys are either `base64url` strings or regular strings. As explained earlier, duplicate keys are replaced with deterministic indexes, significantly reducing redundancy and saving bits.
+
+### 11. String Values
+
+String values follow the same compression rules as keys but are stored in value positions rather than key positions. For example, in `{ "name": "Bob" }`, `name` is encoded as a key, while `Bob` is stored separately as a string value.
+
+### 12. Padding
+
+To ensure proper byte alignment, the encoded bitstream is zero-padded to the nearest multiple of 8 bits. If the encoded data is 29 bits, zkJSON adds three padding bits to extend it to 32 bits (4 bytes), maintaining efficient byte-level storage.
+
+## Special Optimization for Primitive Values and Empty Objects
+
+When the first bit is `1`, zkJSON applies special encoding rules using the next 7 bits, which differ from those used for structured objects. These optimizations allow primitive values and empty objects to be stored with minimal overhead, ensuring maximum compression efficiency.
+
+  - `0` : other value types
+    - `00000` (0) : `null` (`00000000`)
+	- `00001` (1) : `true` (`00000001`)	
+	- `00010` (2)  : `false` (`00000010`)
+	- `00011` (3) : `""` (`00000011`)
+	- `00100` (4) : `[]` (`00000100`)
+	- `00101` (5) : `{}` (`00000101`)	  
+	- `00110` (6) : negative integer followed by `uint` (-1 => `00000110 001`)
+	- `00111` (7) : positive float followed by `uint` (precision) and `uint` (integer)  
+	(3.14 = > `00000111 00010111 01110100 00000010`)
+	- `01000` (8) : negative float followed by `uint` (precision) and `uint` (integer)  
+	(-3.14 = > `00001000 00010111 01110100 00000010`)
+	- `01001` - `111100` (9-60) : alphabetical single character (charmap + 9)
+	- `111101` (61) : non-alphabetical single character : followed by LEB128 (charcode)
+	- `111110` (62) : alphabetical multi characters : followed by short (charmap)
+    - `111111` (63) : non-alphabetic multi characters : followed by LEB128 (charcode)
+  - `1` : positive integer : followed by either
+    - 6 bit interger if smaller than or equal to 63 (62 => `01111110`)
+	-  or `111111` and LEB128 if bigger than 63 (70 => 63 + 7 => `01111111 00000111`)
+  
+```js
+const charmap = { 
+  A: 0, B: 1, C: 2, D: 3, E: 4, F: 5, G: 6, H: 7, I: 8,
+  J: 9, K: 10, L: 11, M: 12, N: 13, O: 14, P: 15, Q: 16, R: 17,
+  S: 18, T: 19, U: 20, V: 21, W: 22, X: 23, Y: 24, Z: 25,
+  a: 26, b: 27, c: 28, d: 29, e: 30, f: 31, g: 32, h: 33, i: 34,
+  j: 35, k: 36, l: 37, m: 38, n: 39, o: 40, p: 41, q: 42, r: 43,
+  s: 44, t: 45, u: 46, v: 47, w: 48, x: 49, y: 50, z: 51
+}
+```
+With these special rules, positive integers less than 64 and single alphhabetical characters, as well as `null`, `true`, `false` `""`, `[]`, `{}`, are all encoded in just 1 byte, maximizing efficiency while minimizing storage overhead.
