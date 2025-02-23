@@ -42,7 +42,7 @@ let data = {
 
 // empty object
 describe("zkJSON v2", function () {
-  it.only("should compare sizes", () => {
+  it("should compare sizes", () => {
     let d = new decoder()
     let u = new u8(1000)
     let wins = 0
@@ -75,7 +75,7 @@ describe("zkJSON v2", function () {
     console.log()
   })
 
-  it("should encode with v2", () => {
+  it.only("should encode with v2", () => {
     console.log()
     data = createJSON()
     data = { a: { b: 54 }, b: [3] }
@@ -103,7 +103,7 @@ describe("zkJSON v2", function () {
       ],
       iWs: [{ YzN6Mk: false }, { "00": true, ch: 55 }, [false, null, true, 60]],
     }
-
+    data = range(0, 1000)
     const _e = encode_x(data, u)
     const msg = enc(data)
     const decoded = decode_x(_e, d)

@@ -24,7 +24,7 @@ module.exports = class decoder {
     this.c += len
     return result
   }
-  lh128() {
+  leb128() {
     let n = 0
     let i = 0
     let len_len = null
@@ -80,7 +80,7 @@ module.exports = class decoder {
       this.json = num
       if (num < 63) {
       } else {
-        this.json += this.lh128()
+        this.json += this.leb128()
       }
     } else {
       const code = this.n(6)
@@ -99,7 +99,7 @@ module.exports = class decoder {
       } else if (code < 61) {
         this.json = strmap_rev[(code - 9).toString()]
       } else if (code === 61) {
-        this.json = String.fromCharCode(Number(this.lh128()))
+        this.json = String.fromCharCode(Number(this.leb128()))
       } else if (code === 62) {
         const len = this.short()
         this.json = ""
@@ -110,7 +110,7 @@ module.exports = class decoder {
         const len = this.short()
         this.json = ""
         for (let i = 0; i < len; i++) {
-          this.json += String.fromCharCode(Number(this.lh128()))
+          this.json += String.fromCharCode(Number(this.leb128()))
         }
       }
     }
@@ -283,11 +283,11 @@ module.exports = class decoder {
   }
   short() {
     const x = this.n(2)
-    return x === 3 ? this.lh128() : this.n(x === 2 ? 4 : x === 1 ? 3 : 2)
+    return x === 3 ? this.leb128() : this.n(x === 2 ? 4 : x === 1 ? 3 : 2)
   }
   uint() {
     const x = this.n(2)
-    return x === 3 ? this.lh128() : this.n(x === 2 ? 6 : x === 1 ? 4 : 3)
+    return x === 3 ? this.leb128() : this.n(x === 2 ? 6 : x === 1 ? 4 : 3)
   }
   dint(prev = 0) {
     if (this.num_cache !== null) {
@@ -298,13 +298,13 @@ module.exports = class decoder {
     }
     const x = this.n(2)
     const diff = x === 0
-    let num = x === 3 ? this.lh128() : this.n(x === 2 ? 6 : x === 1 ? 4 : 3)
+    let num = x === 3 ? this.leb128() : this.n(x === 2 ? 6 : x === 1 ? 4 : 3)
     if (num === 7 && diff) {
       const len = this.short()
       const x2 = this.n(2)
       let diff = x2 === 0
       let n = null
-      if (x2 === 3) n = this.lh128()
+      if (x2 === 3) n = this.leb128()
       else {
         const d = x2 === 0 ? 3 : x2 === 1 ? 4 : 6
         n = this.n(d)
@@ -380,7 +380,7 @@ module.exports = class decoder {
           } else {
             let key = ""
             for (let i2 = 0; i2 < len - 2; i2++) {
-              key += String.fromCharCode(Number(this.lh128()))
+              key += String.fromCharCode(Number(this.leb128()))
             }
             this.keys.push(key)
           }
@@ -430,7 +430,7 @@ module.exports = class decoder {
           val = ""
           for (let i2 = 0; i2 < len; i2++) {
             if (type === 7) {
-              val += String.fromCharCode(Number(this.lh128()))
+              val += String.fromCharCode(Number(this.leb128()))
             } else {
               val += base64_rev[this.n(6).toString()]
             }
