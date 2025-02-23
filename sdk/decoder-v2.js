@@ -55,7 +55,6 @@ module.exports = class decoder {
     this.types = []
     this.nums = []
     this.keys = []
-    this.indexes = []
     this.json = {}
     this.single = this.n(1) === 1
     if (this.single) this.getSingle()
@@ -69,7 +68,6 @@ module.exports = class decoder {
       this.getTypes()
       this.getBools()
       this.getNums()
-      this.getIndexes()
       this.getKeys()
       this.build()
     }
@@ -128,7 +126,6 @@ module.exports = class decoder {
     console.log("keylens", this.keylens)
     console.log("types", this.types)
     console.log("nums", this.nums)
-    console.log("indexes", this.indexes)
     console.log("keys", this.keys)
     console.log()
   }
@@ -271,14 +268,6 @@ module.exports = class decoder {
     }
   }
 
-  getIndexes() {
-    for (const v of this.keylens) {
-      if (v[0] > 1) continue
-      const int = this.short()
-      this.indexes.push(int)
-    }
-  }
-
   getTypes() {
     let i2 = -1
     let len = Math.max(1, this.vrefs.length)
@@ -369,11 +358,12 @@ module.exports = class decoder {
     }
   }
   getKeys() {
-    let ind = 0
+    let arr = 0
+    let obj = 0
     for (let i = 0; i < this.keylens.length; i++) {
       const [type, len] = this.keylens[i]
       if (type < 2) {
-        this.keys.push(this.indexes[ind++])
+        this.keys.push(type === 0 ? arr++ : obj++)
       } else {
         if (type === 2) {
           if (len === 0) {

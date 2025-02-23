@@ -83,6 +83,27 @@ describe("zkJSON v2", function () {
     console.log()
     let d = new decoder()
     let u = new u8(1000, true)
+
+    data = {
+      A: [
+        [null, null, true],
+        { あb: "てすと", g6P: "UGJh", "5VELE9": null, s1: false },
+      ],
+      Vry: [
+        { tfP: "Bn21naOPLV", "8j4": 14, Yvu: true, sP6: null },
+        [22, "Zz", 86, null],
+        [false],
+        [null],
+      ],
+      H: [
+        { zf: false, GghgF: false, J: null },
+        { pg: 2, BN4: false },
+        [true, "FW7"],
+        ["UL"],
+      ],
+      iWs: [{ YzN6Mk: false }, { "00": true, ch: 55 }, [false, null, true, 60]],
+    }
+
     const _e = encode_x(data, u)
     const msg = enc(data)
     const decoded = decode_x(_e, d)

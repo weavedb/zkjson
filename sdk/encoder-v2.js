@@ -74,11 +74,6 @@ class u8 {
     this.dcount2++
   }
 
-  push_dlink(v, flag = 0) {
-    if (flag === 1) this.push_vlink(v)
-    else this.push_klink(v)
-  }
-
   set_newbits(count) {
     const new_bits = bits(count + 1)
     if (new_bits > this.prev_bits) {
@@ -194,10 +189,6 @@ class u8 {
   }
   push_keylen(v) {
     this.short("keys", v)
-  }
-  push_index(v) {
-    if (v < 16) this.short("indexes", v)
-    else this.lh128("indexes", v)
   }
 
   push_int(v) {
@@ -327,7 +318,6 @@ class u8 {
       keys: { len: 0, arr: [] },
       types: { len: 0, arr: [] },
       nums: { len: 0, arr: [] },
-      indexes: { len: 0, arr: [] },
       dc: { len: 0, arr: [] },
       kvals: { len: 0, arr: [] },
       vals: { len: 0, arr: [] },
@@ -365,8 +355,6 @@ class u8 {
       total += this.b.bools.len
       console.log(total, "nums", this.b.nums.arr, this.b.nums.len)
       total += this.b.nums.len
-      console.log(total, "indexes", this.b.indexes.arr, this.b.indexes.len)
-      total += this.b.indexes.len
 
       console.log(total, "kvals", this.b.kvals.arr, this.b.kvals.len)
       total += this.b.kvals.len
@@ -384,7 +372,6 @@ class u8 {
       this.b.keys.len +
       this.b.nums.len +
       this.b.bools.len +
-      this.b.indexes.len +
       this.b.kvals.len +
       this.b.vals.len
 
@@ -447,7 +434,6 @@ class u8 {
     writeBits(this.b.types.arr, this.b.types.len)
     writeBits(this.b.bools.arr, this.b.bools.len)
     writeBits(this.b.nums.arr, this.b.nums.len)
-    writeBits(this.b.indexes.arr, this.b.indexes.len)
     writeBits(this.b.kvals.arr, this.b.kvals.len)
     writeBits(this.b.vals.arr, this.b.vals.len)
 
@@ -463,7 +449,7 @@ class u8 {
 
 // keylen: 0: array, 1: object, ...length
 function pushPathStr(u, v2, prev = null) {
-  if (u.dcount > 0) u.push_dlink(prev === null ? 0 : prev + 1)
+  if (u.dcount > 0) u.push_klink(prev === null ? 0 : prev + 1)
   if (typeof u.str[v2] !== "undefined") {
     u.add("keys", 2, 2)
     u.push_keylen(0)
@@ -493,10 +479,9 @@ function pushPathStr(u, v2, prev = null) {
 }
 
 function pushPathNum(u, prev = null, keylen) {
-  if (u.dcount > 0) u.push_dlink(prev === null ? 0 : prev + 1)
+  if (u.dcount > 0) u.push_klink(prev === null ? 0 : prev + 1)
   u.add("keys", keylen, 2)
   const id = keylen === 0 ? u.iid++ : u.oid++
-  u.push_index(id)
   u.dcount++
 }
 
@@ -586,7 +571,7 @@ function _encode_x(
   index = null,
 ) {
   if (typeof v === "number") {
-    if (prev !== null) u.push_dlink(prev + 1, 1)
+    if (prev !== null) u.push_vlink(prev + 1)
 
     const moved = v % 1 === v ? 0 : getPrecision(v)
     const type = moved === 0 ? (v < 0 ? 5 : 4) : 6
@@ -600,20 +585,20 @@ function _encode_x(
     u.push_int((v < 0 ? -1 : 1) * v * Math.pow(10, moved))
     return type
   } else if (typeof v === "boolean") {
-    if (prev !== null) u.push_dlink(prev + 1, 1)
+    if (prev !== null) u.push_vlink(prev + 1)
     const type = 3
     if (prev_type !== null && prev_type !== type) u.push_type(prev_type)
     else u.tcount++
     u.push_bool(v)
     return type
   } else if (v === null) {
-    if (prev !== null) u.push_dlink(prev + 1, 1)
+    if (prev !== null) u.push_vlink(prev + 1)
     if (prev_type !== null && prev_type !== 1) u.push_type(prev_type)
     else u.tcount++
     return 1
   } else if (typeof v === "string") {
     let ktype = 7
-    if (prev !== null) u.push_dlink(prev + 1, 1)
+    if (prev !== null) u.push_vlink(prev + 1)
     if (typeof u.str[v] !== "undefined") {
       ktype = 2
       u.push_type(prev_type)
@@ -646,7 +631,7 @@ function _encode_x(
     return ktype
   } else if (Array.isArray(v)) {
     if (v.length === 0) {
-      if (prev !== null) u.push_dlink(prev + 1, 1)
+      if (prev !== null) u.push_vlink(prev + 1)
       u.push_type(prev_type)
       u.push_float(false, 1)
       return 6
@@ -662,7 +647,7 @@ function _encode_x(
     return prev_type
   } else if (typeof v === "object") {
     if (Object.keys(v).length === 0) {
-      if (prev !== null) u.push_dlink(prev + 1, 1)
+      if (prev !== null) u.push_vlink(prev + 1)
       u.push_type(prev_type)
       u.push_float(true, 1)
       return 6
