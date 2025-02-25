@@ -4,7 +4,6 @@ const { createJSON } = require("./utils.js")
 const { encode: enc, decode: dec } = require("@msgpack/msgpack")
 const { get, encode, decode } = require("../sdk/encoder-v1_5.js")
 const { decode_x, encode_x, u8 } = require("../sdk/encoder-v2.js")
-const { decode_x: y2, encode_x: x2, u8: u2 } = require("../sdk/encoder-v2.1.js")
 const decoder = require("../sdk/decoder-v2.js")
 const { range } = require("ramda")
 const { encode: encode1, decode: decode1 } = require("../sdk/encoder.js")
@@ -42,9 +41,9 @@ let data = {
 
 // empty object
 describe("zkJSON v2", function () {
-  it("should compare sizes", () => {
+  it.only("should compare sizes", () => {
     let d = new decoder()
-    let u = new u8(1000)
+    let u = new u8(100)
     let wins = 0
     console.log()
     for (let v of range(1, 101)) {
@@ -75,41 +74,20 @@ describe("zkJSON v2", function () {
     console.log()
   })
 
-  it.only("should encode with v2", () => {
+  it("should encode with v2", () => {
     console.log()
     data = createJSON()
-    data = { a: { b: 54 }, b: [3] }
 
     console.log()
     let d = new decoder()
-    let u = new u8(1000, true)
+    let u = new u8(100, true)
 
-    data = {
-      A: [
-        [null, null, true],
-        { あb: "てすと", g6P: "UGJh", "5VELE9": null, s1: false },
-      ],
-      Vry: [
-        { tfP: "Bn21naOPLV", "8j4": 14, Yvu: true, sP6: null },
-        [22, "Zz", 86, null],
-        [false],
-        [null],
-      ],
-      H: [
-        { zf: false, GghgF: false, J: null },
-        { pg: 2, BN4: false },
-        [true, "FW7"],
-        ["UL"],
-      ],
-      iWs: [{ YzN6Mk: false }, { "00": true, ch: 55 }, [false, null, true, 60]],
-    }
-    data = range(0, 1000)
     const _e = encode_x(data, u)
     const msg = enc(data)
     const decoded = decode_x(_e, d)
     console.log("decoded:", decoded)
     console.log(data)
-    //assert.deepEqual(data, decoded)
+    assert.deepEqual(data, decoded)
     d.show()
     console.log()
     console.log("zk", _e)
@@ -120,47 +98,70 @@ describe("zkJSON v2", function () {
     console.log("[msgpack size]", Buffer.from(msg).length)
   })
 
-  it("should benchmark", () => {
+  it.only("should benchmark", () => {
     const count = 100000
     let d = new decoder()
-    let u = new u8(1000)
-
-    let _u2 = new u2(1000)
+    let u = new u8(100)
     data = createJSON()
+    /*data = {
+      HmOjTx: {
+      I0: { Mgo: true, c: "Pl13CG8", e: 93, PWUtvM: "KdOl" },
+        uiE5: { ZMD: 62, MrOl: 82, lxMJx: true, iKaXW: "hXZ8hVKxU" },
+      },
+      AM1: [
+        [null, null],
+        { f: false, BYfLR: "PTs87Nt" },
+        { OZrnk: "6GL2JrqLKz", uaDS: false },
+        { UiFU: "52l6yvMn", bNF: "5TNV" },
+      ],
+      "9kVj": [{ o1: 9, W: "LF1cyALKyi" }, [null, 11]],
+      Cgbz: {
+        67: [null, true],
+        OF9Rn: { aoIf3f: 23, Gp: true, rYlN: 7, Xnfo: null },
+        Kc0QD: { v: false, U: true },
+        Pr: { t: "xhoND0UG", LNkT1L: null, A87h: 26, "2f4F6": 88 },
+      },
+    }*/
 
     console.log("[json size]", Buffer.from(JSON.stringify(data), "utf8").length)
     const msg = enc(data)
     console.log("[msgpack size]", Buffer.from(msg).length)
     const _e = encode_x(data, u)
     console.log("[zkjson v2 size]", Buffer.from(_e).length)
-    const _e2 = x2(data, _u2)
-    console.log("[zkjson v2-1 size]", Buffer.from(_e2).length)
 
     console.log()
     const start0 = Date.now()
     for (let i = 0; i < count; i++) enc(data)
     console.log("[msgpack encode]", Date.now() - start0)
+
     const start1 = Date.now()
     for (let i = 0; i < count; i++) encode_x(data, u)
     console.log("[zkjson v2 encode]", Date.now() - start1)
-    const start1_1 = Date.now()
-    for (let i = 0; i < count; i++) x2(data, _u2)
-    console.log("[zkjson v2-1 encode]", Date.now() - start1_1)
+
+    const start5 = Date.now()
+    for (let i = 0; i < count; i++) JSON.stringify(data)
+    console.log("[json stringify]", Date.now() - start5)
     console.log()
 
     const start2 = Date.now()
     for (let i = 0; i < count; i++) dec(msg)
     console.log("[msgpack decode]", Date.now() - start2)
+
     const start3 = Date.now()
     for (let i = 0; i < count; i++) decode_x(_e, d)
     console.log("[zkjson decode]", Date.now() - start3)
+
+    const str = JSON.stringify(data)
+    const start4 = Date.now()
+    for (let i = 0; i < count; i++) JSON.parse(str)
+    console.log("[json parse]", Date.now() - start4)
     console.log()
 
     console.log(data)
     console.log()
   })
 
-  it("should encode and decode random json", () => {
+  it.only("should encode and decode random json", () => {
     let d = new decoder()
     let u = new u8(1000)
     for (let v of range(0, 1000)) {

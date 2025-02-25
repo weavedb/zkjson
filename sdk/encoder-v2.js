@@ -1,49 +1,148 @@
 const { bits, tobits, strmap, base64 } = require("./utils.js")
 
 class u8 {
-  constructor(size = 1000, log = false) {
-    this.size = size
+  constructor(size = 100, log = false) {
     this.log = log
-  }
-  add(tar, val, vlen) {
-    let b = this.b[tar]
-    val &= vlen >= 32 ? 0xffffffff : (1 << vlen) - 1
-    const used = b.len & 31
-    const free = used === 0 ? 32 : 32 - used
-    if (vlen <= free) {
-      if (used === 0) b.arr.push(val)
-      else b.arr[b.arr.length - 1] = (b.arr[b.arr.length - 1] << vlen) | val
-      b.len += vlen
-      return
+
+    this.kc_counts = new Uint32Array(32)
+    this.vc_counts = new Uint32Array(32)
+    this.kc_diffs = new Uint32Array(4)
+    this.vc_diffs = new Uint32Array(4)
+    this.vlinks = new Uint32Array(32)
+    this.klinks = new Uint32Array(32)
+    this.vflags = new Uint32Array(16)
+    this.kflags = new Uint32Array(16)
+    this.bools = new Uint32Array(16)
+    this.keys = new Uint32Array(32)
+    this.types = new Uint32Array(32)
+    this.nums = new Uint32Array(32)
+    this.dc = new Uint32Array(32)
+    this.kvals = new Uint32Array(64)
+    this.vals = new Uint32Array(64)
+
+    this.strMap = new Map()
+
+    this.bitsLookup = new Uint8Array(17)
+    for (let i = 0; i < 17; i++) {
+      this.bitsLookup[i] = i === 0 ? 1 : 32 - Math.clz32(i)
     }
+  }
+  fastBits(n) {
+    return n < 17 ? this.bitsLookup[n] : bits(n)
+  }
+
+  vc_diffs_set(index, value) {
+    const wordIndex = index >>> 5
+    const bitOffset = index & 31
+    if (value) {
+      this.vc_diffs[wordIndex] |= 1 << bitOffset
+    } else {
+      this.vc_diffs[wordIndex] &= ~(1 << bitOffset)
+    }
+  }
+  vc_diffs_get(index) {
+    const wordIndex = index >>> 5
+    const bitOffset = index & 31
+    return (this.vc_diffs[wordIndex] >>> bitOffset) & 1
+  }
+  kc_diffs_set(index, value) {
+    const wordIndex = index >>> 5
+    const bitOffset = index & 31
+    if (value) {
+      this.kc_diffs[wordIndex] |= 1 << bitOffset
+    } else {
+      this.kc_diffs[wordIndex] &= ~(1 << bitOffset)
+    }
+  }
+  kc_diffs_get(index) {
+    const wordIndex = index >>> 5
+    const bitOffset = index & 31
+    return (this.kc_diffs[wordIndex] >>> bitOffset) & 1
+  }
+
+  add_vlinks(val, vlen) {
+    this.vlinks_len = this._add(this.vlinks, this.vlinks_len, val, vlen)
+  }
+  add_klinks(val, vlen) {
+    this.klinks_len = this._add(this.klinks, this.klinks_len, val, vlen)
+  }
+  add_vflags(val, vlen) {
+    this.vflags_len = this._add(this.vflags, this.vflags_len, val, vlen)
+  }
+  add_kflags(val, vlen) {
+    this.kflags_len = this._add(this.kflags, this.kflags_len, val, vlen)
+  }
+  add_bools(val, vlen) {
+    this.bools_len = this._add(this.bools, this.bools_len, val, vlen)
+  }
+  add_keys(val, vlen) {
+    this.keys_len = this._add(this.keys, this.keys_len, val, vlen)
+  }
+  add_types(val, vlen) {
+    this.types_len = this._add(this.types, this.types_len, val, vlen)
+  }
+  add_nums(val, vlen) {
+    this.nums_len = this._add(this.nums, this.nums_len, val, vlen)
+  }
+  add_dc(val, vlen) {
+    this.dc_len = this._add(this.dc, this.dc_len, val, vlen)
+  }
+  add_kvals(val, vlen) {
+    this.kvals_len = this._add(this.kvals, this.kvals_len, val, vlen)
+  }
+  add_vals(val, vlen) {
+    this.vals_len = this._add(this.vals, this.vals_len, val, vlen)
+  }
+
+  _add(tar, len, val, vlen) {
+    val &= vlen >= 32 ? 0xffffffff : (1 << vlen) - 1
+    const used = len & 31
+    const free = used === 0 ? 32 : 32 - used
+    const idx = len >> 5
+
+    if (vlen <= free) {
+      if (used === 0) tar[idx] = val
+      else tar[idx] = (tar[idx] << vlen) | val
+      len += vlen
+      return len
+    }
+
     const high = val >>> (vlen - free)
-    if (used === 0) b.arr.push(high)
-    else b.arr[b.arr.length - 1] = (b.arr[b.arr.length - 1] << free) | high
-    b.len += free
+    if (used === 0) tar[idx] = high
+    else tar[idx] = (tar[idx] << free) | high
+    len += free
+
     let rest = vlen - free
     if (rest <= 32) {
-      b.arr.push(val & ((1 << rest) - 1))
-      b.len += rest
-      return
+      tar[idx + 1] = val & ((1 << rest) - 1)
+      len += rest
+      return len
     }
+
+    let writeIdx = idx + 1
     while (rest > 32) {
-      b.arr.push((val >>> (rest - 32)) & 0xffffffff)
-      b.len += 32
+      tar[writeIdx++] = (val >>> (rest - 32)) & 0xffffffff
+      len += 32
       rest -= 32
     }
+
     if (rest > 0) {
-      b.arr.push(val & ((1 << rest) - 1))
-      b.len += rest
+      tar[writeIdx] = val & ((1 << rest) - 1)
+      len += rest
     }
+    return len
   }
+
   push_vflag(flag) {
-    this.add("vflags", flag, 1)
+    this.add_vflags(flag, 1)
   }
+
   push_bool(bool) {
-    this.add("bools", bool ? 1 : 0, 1)
+    this.add_bools(bool ? 1 : 0, 1)
   }
+
   push_kflag(flag) {
-    this.add("kflags", flag, 1)
+    this.add_kflags(flag, 1)
   }
 
   get_diff(v, prev) {
@@ -52,45 +151,48 @@ class u8 {
     if (diff < 0) {
       diff = Math.abs(diff) + 3
       isDiff = diff < 7
-    } else {
-      isDiff = diff < 4
-    }
+    } else isDiff = diff < 4
     const v2 = isDiff ? diff : v
-    return [isDiff, diff, v2]
+    return (v2 << 1) | (isDiff ? 1 : 0)
   }
 
   push_vlink(v) {
-    let [isDiff, diff, v2] = this.get_diff(v, this.prev_link)
+    let result = this.get_diff(v, this.prev_link)
+    const isDiff = (result & 1) === 1
+    const v2 = result >>> 1
     this.prev_link = v
     this.push_vflag(isDiff ? 1 : 0)
     this._push_vlink(v2, isDiff, this.dcount)
     this.rcount++
   }
+
   push_klink(v) {
-    let [isDiff, diff, v2] = this.get_diff(v, this.prev_klink)
+    let result = this.get_diff(v, this.prev_klink)
+    const isDiff = (result & 1) === 1
+    const v2 = result >>> 1
     this.prev_klink = v
     this.push_kflag(isDiff ? 1 : 0)
     this._push_klink(v2, isDiff, this.dcount)
-    this.dcount2++
   }
 
   set_newbits(count) {
-    const new_bits = bits(count + 1)
+    const new_bits = this.fastBits(count + 1)
     if (new_bits > this.prev_bits) {
       const diff = new_bits - this.prev_bits
       for (let i = 0; i < diff; i++) {
-        this.add("vlinks", 0, this.prev_bits + i)
+        this.add_vlinks(0, this.prev_bits + i)
       }
       this.prev_bits = new_bits
     }
     return new_bits
   }
+
   set_newbits_k(count) {
-    const new_bits = bits(count + 1)
+    const new_bits = this.fastBits(count + 1)
     if (new_bits > this.prev_kbits) {
       const diff = new_bits - this.prev_kbits
       for (let i = 0; i < diff; i++) {
-        this.add("klinks", 0, this.prev_kbits + i)
+        this.add_klinks(0, this.prev_kbits + i)
       }
       this.prev_kbits = new_bits
     }
@@ -99,187 +201,332 @@ class u8 {
 
   _flush_vlink(v, diff, count) {
     if (diff) {
-      this.add("vlinks", v + 1, 3)
+      this.add_vlinks(v + 1, 3)
     } else {
       const nb = this.set_newbits(count)
-      this.add("vlinks", v + 1, nb)
+      this.add_vlinks(v + 1, nb)
     }
   }
+
   flush_vlink() {
-    let vc = this.vlink_cache
-    if (vc === null) return
-    if (vc[3] < 4) {
-      for (let i = 0; i < vc[3]; i++)
-        this._flush_vlink(vc[0], vc[1][i], vc[2][i])
+    if (this.vc_v === null) return
+    if (this.vc_count < 4) {
+      for (let i = 0; i < this.vc_count; i++)
+        this._flush_vlink(
+          this.vc_v,
+          this.vc_diffs_get(i) === 1,
+          this.vc_counts[i],
+        )
     } else {
-      if (vc[1][0]) {
-        this.add("vlinks", 0, 3)
-        this.short("vlinks", vc[3])
-        this.add("vlinks", vc[0] + 1, 3)
+      if (this.vc_diffs_get(0) === 1) {
+        this.add_vlinks(0, 3)
+        this.short_vlinks(this.vc_count)
+        this.add_vlinks(this.vc_v + 1, 3)
       } else {
-        const nb = this.set_newbits(vc[2][0])
-        this.add("vlinks", 0, nb)
-        this.short("vlinks", vc[3])
-        this.add("vlinks", vc[0] + 1, nb)
+        const nb = this.set_newbits(this.vc_counts[0])
+        this.add_vlinks(0, nb)
+        this.short_vlinks(this.vc_count)
+        this.add_vlinks(this.vc_v + 1, nb)
       }
-    }
-  }
-  flush_klink() {
-    let vc = this.klink_cache
-    if (vc === null) return
-    if (vc[3] < 4) {
-      for (let i = 0; i < vc[3]; i++)
-        this._flush_klink(vc[0], vc[1][i], vc[2][i])
-    } else {
-      if (vc[1][0]) {
-        this.add("klinks", 0, 3)
-        this.short("klinks", vc[3])
-        this.add("klinks", vc[0] + 1, 3)
-      } else {
-        const nb = this.set_newbits_k(vc[2][0])
-        this.add("klinks", 0, nb)
-        this.short("klinks", vc[3])
-        this.add("klinks", vc[0] + 1, nb)
-      }
-    }
-  }
-  _flush_klink(v, diff, count) {
-    if (diff) {
-      this.add("klinks", v + 1, 3)
-    } else {
-      const nb = this.set_newbits_k(count)
-      this.add("klinks", v + 1, nb)
     }
   }
 
   _push_vlink(v, diff, count) {
-    let vc = this.vlink_cache
-    if (vc === null) this.vlink_cache = [v, [diff], [count], 1]
-    else if (v === vc[0]) {
-      vc[3]++
-      vc[1].push(diff)
-      vc[2].push(count)
+    if (this.vc_v === null) {
+      this.vc_v = v
+      this.vc_diffs_set(0, diff ? 1 : 0)
+      this.vc_counts[0] = count
+      this.vc_count = 1
+    } else if (v === this.vc_v) {
+      this.vc_diffs_set(this.vc_count, diff ? 1 : 0)
+      this.vc_counts[this.vc_count] = count
+      this.vc_count++
     } else {
       this.flush_vlink()
-      this.vlink_cache = [v, [diff], [count], 1]
+      this.vc_v = v
+      this.vc_diffs_set(0, diff ? 1 : 0)
+      this.vc_counts[0] = count
+      this.vc_count = 1
     }
   }
+
+  flush_klink() {
+    if (this.kc_v === null) return
+    if (this.kc_count < 4) {
+      for (let i = 0; i < this.kc_count; i++)
+        this._flush_klink(
+          this.kc_v,
+          this.kc_diffs_get(i) === 1,
+          this.kc_counts[i],
+        )
+    } else {
+      if (this.kc_diffs_get(0) === 1) {
+        this.add_klinks(0, 3)
+        this.short_klinks(this.kc_count)
+        this.add_klinks(this.kc_v + 1, 3)
+      } else {
+        const nb = this.set_newbits_k(this.kc_counts[0])
+        this.add_klinks(0, nb)
+        this.short_klinks(this.kc_count)
+        this.add_klinks(this.kc_v + 1, nb)
+      }
+    }
+  }
+
+  _flush_klink(v, diff, count) {
+    if (diff) {
+      this.add_klinks(v + 1, 3)
+    } else {
+      const nb = this.set_newbits_k(count)
+      this.add_klinks(v + 1, nb)
+    }
+  }
+
   _push_klink(v, diff, count) {
-    let vc = this.klink_cache
-    if (vc === null) this.klink_cache = [v, [diff], [count], 1]
-    else if (v === vc[0]) {
-      vc[3]++
-      vc[1].push(diff)
-      vc[2].push(count)
+    if (this.kc_v === null) {
+      this.kc_v = v
+      this.kc_diffs_set(0, diff ? 1 : 0)
+      this.kc_counts[0] = count
+      this.kc_count = 1
+    } else if (v === this.kc_v) {
+      this.kc_diffs_set(this.kc_count, diff ? 1 : 0)
+      this.kc_counts[this.kc_count] = count
+      this.kc_count++
     } else {
       this.flush_klink()
-      this.klink_cache = [v, [diff], [count], 1]
+      this.kc_v = v
+      this.kc_diffs_set(0, diff ? 1 : 0)
+      this.kc_counts[0] = count
+      this.kc_count = 1
     }
   }
 
   push_type(v) {
     let count = this.tcount
     if (count > 3) {
-      this.add("types", 0, 3)
-      this.short("types", count)
-      this.add("types", v, 3)
-    } else for (let i = 0; i < count; i++) this.add("types", v, 3)
+      this.add_types(0, 3)
+      this.short_types(count)
+      this.add_types(v, 3)
+    } else for (let i = 0; i < count; i++) this.add_types(v, 3)
     this.tcount = 1
   }
+
   push_keylen(v) {
-    this.short("keys", v)
+    this.short_keys(v)
   }
 
   push_int(v) {
-    let [isDiff, diff, v2] = this.get_diff(v, this.prev_num)
+    let result = this.get_diff(v, this.prev_num)
+    const isDiff = (result & 1) === 1
+    const v2 = result >>> 1
+
     this.prev_num = v
-    this.dint(isDiff ? diff : v2, isDiff)
+    this.dint(v2, isDiff)
   }
+
   push_float(neg, v) {
     if (v < 4) this.push_int(neg ? 4 + v : v)
     else this.push_int(neg ? 4 : 0)
   }
 
   flush_nums() {
-    const dc = this.nums_cache
-    if (dc !== null) {
-      if (dc[2] < 3) {
-        for (let i = 0; i < dc[2]; i++) this._dint(dc[1], dc[0])
+    if (this.nc_diff !== null) {
+      if (this.nc_count < 3) {
+        for (let i = 0; i < this.nc_count; i++)
+          this._dint(this.nc_v, this.nc_diff)
       } else {
-        this.add("nums", 0, 2)
-        this.add("nums", 7, 3)
-        this.short("nums", dc[2])
-        if (dc[0]) {
-          this.add("nums", 0, 2)
-          this.add("nums", dc[1], 3)
-        } else if (dc[1] < 64) {
-          const d = dc[1] < 16 ? 4 : 6
-          const flag = dc[1] < 16 ? 1 : 2
-          this.add("nums", flag, 2)
-          this.add("nums", dc[1], d)
-        } else this.leb128("nums", dc[1])
+        this.add_nums(0, 2)
+        this.add_nums(7, 3)
+        this.short_nums(this.nc_count)
+        if (this.nc_diff) {
+          this.add_nums(0, 2)
+          this.add_nums(this.nc_v, 3)
+        } else if (this.nc_v < 64) {
+          const d = this.nc_v < 16 ? 4 : 6
+          const flag = this.nc_v < 16 ? 1 : 2
+          this.add_nums(flag, 2)
+          this.add_nums(this.nc_v, d)
+        } else this.leb128_nums(this.nc_v)
       }
     }
   }
 
   dint(v, diff = false) {
-    let dc = this.nums_cache
-    if (dc === null) this.nums_cache = [diff, v, 1]
-    else if (dc[0] === diff && dc[1] === v) {
-      dc[2] += 1
+    if (this.nc_diff === null) {
+      this.nc_diff = diff
+      this.nc_v = v
+      this.nc_count = 1
+    } else if (this.nc_diff === diff && this.nc_v === v) {
+      this.nc_count += 1
     } else {
-      if (dc[2] === 1) this._dint(dc[1], dc[0])
+      if (this.nc_count === 1) this._dint(this.nc_v, this.nc_diff)
       else this.flush_nums()
-      this.nums_cache = [diff, v, 1]
+      this.nc_diff = diff
+      this.nc_v = v
+      this.nc_count = 1
     }
   }
+
   _dint(v, diff) {
-    const tar = "nums"
-    // 1 bit diff mode can be set 1 or 2 or 3
     if (diff) {
-      this.add(tar, 0, 2)
-      this.add(tar, v, 3)
+      this.add_nums(0, 2)
+      this.add_nums(v, 3)
     } else if (v < 64) {
       const d = v < 16 ? 4 : 6
       const flag = v < 16 ? 1 : 2
-      this.add(tar, flag, 2)
-      this.add(tar, v, d)
-    } else this.leb128(tar, v)
+      this.add_nums(flag, 2)
+      this.add_nums(v, d)
+    } else this.leb128_nums(v)
   }
 
-  uint(tar, v) {
+  leb128_2_kvals(v) {
+    while (v >= 128) {
+      this.add_kvals((v & 0x7f) | 0x80, 8)
+      v >>>= 7
+    }
+    this.add_kvals(v, 8)
+  }
+
+  leb128_dc(v) {
+    this.add_dc(3, 2)
+    while (v >= 128) {
+      this.add_dc((v & 0x7f) | 0x80, 8)
+      v >>>= 7
+    }
+    this.add_dc(v, 8)
+  }
+
+  leb128_keys(v) {
+    this.add_keys(3, 2)
+    while (v >= 128) {
+      this.add_keys((v & 0x7f) | 0x80, 8)
+      v >>>= 7
+    }
+    this.add_keys(v, 8)
+  }
+
+  leb128_klinks(v) {
+    this.add_klinks(3, 2)
+    while (v >= 128) {
+      this.add_klinks((v & 0x7f) | 0x80, 8)
+      v >>>= 7
+    }
+    this.add_klinks(v, 8)
+  }
+
+  leb128_vals(v) {
+    this.add_vals(3, 2)
+    while (v >= 128) {
+      this.add_vals((v & 0x7f) | 0x80, 8)
+      v >>>= 7
+    }
+    this.add_vals(v, 8)
+  }
+
+  leb128_kvals(v) {
+    this.add_kvals(3, 2)
+    while (v >= 128) {
+      this.add_kvals((v & 0x7f) | 0x80, 8)
+      v >>>= 7
+    }
+    this.add_kvals(v, 8)
+  }
+
+  leb128_nums(v) {
+    this.add_nums(3, 2)
+    while (v >= 128) {
+      this.add_nums((v & 0x7f) | 0x80, 8)
+      v >>>= 7
+    }
+    this.add_nums(v, 8)
+  }
+
+  leb128_types(v) {
+    this.add_types(3, 2)
+    while (v >= 128) {
+      this.add_types((v & 0x7f) | 0x80, 8)
+      v >>>= 7
+    }
+    this.add_types(v, 8)
+  }
+
+  leb128_vlinks(v) {
+    this.add_vlinks(3, 2)
+    while (v >= 128) {
+      this.add_vlinks((v & 0x7f) | 0x80, 8)
+      v >>>= 7
+    }
+    this.add_vlinks(v, 8)
+  }
+
+  uint_dc(v) {
     if (v < 64) {
       const d = v < 8 ? 3 : v < 16 ? 4 : 6
       const flag = v < 8 ? 0 : v < 16 ? 1 : 2
-      this.add(tar, flag, 2)
-      this.add(tar, v, d)
-    } else this.leb128(tar, v)
+      this.add_dc(flag, 2)
+      this.add_dc(v, d)
+    } else this.leb128_dc(v)
   }
-  leb128_2(tar, v) {
-    while (v >= 128) {
-      this.add(tar, (v & 0x7f) | 0x80, 8)
-      v >>>= 7
-    }
-    this.add(tar, v, 8)
-  }
-  leb128(tar, v) {
-    this.add(tar, 3, 2)
-    while (v >= 128) {
-      this.add(tar, (v & 0x7f) | 0x80, 8)
-      v >>>= 7
-    }
-    this.add(tar, v, 8)
-  }
-  short(tar, v) {
+
+  short_types(v) {
     if (v < 16) {
-      const d = v < 4 ? 2 : bits(v)
-      this.add(tar, d - 2, 2)
-      this.add(tar, v, d)
-    } else this.leb128(tar, v)
+      const d = v < 4 ? 2 : this.fastBits(v)
+      this.add_types(d - 2, 2)
+      this.add_types(v, d)
+    } else this.leb128_types(v)
   }
+
+  short_dc(v) {
+    if (v < 16) {
+      const d = v < 4 ? 2 : this.fastBits(v)
+      this.add_dc(d - 2, 2)
+      this.add_dc(v, d)
+    } else this.leb128_dc(v)
+  }
+
+  short_vals(v) {
+    if (v < 16) {
+      const d = v < 4 ? 2 : this.fastBits(v)
+      this.add_vals(d - 2, 2)
+      this.add_vals(v, d)
+    } else this.leb128_vals(v)
+  }
+
+  short_kvals(v) {
+    if (v < 16) {
+      const d = v < 4 ? 2 : this.fastBits(v)
+      this.add_kvals(d - 2, 2)
+      this.add_kvals(v, d)
+    } else this.leb128_kvals(v)
+  }
+
+  short_keys(v) {
+    if (v < 16) {
+      const d = v < 4 ? 2 : this.fastBits(v)
+      this.add_keys(d - 2, 2)
+      this.add_keys(v, d)
+    } else this.leb128_keys(v)
+  }
+
+  short_klinks(v) {
+    if (v < 16) {
+      const d = v < 4 ? 2 : this.fastBits(v)
+      this.add_klinks(d - 2, 2)
+      this.add_klinks(v, d)
+    } else this.leb128_klinks(v)
+  }
+
+  short_vlinks(v) {
+    if (v < 16) {
+      const d = v < 4 ? 2 : this.fastBits(v)
+      this.add_vlinks(d - 2, 2)
+      this.add_vlinks(v, d)
+    } else this.leb128_vlinks(v)
+  }
+
   reset() {
+    this.strMap.clear()
     this.str_len = 0
-    this.str = {}
     this.prev_bits = 1
     this.prev_kbits = 1
     this.prev_num = 0
@@ -288,31 +535,37 @@ class u8 {
     this.prev_klink = null
     this.single = true
     this.len = 0
-    this.tlen = 0
     this.dlen = 0
     this.jlen = 0
     this.dcount = 0
-    this.dcount2 = 0
     this.rcount = 0
     this.tcount = 0
     this.oid = 0
     this.iid = 0
-    this.vlink_cache = null
-    this.klink_cache = null
-    this.nums_cache = null
-    this.b = {
-      vlinks: { len: 0, arr: [] },
-      klinks: { len: 0, arr: [] },
-      vflags: { len: 0, arr: [] },
-      kflags: { len: 0, arr: [] },
-      bools: { len: 0, arr: [] },
-      keys: { len: 0, arr: [] },
-      types: { len: 0, arr: [] },
-      nums: { len: 0, arr: [] },
-      dc: { len: 0, arr: [] },
-      kvals: { len: 0, arr: [] },
-      vals: { len: 0, arr: [] },
-    }
+
+    this.vc_v = null
+
+    this.vc_count = null
+
+    this.kc_v = null
+
+    this.kc_count = null
+
+    this.nc_diff = null
+    this.nc_v = null
+    this.nc_count = null
+
+    this.vlinks_len = 0
+    this.klinks_len = 0
+    this.vflags_len = 0
+    this.kflags_len = 0
+    this.bools_len = 0
+    this.keys_len = 0
+    this.types_len = 0
+    this.nums_len = 0
+    this.dc_len = 0
+    this.kvals_len = 0
+    this.vals_len = 0
   }
 
   dump() {
@@ -320,132 +573,94 @@ class u8 {
       this.flush_vlink()
       this.flush_klink()
       this.flush_nums()
-      this.add("dc", this.single ? 1 : 0, 1)
-      this.short("dc", this.rcount)
+      this.add_dc(this.single ? 1 : 0, 1)
+      this.short_dc(this.rcount)
     }
 
-    let total = 0
-    if (this.log) {
-      console.log(total, `rcount(${this.rcount})`, this.b.dc.arr, this.b.dc.len)
-      total += this.b.dc.len
-      console.log(total, "vflags", this.b.vflags.arr, this.b.vflags.len)
-      total += this.b.vflags.len
-      console.log(total, "vlinks", this.b.vlinks.arr, this.b.vlinks.len)
-      total += this.b.vlinks.len
+    const totalBits =
+      this.dc_len +
+      this.vflags_len +
+      this.vlinks_len +
+      this.kflags_len +
+      this.klinks_len +
+      this.keys_len +
+      this.types_len +
+      this.nums_len +
+      this.bools_len +
+      this.kvals_len +
+      this.vals_len
 
-      console.log(total, "kflags", this.b.kflags.arr, this.b.kflags.len)
-      total += this.b.kflags.len
-      console.log(total, "klinks", this.b.klinks.arr, this.b.klinks.len)
-      total += this.b.klinks.len
-
-      console.log(total, "keylens", this.b.keys.arr, this.b.keys.len)
-      total += this.b.keys.len
-      console.log(total, "types", this.b.types.arr, this.b.types.len)
-      total += this.b.types.len
-      console.log(total, "bools", this.b.bools.arr, this.b.bools.len)
-      total += this.b.bools.len
-      console.log(total, "nums", this.b.nums.arr, this.b.nums.len)
-      total += this.b.nums.len
-
-      console.log(total, "kvals", this.b.kvals.arr, this.b.kvals.len)
-      total += this.b.kvals.len
-      console.log(total, "vals", this.b.vals.arr, this.b.vals.len)
-      total += this.b.vals.len
-    }
-
-    const _total =
-      this.b.dc.len +
-      this.b.vflags.len +
-      this.b.vlinks.len +
-      this.b.kflags.len +
-      this.b.klinks.len +
-      this.b.types.len +
-      this.b.keys.len +
-      this.b.nums.len +
-      this.b.bools.len +
-      this.b.kvals.len +
-      this.b.vals.len
-
-    const pad_len = (8 - (_total % 8)) % 8
-    if (this.log) {
-      console.log(total, "pad", 0, pad_len)
-      total += pad_len
-    }
-
-    const bit_len = (_total + pad_len) / 8
-    const len = bit_len + this.len + this.dlen
-    const arr = new Uint8Array(len)
+    const padBits = (8 - (totalBits % 8)) % 8
+    const finalBits = totalBits + padBits
+    const outLength = finalBits / 8
+    const out = new Uint8Array(outLength)
 
     let outIndex = 0
     let accumulator = 0
     let accBits = 0
 
-    function writeNumberBits(num, bitsLength) {
-      while (bitsLength > 0) {
+    const writeBits = (num, numBits) => {
+      while (numBits > 0) {
         const free = 8 - accBits
-        if (bitsLength <= free) {
-          accumulator =
-            (accumulator << bitsLength) | (num & ((1 << bitsLength) - 1))
-          accBits += bitsLength
-          bitsLength = 0
+        if (numBits <= free) {
+          accumulator = (accumulator << numBits) | (num & ((1 << numBits) - 1))
+          accBits += numBits
+          numBits = 0
           if (accBits === 8) {
-            arr[outIndex++] = accumulator
+            out[outIndex++] = accumulator
             accumulator = 0
             accBits = 0
           }
         } else {
-          const shift = bitsLength - free
-          const part = num >> shift
+          const shift = numBits - free
+          const part = num >>> shift
           accumulator = (accumulator << free) | (part & ((1 << free) - 1))
-          arr[outIndex++] = accumulator
+          out[outIndex++] = accumulator
           num = num & ((1 << shift) - 1)
-          bitsLength -= free
+          numBits -= free
           accumulator = 0
           accBits = 0
         }
       }
     }
 
-    function writeBits(valueArray, bitsLength) {
-      let remaining = bitsLength
-      for (let i = 0; i < valueArray.length; i++) {
-        const bitsForThis = remaining > 32 ? 32 : remaining
-        writeNumberBits(valueArray[i] >>> 0, bitsForThis)
-        remaining -= bitsForThis
+    const writeBuffer = (buffer, bitLen) => {
+      let remaining = bitLen
+      let i = 0
+      while (remaining > 0 && i < buffer.length) {
+        const bitsThis = Math.min(32, remaining)
+        writeBits(buffer[i] >>> 0, bitsThis)
+        remaining -= bitsThis
+        i++
       }
     }
 
-    writeBits(this.b.dc.arr, this.b.dc.len)
-    writeBits(this.b.vflags.arr, this.b.vflags.len)
-    writeBits(this.b.vlinks.arr, this.b.vlinks.len)
-    writeBits(this.b.kflags.arr, this.b.kflags.len)
-    writeBits(this.b.klinks.arr, this.b.klinks.len)
-    writeBits(this.b.keys.arr, this.b.keys.len)
-    writeBits(this.b.types.arr, this.b.types.len)
-    writeBits(this.b.bools.arr, this.b.bools.len)
-    writeBits(this.b.nums.arr, this.b.nums.len)
-    writeBits(this.b.kvals.arr, this.b.kvals.len)
-    writeBits(this.b.vals.arr, this.b.vals.len)
+    writeBuffer(this.dc, this.dc_len)
+    writeBuffer(this.vflags, this.vflags_len)
+    writeBuffer(this.vlinks, this.vlinks_len)
+    writeBuffer(this.kflags, this.kflags_len)
+    writeBuffer(this.klinks, this.klinks_len)
+    writeBuffer(this.keys, this.keys_len)
+    writeBuffer(this.types, this.types_len)
+    writeBuffer(this.bools, this.bools_len)
+    writeBuffer(this.nums, this.nums_len)
+    writeBuffer(this.kvals, this.kvals_len)
+    writeBuffer(this.vals, this.vals_len)
 
-    if (pad_len > 0) writeBits([0], pad_len)
-    if (this.log) {
-      console.log()
-      console.log(total, "bits", total / 8, "bytes")
-      console.log()
-    }
-    return arr
+    if (padBits > 0) writeBits(0, padBits)
+
+    return out
   }
 }
 
-// keylen: 0: array, 1: object, ...length
 function pushPathStr(u, v2, prev = null) {
   if (u.dcount > 0) u.push_klink(prev === null ? 0 : prev + 1)
-  if (typeof u.str[v2] !== "undefined") {
-    u.add("keys", 2, 2)
+  if (u.strMap.has(v2)) {
+    u.add_keys(2, 2)
     u.push_keylen(0)
-    u.short("kvals", u.str[v2])
+    u.short_kvals(u.strMap.get(v2))
   } else {
-    u.str[v2] = u.str_len++
+    u.strMap.set(v2, u.str_len++)
     const len = v2.length
     let ktype = 3
     let codes = []
@@ -460,17 +675,17 @@ function pushPathStr(u, v2, prev = null) {
       }
       if (is64) ktype = 2
     }
-    u.add("keys", ktype, 2)
+    u.add_keys(ktype, 2)
     u.push_keylen(len + 2)
-    if (ktype === 3) for (let v of codes2) u.leb128_2("kvals", v)
-    else for (let v of codes) u.add("kvals", v, 6)
+    if (ktype === 3) for (let v of codes2) u.leb128_2_kvals(v)
+    else for (let v of codes) u.add_kvals(v, 6)
   }
   u.dcount++
 }
 
 function pushPathNum(u, prev = null, keylen) {
   if (u.dcount > 0) u.push_klink(prev === null ? 0 : prev + 1)
-  u.add("keys", keylen, 2)
+  u.add_keys(keylen, 2)
   const id = keylen === 0 ? u.iid++ : u.oid++
   u.dcount++
 }
@@ -478,37 +693,42 @@ function pushPathNum(u, prev = null, keylen) {
 function encode_x(v, u) {
   u.reset()
   if (v === null) {
-    u.add("dc", 1, 1)
-    u.add("dc", 0, 7)
+    u.add_dc(1, 1)
+    u.add_dc(0, 7)
   } else if (typeof v !== "object") {
-    u.add("dc", 1, 1)
-    if (v === true) u.add("dc", 1, 7)
-    else if (v === false) u.add("dc", 2, 7)
-    else if (v === "") u.add("dc", 3, 7)
+    u.add_dc(1, 1)
+    if (v === true) u.add_dc(1, 7)
+    else if (v === false) u.add_dc(2, 7)
+    else if (v === "") u.add_dc(3, 7)
     else if (typeof v === "number") {
       const moved = v % 1 === v ? 0 : getPrecision(v)
       const type = moved === 0 ? (v < 0 ? 5 : 4) : v < 0 ? 7 : 6
       if (type === 4) {
-        u.add("dc", 1, 1)
-        if (v < 63) {
-          u.add("dc", v, 6)
-        } else {
-          u.add("dc", 63, 6)
-          u.leb128_2("dc", v - 63)
+        u.add_dc(1, 1)
+        if (v < 63) u.add_dc(v, 6)
+        else {
+          u.add_dc(63, 6)
+          u.leb128_2_dc(v - 63)
         }
       } else {
-        u.add("dc", 0, 1)
-        u.add("dc", type + 1, 6)
-        if (moved > 0) u.uint("dc", moved)
-        u.uint("dc", (v < 0 ? -1 : 1) * v * Math.pow(10, moved))
+        u.add_dc(0, 1)
+        u.add_dc(type + 1, 6)
+        if (moved > 0) u.uint_dc(moved)
+        u.uint_dc((v < 0 ? -1 : 1) * v * Math.pow(10, moved))
       }
     } else if (typeof v === "string") {
-      u.add("dc", 0, 1)
-      if (v.length === 1 && typeof strmap[v] !== "undefined") {
-        u.add("dc", strmap[v] + 9, 6)
-      } else if (v.length === 1) {
-        u.add("dc", 61, 6)
-        u.leb128_2("dc", v.charCodeAt(0))
+      u.add_dc(0, 1)
+
+      if (v.length === 1) {
+        const charCode = v.charCodeAt(0)
+        const mapValue = strmap[v]
+
+        if (typeof mapValue !== "undefined") {
+          u.add_dc(mapValue + 9, 6)
+        } else {
+          u.add_dc(61, 6)
+          u.leb128_2_dc(charCode)
+        }
       } else {
         let is64 = true
         for (let i = 0; i < v.length; i++) {
@@ -517,25 +737,28 @@ function encode_x(v, u) {
             break
           }
         }
+
         if (is64) {
-          u.add("dc", 62, 6)
-          u.short("dc", v.length)
+          u.add_dc(62, 6)
+          u.short_dc(v.length)
           for (let i = 0; i < v.length; i++) {
-            u.add("dc", base64[v[i]], 6)
+            u.add_dc(base64[v[i]], 6)
           }
         } else {
-          u.add("dc", 63, 6)
-          u.short("dc", v.length)
-          for (let i = 0; i < v.length; i++) u.leb128_2("dc", v.charCodeAt(i))
+          u.add_dc(63, 6)
+          u.short_dc(v.length)
+          for (let i = 0; i < v.length; i++) {
+            u.leb128_2_dc(v.charCodeAt(i))
+          }
         }
       }
     }
   } else if (Array.isArray(v) && v.length === 0) {
-    u.add("dc", 1, 1)
-    u.add("dc", 4, 7)
+    u.add_dc(1, 1)
+    u.add_dc(4, 7)
   } else if (Object.keys(v).length === 0) {
-    u.add("dc", 1, 1)
-    u.add("dc", 5, 7)
+    u.add_dc(1, 1)
+    u.add_dc(5, 7)
   } else {
     u.single = false
     u.push_type(_encode_x(v, u))
@@ -551,7 +774,6 @@ function getPrecision(v) {
   return frac.length
 }
 
-// 0: repeat, 1: null, 2: true, 3: false, 4: uint, 5: neg, 6: float, 7: str
 function _encode_x(
   v,
   u,
@@ -589,15 +811,15 @@ function _encode_x(
   } else if (typeof v === "string") {
     let ktype = 7
     if (prev !== null) u.push_vlink(prev + 1)
-    if (typeof u.str[v] !== "undefined") {
+    if (u.strMap.has(v)) {
       ktype = 2
       u.push_type(prev_type)
-      u.short("vals", 0)
-      u.short("vals", u.str[v])
+      u.short_vals(0)
+      u.short_vals(u.strMap.get(v))
     } else {
-      u.str[v] = u.str_len++
+      u.strMap.set(v, u.str_len++)
       const len = v.length
-      u.short("vals", len)
+      u.short_vals(len)
       let codes = []
       let codes2 = []
       let is64 = true
@@ -615,8 +837,8 @@ function _encode_x(
       if (prev_type !== null && prev_type !== ktype) u.push_type(prev_type)
       else u.tcount++
 
-      if (is64) for (let v of codes) u.add("vals", v, 6)
-      else for (let v of codes2) u.leb128_2("vals", v)
+      if (is64) for (let v of codes) u.add_vals(v, 6)
+      else for (let v of codes2) u.leb128_2_vals(v)
     }
     return ktype
   } else if (Array.isArray(v)) {
