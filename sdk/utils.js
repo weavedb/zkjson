@@ -19,6 +19,7 @@ function tobits(arr, cursor = 0) {
   if (remaining.length > 0) result.push(remaining)
   return result
 }
+
 function bits(n) {
   return n === 0 ? 1 : 32 - Math.clz32(n)
 }

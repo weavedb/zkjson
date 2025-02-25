@@ -152,7 +152,7 @@ Boolean values are stored in 1 bit:
 
 ### 9. Number Values
 
-ositive and negative integers are stored using a 2-bit flag in a custom number system:
+Positive and negative integers are stored using a 2-bit flag in a custom number system:
 
 - `0` : delta
 - `1` : 4 bits
