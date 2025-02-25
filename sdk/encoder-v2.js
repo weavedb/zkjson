@@ -492,6 +492,14 @@ class u8 {
     } else this.leb128_vals(v)
   }
 
+  short_nums(v) {
+    if (v < 16) {
+      const d = v < 4 ? 2 : this.fastBits(v)
+      this.add_nums(d - 2, 2)
+      this.add_nums(v, d)
+    } else this.leb128_nums(v)
+  }
+
   short_kvals(v) {
     if (v < 16) {
       const d = v < 4 ? 2 : this.fastBits(v)

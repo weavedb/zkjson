@@ -133,13 +133,13 @@ Duplicate string keys and types are replaced with a `0` flag followed by a deter
 
 zkJSON defines 7 data types, each represented using only 3 bits:
 
-- `1` : `null`
-- `2` : `base64url string`
-- `3` : `bool`
-- `4` : `positive integer`
-- `5` : `negative integer`
-- `6` : `float`
-- `7` : `string`
+- `001` (1) : `null`
+- `010` (2) : `base64url string`
+- `011` (3) : `bool`
+- `100` (4) : `positive integer`
+- `101` (5) : `negative integer`
+- `110` (6) : `float`
+- `111` (7) : `string`
 
 The value `0` is reserved for type packing. If the same type appears more than three times consecutively, it is compressed using a repeat flag (`0`), a short-length encoding, and the actual type. For example, `[ 3, 3, 3, 3, 3 ]` is compressed into `[ 0, 5, 3 ]`, which is stored as `000 101 011`, saving 6 bits.
 
@@ -154,10 +154,10 @@ Boolean values are stored in 1 bit:
 
 Positive and negative integers are stored using a 2-bit flag in a custom number system:
 
-- `0` : delta
-- `1` : 4 bits
-- `2` : 6 bits
-- `3` : LEB128
+- `00` (0) : delta
+- `01` (1) : 4 bits
+- `10` (2) : 6 bits
+- `11` (3) : LEB128
 
 If a value is delta-encoded (`0` flag), and the next bit is `7`, it indicates delta packing, followed by a short length and a 3-bit delta value. For example, `[ 1, 2, 3, 4, 5 ]` (30 bits) is first transformed into `[ 1, 1, 1, 1, 1 ]` via delta conversion, then further compressed to `00 111 001` using delta packing, saving 22 bits.
 
@@ -212,3 +212,8 @@ const charmap = {
 }
 ```
 With these special rules, positive integers less than 64 and single alphhabetical characters, as well as `null`, `true`, `false` `""`, `[]`, `{}`, are all encoded in just 1 byte, maximizing efficiency while minimizing storage overhead.
+
+
+## Benchmarking
+
+[Benchmarks against MessagePack, CBOR and BSON](https://zkjson-v2-benchmark.vercel.app/)

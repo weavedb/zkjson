@@ -11,6 +11,13 @@
                                                        |_|         |_|              
 ```
 
+## zkJSON v2 is Out
+
+zkJSON v2 drastically improves v1 with bit-level optimizations, columlnar restructuring, and delta packing. It significantly the current leading standards of JSON encoding, [MessagePack](https://msgpack.org/) and [CBOR](https://datatracker.ietf.org/doc/html/rfc7049), by far in compression ratio in many cases.
+
+- [v2 Spec](./docs/zkjson-v2.md)
+- [v2 Benchmarks](https://zkjson-v2-benchmark.vercel.app)
+
 ## Zero Knowledge Provable JSON
 
 **zkJSON** makes any arbitrary JSON data provable with zero knowledge proof, and makes them verifiable both offchain and onchain (blockchain).
