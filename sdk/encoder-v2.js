@@ -649,10 +649,10 @@ class u8 {
     writeBuffer(this.kflags, this.kflags_len)
     writeBuffer(this.klinks, this.klinks_len)
     writeBuffer(this.keys, this.keys_len)
+    writeBuffer(this.kvals, this.kvals_len)
     writeBuffer(this.types, this.types_len)
     writeBuffer(this.bools, this.bools_len)
     writeBuffer(this.nums, this.nums_len)
-    writeBuffer(this.kvals, this.kvals_len)
     writeBuffer(this.vals, this.vals_len)
 
     if (padBits > 0) writeBits(0, padBits)
@@ -684,7 +684,7 @@ function pushPathStr(u, v2, prev = null) {
       if (is64) ktype = 2
     }
     u.add_keys(ktype, 2)
-    u.push_keylen(len + 2)
+    u.push_keylen(len + 1)
     if (ktype === 3) for (let v of codes2) u.leb128_2_kvals(v)
     else for (let v of codes) u.add_kvals(v, 6)
   }
@@ -694,7 +694,6 @@ function pushPathStr(u, v2, prev = null) {
 function pushPathNum(u, prev = null, keylen) {
   if (u.dcount > 0) u.push_klink(prev === null ? 0 : prev + 1)
   u.add_keys(keylen, 2)
-  const id = keylen === 0 ? u.iid++ : u.oid++
   u.dcount++
 }
 
@@ -884,9 +883,4 @@ function _encode_x(
   }
 }
 
-function decode_x(v, d) {
-  d.decode(v)
-  return d.json
-}
-
-module.exports = { encode_x, decode_x, u8 }
+module.exports = { encode_x, u8 }

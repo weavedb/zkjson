@@ -7,7 +7,7 @@ const {
   base64,
 } = require("./utils.js")
 
-module.exports = class decoder {
+class decoder {
   constructor() {
     this.c = 0
     this.json = null
@@ -65,10 +65,10 @@ module.exports = class decoder {
       this.getKflags()
       this.getKlinks()
       this.getKeyLens()
+      this.getKeys()
       this.getTypes()
       this.getBools()
       this.getNums()
-      this.getKeys()
       this.build()
     }
   }
@@ -115,9 +115,11 @@ module.exports = class decoder {
       }
     }
   }
+
   getLen() {
     this.len = this.short()
   }
+
   show() {
     console.log()
     console.log("len", this.len)
@@ -129,6 +131,7 @@ module.exports = class decoder {
     console.log("keys", this.keys)
     console.log()
   }
+
   getVflags() {
     let i = 0
     while (i < this.len) {
@@ -137,6 +140,7 @@ module.exports = class decoder {
       i++
     }
   }
+
   getKflags() {
     let i = 0
     while (i < this.key_length - 1) {
@@ -201,6 +205,7 @@ module.exports = class decoder {
     prev = val
     return prev
   }
+
   addKlink(diff, val, prev) {
     val -= 1
     if (diff) {
@@ -371,7 +376,7 @@ module.exports = class decoder {
             this.keys.push([code])
           } else {
             let key = ""
-            for (let i2 = 0; i2 < len - 2; i2++) key += base64_rev[this.n(6)]
+            for (let i2 = 0; i2 < len - 1; i2++) key += base64_rev[this.n(6)]
             this.keys.push(key)
           }
         } else {
@@ -379,7 +384,7 @@ module.exports = class decoder {
             this.keys.push("")
           } else {
             let key = ""
-            for (let i2 = 0; i2 < len - 2; i2++) {
+            for (let i2 = 0; i2 < len - 1; i2++) {
               key += String.fromCharCode(Number(this.leb128()))
             }
             this.keys.push(key)
@@ -590,3 +595,10 @@ module.exports = class decoder {
     }
   }
 }
+
+function decode_x(v, d) {
+  d.decode(v)
+  return d.json
+}
+
+module.exports = { decoder, decode_x }
