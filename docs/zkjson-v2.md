@@ -5,7 +5,7 @@ zkJSON v2 leverages bit-level optimizations to encode JSON at lightning speed wh
 
 ## How zkJSON Outperforms Every Other Encoding Algorithm
 
-MessagePack generates the smallest encoded data sizes among existing self-contained JSON serialization formats. However, zkJSON outperforms MessagePack in 90% of cases with random data, with the remaining 10% yielding nearly identical sizes. More importantly, for structured data with repetitive patterns and duplicate values, zkJSON far surpasses MessagePack, achieving up to a 90% better compression rate.
+MessagePack generates the smallest encoded data sizes among existing self-contained JSON serialization formats. However, zkJSON outperforms MessagePack in 90% of cases with random data, with the remaining 10% yielding nearly identical sizes. More importantly, for structured data with repetitive patterns and duplicate values, zkJSON far surpasses MessagePack, achieving up to around 95% better compression rates ([20x smaller in size](https://zkjson-v2-benchmark.vercel.app/)).
 
 How could beating the current status quo even be possible at all, let alone by a wide margin?
 
@@ -74,7 +74,7 @@ Additionally, zkJSON performs a single scan over the data, restructuring it into
 
 ## Columnar Restructuring
 
-zkJSON converts JSON data into integer representations and organizes them into column-based chunks during scanning. The encoded data is divided into 12 groups of similar integers, ensuring that related values are packed together. The packing order is crucial, as earlier groups act as metadata for subsequent groups.
+zkJSON converts JSON data into integer representations and organizes them into column-based chunks during scanning. The encoded data is divided into 13 groups of similar integers, ensuring that related values are packed together. The packing order is crucial, as earlier groups act as metadata for subsequent groups.
 
 ### 1. First Bit
 
@@ -82,7 +82,11 @@ The very first bit classifies whether the data is a primitive type including an 
   - `0` : a non-empty structured object
   - `1` : a primitive value or an empty array or an empty object
 
-### 2. Value Flags
+### 2. Value Count
+
+If the first bit is `0`, the following bits represent the number (short) of values in the JSON.
+
+### 3. Value Flags
 
 zkJSON builds a structure map, linking values to keys and keys to their parent objects, while also marking objects and arrays. For instance, with `{ a: 1, b: 2, c: [3, 4] }`, it first discovers an object `{}` then goes through `a` => `1` => `b` => `2` => `c` => `[]` => `3` => `4`, which generates a keymap of `[ -1, 0, 0, 0, 3 ]` and a value map of `[ 1, 2, 4, 4 ]`. The keymap corresponds to `[ "{}", "a", "b", "c", "[]" ]` and the value map correcponds to `[ 1, 2, 4, 4 ]` respectively. The valuemap is converted to deltas if the difference is less than 4, which usually gives us small integers saving bits. So `[ 1, 2, 4, 4 ]` becomes `[ 1, 1, 2, 0 ]`. If a delta decreases, an offset of 4 is added to indicate a negative shift.
 
@@ -98,7 +102,7 @@ Value flags are 1 bit flags to specify if the corresponding item is a delta (`1`
 
 For delta-encoded values, zkJSON uses only 3 bits per number (range 0-8), saving multiple bits compared to non-delta values.
 
-### 3. Value Links
+### 4. Value Links
 
 Value links represent the value map (`[ 1, 1, 2, 0 ]`), with each integer’s bit-length deterministically determined by combining the value map with the key map. For example, given the key map `[ -1(0), 0(1), 0(2), 0(3), 3(4) ]` and the value map `[ 1(v), 2(v), 4(v), 4(v) ]`, preserving the scanning order results in `[ -1(0), 0(1), 1(v), 0(2), 2(v), 0(3), 3(v), 3(4), 4(v) ]`. Since key indexes are always incremental, `1(v)` can only refer to previous indexes, ensuring it is safe to encode using only 2 bits. However, since `0` is reserved for delta packing, zkJSON increments non-delta values by 1 before encoding, so `[ 1, 2, 4, 4 ]` becomes `[ 2, 3, 5, 5 ]`, and `2(v)` actually consumes 3 bits while remaining fully deterministic. Delta values always consume only 3 bits.
 
@@ -106,15 +110,15 @@ Value links represent the value map (`[ 1, 1, 2, 0 ]`), with each integer’s bi
 
 If the same delta pattern occurs more than three times consecutively, zkJSON applies delta packing to eliminate redundant storage. For example, with the value map `[ 1, 2, 3, 4, 5, 6, 7, 8, 9 ]`, delta conversion results in `[ 1, 1, 1, 1, 1, 1, 1, 1, 1 ]`, requiring 27 bits (3 bits per value). Instead of storing repetitive deltas, zkJSON compresses the sequence by indicating delta packing with `0` (3 bits), specifying the length `9` (4 bits), and encoding the delta value `1` (3 bits), resulting in just 10 bits (`000 1001 001`). This saves 17 bits compared to the naive approach.
 
-### 4.Key Flags
+### 5.Key Flags
 
 Key flags are 1-bit indicators that specify whether a key uses delta encoding, just like value flags.
 
-### 5. Key Links
+### 6. Key Links
 
 Key links represent the keymap (`[ -1, 0, 0, 0, 3 ]`), but since the first element is always `-1`, it is removed. Additionally, `0` is reserved for delta packing, so `[ -1, 0, 0, 0, 3 ]` is transformed into `[ 1, 1, 1, 4 ]`, with delta conversion and packing further optimizing it to `[ 1, 0, 0, 3 ]`.
 
-### 6. Key Types
+### 7. Key Types
 
 Key types are 2-bit indicators that define the type of each key in the keymap:
 
@@ -127,9 +131,15 @@ For example, given the key map `["{}", "a", "b", "c", "[]"]`, the key types woul
 
 For keys classified as base64url or regular strings (types `2` and `3`), key types are followed by the string length in a compressed format. For example, the key `abc` is stored as `10 00 11` (`10` for base64url, `00` indicating a 2-bit short encoding, and `11` representing a length of 3).
 
+Key types are followed by a key length (short) + 1 (since `0` is reserved for duplicate references) if the key type is string (`10` or `11`). For instance, if the key is `abc`, the key type is `10 00 11`.
+
 Duplicate string keys and types are replaced with a `0` flag followed by a deterministic index, significantly reducing storage overhead. For instance, in `[ { "name": "Bob" }, { "name": "Alice" } ]`, the second occurrence of `name` is not stored as `base64url` again but instead referenced with `10 000`, pointing to the first occurrence, saving 22 bits (`name` vs `0`, 24 bits vs 2 bits). This method extends to cross-referencing values as well. In `[ { "name": "Bob" }, { "Bob": "name" } ]`, both `name` and `Bob` are replaced with deterministic indexes `0` and `1`, respectively, further reducing redundancy.
 
-### 7. Data Types
+### 8. Keys
+
+Keys are either `base64url` strings or regular strings. As explained earlier, duplicate keys are replaced with deterministic indexes, significantly reducing redundancy and saving bits.
+
+### 9. Data Types
 
 zkJSON defines 7 data types, each represented using only 3 bits:
 
@@ -143,14 +153,14 @@ zkJSON defines 7 data types, each represented using only 3 bits:
 
 The value `0` is reserved for type packing. If the same type appears more than three times consecutively, it is compressed using a repeat flag (`0`), a short-length encoding, and the actual type. For example, `[ 3, 3, 3, 3, 3 ]` is compressed into `[ 0, 5, 3 ]`, which is stored as `000 101 011`, saving 6 bits.
 
-### 8. Boolean Values
+### 10. Boolean Values
 
 Boolean values are stored in 1 bit:
 
 - `0` : false
 - `1` : true
 
-### 9. Number Values
+### 11. Number Values
 
 Positive and negative integers are stored using a 2-bit flag in a custom number system:
 
@@ -165,15 +175,11 @@ Floats are handled differently, using a sign, precision, and integer representat
 
 For example, `-3.14` is a negative number with precision `2`, which makes the first integer `6` (2 + 4) and the second integer `314` in LEB128 format. So `-3.14` results in `01 0110 11 10011010 00000010` which is 24 bits (3 bytes). In contrast, MessagePack consumes 9 bytes to store `-3.14`.
 
-### 10. Keys
-
-Keys are either `base64url` strings or regular strings. As explained earlier, duplicate keys are replaced with deterministic indexes, significantly reducing redundancy and saving bits.
-
-### 11. String Values
+### 12. String Values
 
 String values follow the same compression rules as keys but are stored in value positions rather than key positions. For example, in `{ "name": "Bob" }`, `name` is encoded as a key, while `Bob` is stored separately as a string value.
 
-### 12. Padding
+### 13. Padding
 
 To ensure proper byte alignment, the encoded bitstream is zero-padded to the nearest multiple of 8 bits. If the encoded data is 29 bits, zkJSON adds three padding bits to extend it to 32 bits (4 bytes), maintaining efficient byte-level storage.
 
