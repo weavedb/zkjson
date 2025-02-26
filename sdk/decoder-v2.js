@@ -243,19 +243,8 @@ class decoder {
           val = this.n(count)
           if (val === 0) count += 1
         } while (val === 0)
-        if (val === 0) {
-          let len = this.short()
-          val = this.n(count)
-          let i3 = i
-          for (let i2 = 0; i2 < len; i2++) {
-            const diff = this.vflags[i3 + i2]
-            prev = this.addVlink(diff === 1, val, prev)
-            i++
-          }
-        } else {
-          prev = this.addVlink(false, val, prev)
-          i++
-        }
+        prev = this.addVlink(false, val, prev)
+        i++
       }
     }
   }

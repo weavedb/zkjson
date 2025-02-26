@@ -104,7 +104,13 @@ For delta-encoded values, zkJSON uses only 3 bits per number (range 0-8), saving
 
 ### 4. Value Links
 
-Value links represent the value map (`[ 1, 1, 2, 0 ]`), with each integer’s bit-length deterministically determined by combining the value map with the key map. For example, given the key map `[ -1(0), 0(1), 0(2), 0(3), 3(4) ]` and the value map `[ 1(v), 2(v), 4(v), 4(v) ]`, preserving the scanning order results in `[ -1(0), 0(1), 1(v), 0(2), 2(v), 0(3), 3(v), 3(4), 4(v) ]`. Since key indexes are always incremental, `1(v)` can only refer to previous indexes, ensuring it is safe to encode using only 2 bits. However, since `0` is reserved for delta packing, zkJSON increments non-delta values by 1 before encoding, so `[ 1, 2, 4, 4 ]` becomes `[ 2, 3, 5, 5 ]`, and `2(v)` actually consumes 3 bits while remaining fully deterministic. Delta values always consume only 3 bits.
+Value links represent the value map (`[ 1, 1, 2, 0 ]`), with each integer’s bit-length deterministically determined by combining the value map with the key map. For example, given the key map `[ -1(0), 0(1), 0(2), 0(3), 3(4) ]` and the value map `[ 1(v), 2(v), 4(v), 4(v) ]`, preserving the scanning order results in `[ -1(0), 0(1), 1(v), 0(2), 2(v), 0(3), 3(4), 4(v), 4(v) ]`. Since key indexes are always incremental, `1(v)` can only refer to previous indexes, ensuring it is safe to encode using only 2 bits. However, since `0` is reserved for bit increment, zkJSON increments non-delta values by 1 before encoding, so `[ 1, 2, 4, 4 ]` becomes `[ 2, 3, 5, 5 ]`, and `2(v)` actually consumes 3 bits while remaining fully deterministic. Delta values always consume only 3 bits.
+
+`0` with the current expected number of bits is used to indicate increments in the number of bits required for each link. For example, in the value map `[ 1, 2, 2, 7, 15 ]` (40 bits), it becomes `[ 1, 0, 0, 7, 15 ]` with delta conversion and the required bit lengths are `[ 3(delta), 3(delta), 3(delta), 3, 4 ]`. To encode this efficiently, zkJSON inserts `0` before each increment except for deltas as we always know a delta requires 3 bits, resulting in 22 bits, saving 18 bits.
+
+- `001(delta) 000(delta) 000(delta) 0(inc) 00(inc) 111(7) 000(inc) 1111(15)`
+
+This ensures that zkJSON can always determine the minimum number of bits needed to read the next value link without additional metadata.
 
 #### Delta Packing
 
