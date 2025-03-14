@@ -4,7 +4,6 @@
 
 - [Litepaper / Spec v1](../README.md)
 - [Spec v1.5](./zkjson-v1_5.md)
-- [Spec v2](./zkjson-v2.md)
 
 ### Tutorials
 
