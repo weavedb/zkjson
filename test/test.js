@@ -1,5 +1,7 @@
 const { resolve } = require("path")
 const {
+  toIndex,
+  fromIndex,
   path,
   val,
   toSignal,
@@ -293,5 +295,10 @@ describe("zkJSON", function () {
       const encoded = encodeQuery(v)
       expect(decodeQuery(encoded)).to.eql(v)
     }
+  })
+  it("should convert to/from index", () => {
+    const index = toIndex("bob_1")
+    expect(index).to.eql("422775512881")
+    expect(fromIndex(index)).to.eql("bob_1")
   })
 })

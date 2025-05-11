@@ -394,24 +394,19 @@ function decode(arr) {
   return json
 }
 
-const toIndex = str => {
-  return (
-    "1" +
-    str
-      .split("")
-      .map(s => base64Map[s])
-      .join("")
-  )
+function toIndex(rawStr) {
+  const b64url = Buffer.from(rawStr, "utf8").toString("base64url")
+  const bi = BigInt("0x" + Buffer.from(b64url, "base64url").toString("hex"))
+  return bi.toString(10)
 }
 
-const fromIndex = id => {
-  let _id = id.toString().split("")
-  _id.shift()
-  return splitEvery(2, _id)
-    .map(s => {
-      return strMap[s.join("")]
-    })
-    .join("")
+function fromIndex(idxStr) {
+  const bi = BigInt(idxStr)
+  let hex = bi.toString(16)
+  if (hex.length % 2) hex = "0" + hex
+  const buf = Buffer.from(hex, "hex")
+  const b64url = buf.toString("base64url")
+  return Buffer.from(b64url, "base64url").toString("utf8")
 }
 
 function toSignal(arr) {
