@@ -1,6 +1,6 @@
 {
   "name": "zkjson",
-  "version": "0.5.3",
+  "version": "0.6.0",
   "description": "Zero Knowledge Provable JSON",
   "main": "index.js",
   "license": "MIT",

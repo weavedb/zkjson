@@ -37,10 +37,10 @@ contract Groth16VerifierJSON {
     uint256 constant gammax2 = 10857046999023057135944570762232829481370756359578518086990519993285655852781;
     uint256 constant gammay1 = 4082367875863433681332203403145435568316851327593401208105741076214120093531;
     uint256 constant gammay2 = 8495653923123431417604973247489272438418190587263600148770280649306958101930;
-    uint256 constant deltax1 = 16323886806377948767625289345386923912488425685292264502851407533751890364893;
-    uint256 constant deltax2 = 15728036135898260810892479278030679906213338463446298332250898095140196532350;
-    uint256 constant deltay1 = 7311361608150524708643711937539709432213365833416427921151717898214981893794;
-    uint256 constant deltay2 = 5360237348765695204487062346058482342794521371770543578645384390456849442785;
+    uint256 constant deltax1 = 10548989649020101460514539324030972308502034681633392883991961616863130637984;
+    uint256 constant deltax2 = 1049946570122174039975801346728261460931086847141295177952236227197145479746;
+    uint256 constant deltay1 = 10558381744179704646192748283236903784158982943346653783344902335722321321384;
+    uint256 constant deltay2 = 16748276816739890599042583608461502899144793788720809401511640542800930620065;
 
     
     uint256 constant IC0x = 11086791052709537593958527982551466373543557342479473456486918346706557110272;
@@ -82,6 +82,12 @@ contract Groth16VerifierJSON {
     uint256 constant IC12x = 3003572233500184455318954446784006239696026573012811847295348627074111281539;
     uint256 constant IC12y = 6485361686957307324235352983357156310358934769793375149333110905137006337248;
     
+    uint256 constant IC13x = 2025484288051762304170760878169695013364214111997466862551524207031601382631;
+    uint256 constant IC13y = 7038960739366138059493181524660940249493960394838603142532679804397882049709;
+    
+    uint256 constant IC14x = 11387856957329089595489992260814785056704488293876837097183204151395206987719;
+    uint256 constant IC14y = 17844362785282169318131685916181008035618810588862118232161118858351706006467;
+    
  
     // Memory data
     uint16 constant pVk = 0;
@@ -89,7 +95,7 @@ contract Groth16VerifierJSON {
 
     uint16 constant pLastMem = 896;
 
-    function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[12] calldata _pubSignals) public view returns (bool) {
+    function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[14] calldata _pubSignals) public view returns (bool) {
         assembly {
             function checkField(v) {
                 if iszero(lt(v, q)) {
@@ -156,6 +162,10 @@ contract Groth16VerifierJSON {
                 g1_mulAccC(_pVk, IC11x, IC11y, calldataload(add(pubSignals, 320)))
                 
                 g1_mulAccC(_pVk, IC12x, IC12y, calldataload(add(pubSignals, 352)))
+                
+                g1_mulAccC(_pVk, IC13x, IC13y, calldataload(add(pubSignals, 384)))
+                
+                g1_mulAccC(_pVk, IC14x, IC14y, calldataload(add(pubSignals, 416)))
                 
 
                 // -A
@@ -235,6 +245,10 @@ contract Groth16VerifierJSON {
             checkField(calldataload(add(_pubSignals, 352)))
             
             checkField(calldataload(add(_pubSignals, 384)))
+            
+            checkField(calldataload(add(_pubSignals, 416)))
+            
+            checkField(calldataload(add(_pubSignals, 448)))
             
 
             // Validate all evaluations

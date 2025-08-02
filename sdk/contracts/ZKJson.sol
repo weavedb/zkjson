@@ -13,7 +13,7 @@ contract ZKJson is ZKQuery{
     }
     uint[] memory value = new uint[](size_val);
     for(uint i = 10 + size_path; i < 10 + size_path + size_val; i++){
-      value[i - (10 + size_val)] = zkp[i];
+      value[i - (10 + size_path)] = zkp[i];
     }
     return toArr(value);
   }
