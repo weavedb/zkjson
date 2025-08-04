@@ -4,27 +4,25 @@ const { resolve } = require("path")
 const { expect } = require("chai")
 
 async function deploy() {
-  const [committer] = await ethers.getSigners()
   const VerifierDB = await ethers.getContractFactory("Groth16VerifierDB")
   const verifierDB = await VerifierDB.deploy()
 
-  const MyRU = await ethers.getContractFactory("NORU")
-  const myru = await MyRU.deploy(verifierDB.address, committer.address)
-  return { myru, committer }
+  const NORU = await ethers.getContractFactory("NORU")
+  const noru = await NORU.deploy(verifierDB.address)
+  return { noru }
 }
 
 describe("MyRollup", function () {
-  let myru, committer, db, col_id, ru
+  let noru
   this.timeout(0)
 
   beforeEach(async () => {
     const dep = await loadFixture(deploy)
-    myru = dep.myru
-    committer = dep.committer
+    noru = dep.noru
   })
 
   it("should verify rollup transactions", async function () {
-    db = new DB({
+    const db = new DB({
       level: 168,
       size_path: 4,
       size_val: 8,
@@ -41,7 +39,7 @@ describe("MyRollup", function () {
       ),
     })
     await db.init()
-    col_id = await db.addCollection()
+    const col_id = await db.addCollection()
     const people = [{ name: "Bob", age: 5 }]
     let txs = people.map(v => {
       return [col_id, v.name, v]
@@ -54,7 +52,7 @@ describe("MyRollup", function () {
       id: "Bob",
     })
 
-    expect(await myru.qString(zkp)).to.eql("Bob")
+    expect(await noru.qString(zkp)).to.eql("Bob")
 
     const zkp2 = await db.genProof({
       json: people[0],
@@ -63,6 +61,6 @@ describe("MyRollup", function () {
       id: "Bob",
       query: ["$gt", 3],
     })
-    expect(await myru.qCond(zkp2.slice(13, 14), zkp2)).to.eql(true)
+    expect(await noru.qCond(zkp2.slice(13, 14), zkp2)).to.eql(true)
   })
 })
