@@ -33,9 +33,17 @@ describe("zkNFT", function () {
       float: 1.23,
       arr: [1, 2, 3, true, null, "hello", 3.14],
     }
-    const nft = new NFT({ wasm, zkey, json })
+    const nft = new NFT({
+      wasm,
+      zkey,
+      json,
+      size_val: 34,
+      size_path: 5,
+    })
     const cid = nft.cid()
     await zknft.mint(user.address, `ipfs://${cid}`)
+    const start = Date.now()
+    await nft.zkp("str")
 
     // query string
     expect(

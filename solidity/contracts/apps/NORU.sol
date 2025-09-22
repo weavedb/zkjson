@@ -13,9 +13,8 @@ contract NORU is NORollup {
   uint constant SIZE_VAL = 8;
   address public verifierDB;
 
-  constructor (address _verifierDB, address _committer){
+  constructor (address _verifierDB){
     verifierDB = _verifierDB;
-    committer = _committer;
   }
   
   function validateQuery(uint[] memory zkp) private view returns(uint[] memory){
