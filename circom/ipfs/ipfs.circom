@@ -19,7 +19,7 @@ template IPFS (size_json, size_path, size_val, nBlocks) {
     signal input val[size_val];
     signal output exist;
     signal output out[32];
-    var binary[458];
+    var binary[nBlocks * 512];
     var _json[size_json];
     var _path[size_json];
     var _val[size_json];

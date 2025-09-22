@@ -73,10 +73,9 @@ function toCID(source) {
 
 module.exports = class NFT {
   constructor({
-    size_val = 5,
+    size_val = 34,
     size_path = 5,
     size_json = 256,
-    nBlocks = 10,
     wasm,
     zkey,
     json,
@@ -84,7 +83,6 @@ module.exports = class NFT {
     this.json = json
     this.wasm = wasm
     this.zkey = zkey
-    this.nBlocks = nBlocks
     this.size_val = size_val
     this.size_path = size_path
     this.size_json = size_json

@@ -4,12 +4,12 @@ pragma solidity >=0.7.0 <0.9.0;
 import "./ZKQuery.sol";
 
 interface VerifierIPFS {
-  function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[43] calldata _pubSignals) external view returns (bool);
+  function verifyProof(uint[2] calldata _pA, uint[2][2] calldata _pB, uint[2] calldata _pC, uint[72] calldata _pubSignals) external view returns (bool);
 }
 
 contract ZKIPFS is ZKQuery{
   uint constant SIZE_PATH = 5;
-  uint constant SIZE_VAL = 5;
+  uint constant SIZE_VAL = 34;
   address public verifierIPFS;
   bytes constant ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
   
@@ -76,7 +76,7 @@ contract ZKIPFS is ZKQuery{
     }
     uint[] memory value = new uint[](size_val);
     for(uint i = len + size_path; i < len + size_path + size_val; i++){
-      value[i - (len + size_val)] = zkp[i];
+      value[i - (len + size_path)] = zkp[i];
     }
     return toArr(value);
   }
