@@ -1,4 +1,4 @@
-import crypto from "crypto"
+import { hash } from "fast-sha256"
 import { groth16 } from "snarkjs"
 import { query, pad, path, val } from "./encoder.js"
 import { push, arr } from "./uint.js"
@@ -121,7 +121,9 @@ export default class NFT {
   }
   cid() {
     const str = new TextEncoder().encode(JSON.stringify(this.json))
-    const hash = coerce(crypto.createHash("sha256").update(str).digest())
-    return toCID(new Uint8Array([18, hash.length, ...Array.from(hash)]))
+    const hashBytes = hash(str)
+    return toCID(
+      new Uint8Array([18, hashBytes.length, ...Array.from(hashBytes)]),
+    )
   }
 }
