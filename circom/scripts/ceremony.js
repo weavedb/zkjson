@@ -1,13 +1,14 @@
-const { spawn } = require("node:child_process")
-const { existsSync, mkdirSync } = require("fs")
-const { resolve } = require("path")
-const { v4: uuidv4 } = require("uuid")
+import { spawn } from "node:child_process"
+import { existsSync, mkdirSync } from "fs"
+import { resolve } from "path"
+import { v4 as uuidv4 } from "uuid"
+import yargs from "yargs"
 
 let {
   power,
   entropy = uuidv4(),
   name,
-} = require("yargs")(process.argv.slice(2)).options({
+} = yargs(process.argv.slice(2)).options({
   entropy: { type: "string" },
   power: { type: "number", demandOption: true },
   name: { type: "string" },
@@ -16,12 +17,12 @@ let {
 if (typeof name === "undefined") name = "first contribution"
 
 const main = async () => {
-  const build = resolve(__dirname, "../build")
-  const ptau = resolve(__dirname, "../build/ptau")
-  const ptau_n = resolve(__dirname, "../build/ptau", power.toString())
+  const build = resolve(import.meta.dirname, "../build")
+  const ptau = resolve(import.meta.dirname, "../build/ptau")
+  const ptau_n = resolve(import.meta.dirname, "../build/ptau", power.toString())
   for (const v of [build, ptau, ptau_n]) if (!existsSync(v)) mkdirSync(v)
 
-  const ceremony = resolve(__dirname, "./ceremony.sh")
+  const ceremony = resolve(import.meta.dirname, "./ceremony.sh")
   const ls = spawn("sh", [ceremony, power, name, entropy])
 
   ls.stdout.on("data", data => console.log(`${data}`))
