@@ -1,4 +1,4 @@
-const {
+import {
   clone,
   uniq,
   sortBy,
@@ -16,7 +16,7 @@ const {
   includes,
   splitEvery,
   flatten,
-} = require("ramda")
+} from "ramda"
 const ops = {
   $eq: 10,
   $ne: 11,
@@ -1299,7 +1299,7 @@ const unshift = (vals, _num) => {
   }
   return addedCount
 }
-module.exports = {
+export {
   from128s,
   to128s,
   to128,

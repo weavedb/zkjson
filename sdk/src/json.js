@@ -1,6 +1,6 @@
-const { pad, toSignal, encode, encodePath, encodeVal } = require("./encoder")
+import { pad, toSignal, encode, encodePath, encodeVal } from "./encoder"
 
-module.exports = class Json {
+export default class Json {
   constructor({ size_val = 8, size_path = 4, size_json = 256 }) {
     this.size_val = size_val
     this.size_path = size_path

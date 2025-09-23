@@ -42,7 +42,7 @@ describe("zkNFT", function () {
     })
     const cid = nft.cid()
     await zknft.mint(user.address, `ipfs://${cid}`)
-    const start = Date.now()
+
     await nft.zkp("str")
 
     // query string

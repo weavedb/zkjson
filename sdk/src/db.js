@@ -1,10 +1,10 @@
-const newMemEmptyTrie = require("./circomlibjs").newMemEmptyTrie
-const snarkjs = require("snarkjs")
-const { is, indexOf, range, isNil } = require("ramda")
-const { pad, toSignal, encode, toIndex } = require("./encoder")
-const Collection = require("./collection")
+import { newMemEmptyTrie } from "./circomlibjs.js"
+import { groth16 } from "snarkjs"
+import { is, indexOf, range, isNil } from "ramda"
+import { pad, toSignal, encode, toIndex } from "./encoder.js"
+import Collection from "./collection.js"
 
-class DB {
+export default class DB {
   constructor({
     size_val = 8,
     size_path = 4,
@@ -78,7 +78,7 @@ class DB {
       val: this.getVal(json, path),
       query,
     })
-    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+    const { proof, publicSignals } = await groth16.fullProve(
       inputs,
       this.wasm,
       this.zkey,
@@ -94,7 +94,7 @@ class DB {
 
   async genRollupProof(txs) {
     const inputs = await this.getRollupInputs({ queries: txs })
-    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+    const { proof, publicSignals } = await groth16.fullProve(
       inputs,
       this.wasmRU,
       this.zkeyRU,
@@ -356,5 +356,3 @@ class DB {
     return await this.tree.find(col)
   }
 }
-
-module.exports = DB

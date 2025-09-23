@@ -1,4 +1,4 @@
-const {
+import {
   toArray,
   concat,
   sum,
@@ -7,12 +7,12 @@ const {
   pushArray,
   length,
   next,
-  arr: _arr,
+  arr as _arr,
   push,
   pop,
   last,
   bn,
-} = require("./uint")
+} from "./uint.js"
 const _null_ = [110, 117, 108, 108]
 const _true_ = [116, 114, 117, 101]
 const _false_ = [102, 97, 108, 115, 101]
@@ -311,4 +311,4 @@ const parse = (str, size = 100, digit = 9) => {
   return json
 }
 
-module.exports = { parse }
+export { parse }

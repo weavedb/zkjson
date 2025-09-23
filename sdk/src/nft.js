@@ -1,8 +1,8 @@
-const crypto = require("crypto")
-const snarkjs = require("snarkjs")
-const { query, pad, path, val } = require("./encoder")
-const { push, arr } = require("./uint")
-const { parse } = require("./parse")
+import crypto from "crypto"
+import { groth16 } from "snarkjs"
+import { query, pad, path, val } from "./encoder.js"
+import { push, arr } from "./uint.js"
+import { parse } from "./parse.js"
 
 function coerce(o) {
   if (o instanceof Uint8Array && o.constructor.name === "Uint8Array") return o
@@ -71,7 +71,7 @@ function toCID(source) {
   return str
 }
 
-module.exports = class NFT {
+export default class NFT {
   constructor({
     size_val = 34,
     size_path = 5,
@@ -106,7 +106,7 @@ module.exports = class NFT {
     const _path = this.path(pth)
     const _val = Array.isArray(cond) ? this.query(pth, cond) : this.val(pth)
     const inputs = { path: _path, val: _val, encoded }
-    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+    const { proof, publicSignals } = await groth16.fullProve(
       inputs,
       this.wasm,
       this.zkey,
