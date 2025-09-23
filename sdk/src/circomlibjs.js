@@ -1,21 +1,10 @@
-"use strict"
-
-Object.defineProperty(exports, "__esModule", { value: true })
-const { splitEvery } = require("ramda")
-var ffjavascript = require("ffjavascript")
-var blake2b = require("blake2b")
-var createBlakeHash = require("blake-hash")
-var ethers = require("ethers")
-var assert = require("assert")
-
-function _interopDefaultLegacy(e) {
-  return e && typeof e === "object" && "default" in e ? e : { default: e }
-}
-
-var blake2b__default = /*#__PURE__*/ _interopDefaultLegacy(blake2b)
-var createBlakeHash__default =
-  /*#__PURE__*/ _interopDefaultLegacy(createBlakeHash)
-var assert__default = /*#__PURE__*/ _interopDefaultLegacy(assert)
+import { splitEvery } from "ramda"
+import * as ffjavascript from "ffjavascript"
+import blake2b from "blake2b"
+import createBlakeHash from "blake-hash"
+import * as ethers from "ethers"
+import * as assert from "assert"
+const assert__default = assert
 
 async function buildBabyJub() {
   const bn128 = await ffjavascript.getCurveFromName("bn128", true)
@@ -40546,20 +40535,23 @@ const mimc7Contract = _mimc7Contract
 const mimcSpongecontract = _mimcSpongeContract
 const poseidonContract = _poseidonContract
 
-exports.SMT = SMT
-exports.SMTMemDb = SMTMemDb
-exports.buildBabyjub = buildBabyJub
-exports.buildEddsa = buildEddsa
-exports.buildMimc7 = buildMimc7
-exports.buildMimcSponge = buildMimcSponge
-exports.buildPedersenHash = buildPedersenHash
-exports.buildPoseidon = buildPoseidon$2
-exports.buildPoseidonOpt = buildPoseidon
-exports.buildPoseidonReference = buildPoseidon$1
-exports.buildPoseidonWasm = buildPoseidonWasm
-exports.buildSMT = buildSMT
-exports.evmasm = Contract
-exports.mimc7Contract = mimc7Contract
-exports.mimcSpongecontract = mimcSpongecontract
-exports.newMemEmptyTrie = newMemEmptyTrie
-exports.poseidonContract = poseidonContract
+// ESM exports mapped from original CommonJS names
+export {
+  SMT,
+  SMTMemDb,
+  buildBabyJub as buildBabyjub,
+  buildEddsa,
+  buildMimc7,
+  buildMimcSponge,
+  buildPedersenHash,
+  buildPoseidon$2 as buildPoseidon,
+  buildPoseidon as buildPoseidonOpt,
+  buildPoseidon$1 as buildPoseidonReference,
+  buildPoseidonWasm,
+  buildSMT,
+  Contract as evmasm,
+  mimc7Contract,
+  mimcSpongecontract,
+  newMemEmptyTrie,
+  poseidonContract,
+}

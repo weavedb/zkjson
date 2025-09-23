@@ -567,7 +567,7 @@ function next(json, c) {
   return bn([0, c[1], 0, 0, 0, 1, c[6], 0, 0])
 }
 
-module.exports = {
+export {
   next,
   arr,
   push,

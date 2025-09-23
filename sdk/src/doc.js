@@ -1,16 +1,16 @@
-const snarkjs = require("snarkjs")
-const { resolve } = require("path")
-const { isNil } = require("ramda")
-const {
+import { groth16 } from "snarkjs"
+import { resolve } from "path"
+import { isNil } from "ramda"
+import {
   encodeQuery,
   pad,
   toSignal,
   encode,
   encodePath,
   encodeVal,
-} = require("./encoder")
+} from "./encoder.js"
 
-module.exports = class Doc {
+export default class Doc {
   constructor({ size_val = 8, size_path = 4, size_json = 256, wasm, zkey }) {
     this.size_val = size_val
     this.size_path = size_path
@@ -48,7 +48,7 @@ module.exports = class Doc {
   }
   async genProof({ json, path, query }) {
     const inputs = await this.getInputs({ json, path, query })
-    const { proof, publicSignals } = await snarkjs.groth16.fullProve(
+    const { proof, publicSignals } = await groth16.fullProve(
       inputs,
       this.wasm,
       this.zkey,

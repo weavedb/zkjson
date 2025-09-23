@@ -1,4 +1,4 @@
-const { clone, isNil, includes, splitEvery, flatten } = require("ramda")
+import { clone, isNil, includes, splitEvery, flatten } from "ramda"
 const ops = {
   $eq: 10,
   $ne: 11,
@@ -564,7 +564,7 @@ function decodeQuery(v) {
   return [op, decodeVal(v.slice(1))]
 }
 
-module.exports = {
+export {
   encode,
   decode,
   encodePath,

@@ -1,8 +1,8 @@
-const newMemEmptyTrie = require("./circomlibjs").newMemEmptyTrie
-const { pad, toSignal, id2str, encode, toIndex } = require("./encoder")
-const Doc = require("./doc")
+import { newMemEmptyTrie } from "./circomlibjs.js"
+import { pad, toSignal, encode, toIndex } from "./encoder.js"
+import Doc from "./doc.js"
 
-class Collection {
+export default class Collection {
   constructor({ size_val = 8, size_path = 4, size_json = 256, level = 168 }) {
     this.size_val = size_val
     this.size_path = size_path
@@ -57,5 +57,3 @@ class Collection {
     return await this.tree.find(id)
   }
 }
-
-module.exports = Collection
