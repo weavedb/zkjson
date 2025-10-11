@@ -1,4 +1,4 @@
-import { newMemEmptyTrie } from "./circomlibjs.js"
+import newMemEmptyTrie from "./newMemEmptyTrie.js"
 import { pad, toSignal, encode, toIndex } from "./encoder.js"
 import Doc from "./doc.js"
 

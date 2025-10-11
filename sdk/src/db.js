@@ -1,4 +1,4 @@
-import { newMemEmptyTrie } from "./circomlibjs.js"
+import newMemEmptyTrie from "./newMemEmptyTrie.js"
 import { groth16 } from "snarkjs"
 import { is, indexOf, range, isNil } from "ramda"
 import { pad, toSignal, encode, toIndex } from "./encoder.js"
