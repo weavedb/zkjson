@@ -81,7 +81,7 @@ export default class DBTree {
     await this.tree.insert(id, [root])
     if (id === this.count) {
       this.count++
-      if (this.kvi) this.kvi.put("count", this.count)
+      if (this.kvi) await this.kvi.put("count", this.count)
     }
     return id
   }
