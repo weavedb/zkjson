@@ -4,6 +4,14 @@ import { is, indexOf, range, isNil } from "ramda"
 import { pad, toSignal, encode, toIndex } from "./encoder.js"
 import Collection from "./collection.js"
 
+const to64 = hash => {
+  const n = BigInt(hash)
+  let hex = n.toString(16)
+  if (hex.length % 2) hex = "0" + hex
+  const buf = Buffer.from(hex, "hex")
+  return buf.toString("base64")
+}
+
 export default class DB {
   constructor({
     size_val = 8,
@@ -279,6 +287,12 @@ export default class DB {
       col_root,
     }
   }
+  hash(format) {
+    const _hash = this.tree.F.toObject(this.tree.root)
+    if (format === "base64") return to64(_hash.toString())
+    return _hash.toString()
+  }
+
   getID(num) {
     if (!isNil(num)) {
       if (indexOf(num)(this.ids) !== -1) {
