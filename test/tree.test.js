@@ -8,10 +8,10 @@ describe("zkJSON", () => {
       return key => {
         return {
           get: k => store[`${key}/${k}`],
-          put: (k, v) => {
+          put: async (k, v) => {
             store[`${key}/${k}`] = v
           },
-          del: k => delete store[`${key}/${k}`],
+          del: async k => delete store[`${key}/${k}`],
         }
       }
     }
