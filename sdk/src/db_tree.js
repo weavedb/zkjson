@@ -2,6 +2,20 @@ import newMemEmptyTrie from "./newMemEmptyTrie.js"
 import { is, indexOf, isNil } from "ramda"
 import Collection from "./collection_tree.js"
 
+const to64 = hash => {
+  const n = BigInt(hash)
+  let hex = n.toString(16)
+  if (hex.length % 2) hex = "0" + hex
+  const buf = Buffer.from(hex, "hex")
+  return buf.toString("base64")
+}
+const from64 = b64 => {
+  const buf = Buffer.from(b64, "base64")
+  const hex = buf.toString("hex")
+  const n = BigInt("0x" + hex)
+  return n.toString()
+}
+
 export default class DBTree {
   constructor({
     size_val = 256,
@@ -23,12 +37,17 @@ export default class DBTree {
   }
 
   async init() {
-    this.kvi = this.kv?.("__db__")
+    this.kvi = this.kv?.("db")
     this.tree = await newMemEmptyTrie(this.kvi)
     if (this.kvi) {
-      const count = this.kvi.get("__count__")
+      const count = this.kvi.get("count")
       if (!isNil(count)) this.count = count
     }
+  }
+  hash(format) {
+    const _hash = this.tree.F.toObject(this.tree.root)
+    if (format === "base64") return to64(_hash.toString())
+    return _hash.toString()
   }
   async exists(num) {
     const ex = this.ids[num] || (await this.tree.find(num)).found
@@ -57,31 +76,41 @@ export default class DBTree {
     } else {
       id = await this.getID(num)
     }
-    const _col = new Collection({
-      size_val: this.size_val,
-      size_path: this.size_path,
-      level: this.level,
-      size_json: this.size_json,
-      kv: this.kv?.(`__dir__/${id}`),
-    })
-    await _col.init()
-    this.cols[id] = _col
-    this.ids[id] = true
+    const _col = await this.loadCol(id)
     const root = _col.tree.F.toObject(_col.tree.root).toString()
     await this.tree.insert(id, [root])
     if (id === this.count) {
       this.count++
-      if (this.kvi) this.kvi.put("__count__", this.count)
+      if (this.kvi) this.kvi.put("count", this.count)
     }
     return id
   }
-  getColTree(col) {
+  async getColTree(col) {
     const _col = this.cols[col]
-    if (!_col) throw Error("collection doesn't exist")
-    return _col
+    if (!_col) {
+      return await this.loadCollection(col)
+    } else return _col
+  }
+  async loadCol(id) {
+    const col = new Collection({
+      size_val: this.size_val,
+      size_path: this.size_path,
+      level: this.level,
+      size_json: this.size_json,
+      kv: this.kv?.(`dir_${id}`),
+    })
+    await col.init()
+    this.cols[id] = col
+    this.ids[id] = true
+    return col
+  }
+  async loadCollection(id) {
+    const hit = await this.tree.find(id)
+    if (!hit || !hit.found) throw Error("collection doesn't exist")
+    return await this.loadCol(id)
   }
   async insert(col, _key, _val) {
-    const _col = this.getColTree(col)
+    const _col = await this.getColTree(col)
     let update = false
     let res_doc
     if ((await _col.get(_key)).found) {
@@ -99,21 +128,21 @@ export default class DBTree {
     return await this.tree.update(colD, [root])
   }
   async update(col, _key, _val) {
-    const _col = this.getColTree(col)
+    const _col = await this.getColTree(col)
     const res_doc = await _col.update(_key, _val)
     const res_col = await this.updateDB(_col, col)
     return { doc: res_doc, col: res_col, tree: _col.tree }
   }
 
   async delete(col, _key) {
-    const _col = this.getColTree(col)
+    const _col = await this.getColTree(col)
     const res_doc = await _col.delete(_key)
     const res_col = await this.updateDB(_col, col)
     return { doc: res_doc, col: res_col, tree: _col.tree }
   }
 
   async get(col, _key) {
-    const _col = this.getColTree(col)
+    const _col = await this.getColTree(col)
     return await _col.get(_key)
   }
   async getCol(col) {

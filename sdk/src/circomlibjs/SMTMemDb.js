@@ -4,9 +4,9 @@ export default class SMTMemDb {
     this.nodes = {}
     this.root = F.zero
     if (this.kv) {
-      const root = this.kv.get("__root__")
+      const root = this.kv.get("root")
       if (root) this.root = root
-      else this.kv.put("__root__", this.root)
+      else this.kv.put("root", this.root)
     }
     this.F = F
   }
@@ -31,7 +31,7 @@ export default class SMTMemDb {
   async get(key) {
     const keyS = this._key2str(key)
     if (!this.nodes[keyS]) {
-      let node = this.kv.get(`__nodes__/${keyS}`)
+      let node = this.kv.get(`node_${keyS}`)
       if (node) this.nodes[keyS] = node
     }
     return this.nodes[keyS]
@@ -47,7 +47,7 @@ export default class SMTMemDb {
 
   async setRoot(rt) {
     this.root = rt
-    if (this.kv) this.kv.put("__root__", this.root)
+    if (this.kv) this.kv.put("root", this.root)
   }
 
   async multiIns(inserts) {
@@ -55,7 +55,7 @@ export default class SMTMemDb {
       const keyS = this._key2str(inserts[i][0])
       this._normalize(inserts[i][1])
       this.nodes[keyS] = inserts[i][1]
-      if (this.kv) this.kv.put(`__nodes__/${keyS}`, this.nodes[keyS])
+      if (this.kv) this.kv.put(`node_${keyS}`, this.nodes[keyS])
     }
   }
 
@@ -63,7 +63,7 @@ export default class SMTMemDb {
     for (let i = 0; i < dels.length; i++) {
       const keyS = this._key2str(dels[i])
       delete this.nodes[keyS]
-      if (this.kv) this.kv.del(`__nodes__/${keyS}`)
+      if (this.kv) this.kv.del(`node_${keyS}`)
     }
   }
 }
