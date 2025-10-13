@@ -1,6 +1,6 @@
 {
   "name": "zkjson",
-  "version": "0.8.2",
+  "version": "0.8.3",
   "description": "Zero Knowledge Provable JSON",
   "type": "module",
   "scripts": {
