@@ -1,19 +1,12 @@
 import { describe, it } from "node:test"
 import { strict as assert } from "node:assert"
 import DB from "../sdk/src/db_tree.js"
-import DB2 from "../sdk/src/db.js"
 import Prover from "../sdk/src/prover.js"
 import { resolve } from "path"
 
 describe("zkJSON", () => {
   it("should generate proofs", { timeout: Infinity }, async () => {
     const db = new DB({
-      level: 168,
-      size_path: 4,
-      size_val: 8,
-      size_json: 256,
-      size_txs: 10,
-      level_col: 8,
       wasm: resolve(
         import.meta.dirname,
         "../circom/build/circuits/db/index_js/index.wasm",
@@ -42,10 +35,10 @@ describe("zkJSON", () => {
         "../circom/build/circuits/db/index_0001.zkey",
       ),
     })
-    console.log(await prover.genProof(inputs))
+    assert.equal((await prover.genProof(inputs))[8], "1")
   })
 
-  it.only("should generate proofs", { timeout: Infinity }, async () => {
+  it("should generate proofs2", { timeout: Infinity }, async () => {
     const _kv = () => {
       let store = {}
       return key => ({
@@ -80,20 +73,20 @@ describe("zkJSON", () => {
 
     const inputs = await db3.getInputs({
       json: { abc: 1 },
-      col_id: 0,
+      col_id: 1,
       path: "abc",
       id: "abc-1",
     })
     const prover = new Prover({
       wasm: resolve(
         import.meta.dirname,
-        "../../weavedb/hb/src/circom/db2/index_js/index.wasm",
+        "../circom/build/circuits/db/index_js/index.wasm",
       ),
       zkey: resolve(
         import.meta.dirname,
-        "../../weavedb/hb/src/circom/db2/index_0001.zkey",
+        "../circom/build/circuits/db/index_0001.zkey",
       ),
     })
-    console.log(await prover.genProof(inputs))
+    assert.equal((await prover.genProof(inputs))[8], "1")
   })
 })

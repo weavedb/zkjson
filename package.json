@@ -7,9 +7,7 @@
   "scripts": {
     "test": "node --experimental-wasm-memory64 --test --test-concurrency=1",
     "test-only": "node --experimental-wasm-memory64 --test-only --test-concurrency=1",
-    "test-all": "node --experimental-wasm-memory64 --test --test-concurrency=1 test/**/*.test.js",
-    "ceremony": "node circom/scripts/ceremony.js",
-    "compile": "node circom/scripts/compile.js"
+    "test-all": "node --experimental-wasm-memory64 --test --test-concurrency=1 test/**/*.test.js"
   },
   "dependencies": {
     "chai": "^4",
@@ -22,8 +20,5 @@
     "ramda": "^0.29.1",
     "uuid": "^9.0.1",
     "yargs": "^17.7.2"
-  },
-  "devDependencies": {
-    "@msgpack/msgpack": "^3.0.1"
   }
 }

@@ -1,8 +1,8 @@
-import { spawn } from "node:child_process"
-import { writeFileSync, existsSync, mkdirSync } from "fs"
-import { resolve } from "path"
-import { v4 as uuidv4 } from "uuid"
-import yargs from "yargs"
+const { spawn } = require("node:child_process")
+const { writeFileSync, existsSync, mkdirSync } = require("fs")
+const { resolve } = require("path")
+const { v4: uuidv4 } = require("uuid")
+const yargs = require("yargs")
 let {
   power,
   entropy = uuidv4(),
@@ -34,23 +34,13 @@ let {
 
 if (typeof name === "undefined") name = "zkJSON"
 const main = async () => {
-  const build = resolve(import.meta.dirname, "../build")
-  const ptau = resolve(import.meta.dirname, "../build/ptau")
-  const ptau_n = resolve(import.meta.dirname, "../build/ptau", power.toString())
-  const circuits = resolve(import.meta.dirname, "../build/circuits")
-  const circuits_x = resolve(import.meta.dirname, "../build/circuits", circuit)
-  const index = resolve(
-    import.meta.dirname,
-    "../build/circuits",
-    circuit,
-    "index.circom",
-  )
-  const input = resolve(
-    import.meta.dirname,
-    "../build/circuits",
-    circuit,
-    "input.json",
-  )
+  const build = resolve(__dirname, "../build")
+  const ptau = resolve(__dirname, "../build/ptau")
+  const ptau_n = resolve(__dirname, "../build/ptau", power.toString())
+  const circuits = resolve(__dirname, "../build/circuits")
+  const circuits_x = resolve(__dirname, "../build/circuits", circuit)
+  const index = resolve(__dirname, "../build/circuits", circuit, "index.circom")
+  const input = resolve(__dirname, "../build/circuits", circuit, "input.json")
 
   for (const v of [build, ptau, ptau_n])
     if (!existsSync(v)) {
@@ -106,7 +96,7 @@ component main {public [oldRoot]} = Rollup(${size_txs}, ${level_col}, ${level}, 
 
   writeFileSync(input, JSON.stringify(inputs))
 
-  const compile = resolve(import.meta.dirname, "./compile.sh")
+  const compile = resolve(__dirname, "./compile.sh")
   const ls = spawn("sh", [compile, circuit, power, entropy, name])
 
   ls.stdout.on("data", data => console.log(`${data}`))
