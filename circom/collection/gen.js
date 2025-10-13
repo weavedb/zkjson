@@ -1,7 +1,7 @@
 const _json = { a: 5 }
 const _path = "a"
 const _val = _json[_path]
-const { Collection } = require("../../sdk")
+const { Collection } = require("../../sdk/src")
 
 const gen = async ({
   size_val = 8,

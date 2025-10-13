@@ -1,4 +1,4 @@
-const { DB } = require("../../sdk")
+const { DB } = require("../../sdk/src")
 
 const gen = async ({
   size_val = 256,

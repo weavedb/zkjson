@@ -1,4 +1,4 @@
-const { Doc, fromSignal } = require("../../sdk")
+const { Doc, fromSignal } = require("../../sdk/src")
 
 const gen2 = async ({
   size_val = 256,

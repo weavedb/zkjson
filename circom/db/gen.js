@@ -1,4 +1,4 @@
-import { DB } from "../../sdk/src/index.js"
+const { DB } = require("../../sdk/src")
 
 const _json = { a: 5 }
 const _path = "a"
@@ -27,4 +27,4 @@ const gen = async ({
   }
 }
 
-export default gen
+module.exports = gen

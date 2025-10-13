@@ -1,0 +1,12 @@
+{
+  "name": "zkjson-circuits",
+  "version": "0.1.0",
+  "main": "index.js",
+  "scripts": {
+    "compile": "node scripts/compile.js",
+    "ceremony": "node circom/scripts/ceremony.js"
+  },
+  "dependencies": {
+    "snarkjs": "^0.7.5"
+  }
+}
