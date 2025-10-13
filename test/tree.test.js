@@ -1,19 +1,58 @@
 import { describe, it } from "node:test"
 import { strict as assert } from "node:assert"
 import DB from "../sdk/src/db_tree.js"
+import DB2 from "../sdk/src/db.js"
+import Prover from "../sdk/src/prover.js"
+import { resolve } from "path"
+
 describe("zkJSON", () => {
   it("should generate proofs", { timeout: Infinity }, async () => {
+    const db = new DB({
+      level: 168,
+      size_path: 4,
+      size_val: 8,
+      size_json: 256,
+      size_txs: 10,
+      level_col: 8,
+      wasm: resolve(
+        import.meta.dirname,
+        "../circom/build/circuits/db/index_js/index.wasm",
+      ),
+      zkey: resolve(
+        import.meta.dirname,
+        "../circom/build/circuits/db/index_0001.zkey",
+      ),
+    })
+    await db.init()
+    const col_id = await db.addCollection()
+    await db.insert(col_id, "bob", { name: "Bob" })
+    const inputs = await db.getInputs({
+      json: { name: "Bob" },
+      col_id: 0,
+      path: "name",
+      id: "bob",
+    })
+    const prover = new Prover({
+      wasm: resolve(
+        import.meta.dirname,
+        "../circom/build/circuits/db/index_js/index.wasm",
+      ),
+      zkey: resolve(
+        import.meta.dirname,
+        "../circom/build/circuits/db/index_0001.zkey",
+      ),
+    })
+    console.log(await prover.genProof(inputs))
+  })
+
+  it.only("should generate proofs", { timeout: Infinity }, async () => {
     const _kv = () => {
       let store = {}
-      return key => {
-        return {
-          get: k => store[`${key}/${k}`],
-          put: async (k, v) => {
-            store[`${key}/${k}`] = v
-          },
-          del: async k => delete store[`${key}/${k}`],
-        }
-      }
+      return key => ({
+        get: k => store[`${key}/${k}`],
+        put: async (k, v) => void (store[`${key}/${k}`] = v),
+        del: async k => void delete store[`${key}/${k}`],
+      })
     }
     const kv = _kv()
     const db = new DB({ kv })
@@ -32,9 +71,29 @@ describe("zkJSON", () => {
     }
     const hash2_2 = db2.hash()
 
-    const db3 = new DB({ kv })
+    const db3 = new DB({
+      kv,
+    })
     await db3.init()
     const hash3 = db3.hash()
     assert.equal(hash3, hash2_2)
+
+    const inputs = await db3.getInputs({
+      json: { abc: 1 },
+      col_id: 0,
+      path: "abc",
+      id: "abc-1",
+    })
+    const prover = new Prover({
+      wasm: resolve(
+        import.meta.dirname,
+        "../../weavedb/hb/src/circom/db2/index_js/index.wasm",
+      ),
+      zkey: resolve(
+        import.meta.dirname,
+        "../../weavedb/hb/src/circom/db2/index_0001.zkey",
+      ),
+    })
+    console.log(await prover.genProof(inputs))
   })
 })

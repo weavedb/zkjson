@@ -1,6 +1,7 @@
 import newMemEmptyTrie from "./newMemEmptyTrie.js"
 import { is, indexOf, isNil } from "ramda"
 import Collection from "./collection_tree.js"
+import { toIndex } from "./encoder.js"
 
 const to64 = hash => {
   const n = BigInt(hash)
@@ -9,28 +10,22 @@ const to64 = hash => {
   const buf = Buffer.from(hex, "hex")
   return buf.toString("base64")
 }
-const from64 = b64 => {
-  const buf = Buffer.from(b64, "base64")
-  const hex = buf.toString("hex")
-  const n = BigInt("0x" + hex)
-  return n.toString()
-}
 
 export default class DBTree {
   constructor({
+    size_json = 256,
+    level_col = 24,
     size_val = 256,
     size_path = 32,
     level = 184,
-    size_json = 256,
-    level_col = 24,
     kv,
   }) {
     this.kv = kv
+    this.level = level
     this.level_col = level_col
+    this.size_json = size_json
     this.size_val = size_val
     this.size_path = size_path
-    this.level = level
-    this.size_json = size_json
     this.count = 0
     this.ids = {}
     this.cols = []
@@ -93,10 +88,10 @@ export default class DBTree {
   }
   async loadCol(id) {
     const col = new Collection({
+      size_json: this.size_json,
       size_val: this.size_val,
       size_path: this.size_path,
       level: this.level,
-      size_json: this.size_json,
       kv: this.kv?.(`dir_${id}`),
     })
     await col.init()
@@ -147,5 +142,28 @@ export default class DBTree {
   }
   async getCol(col) {
     return await this.tree.find(col)
+  }
+  async getInputs({ id, col_id, json, path, val, query }) {
+    const col_root = this.tree.F.toObject(this.tree.root).toString()
+    const col_res = await this.getCol(col_id)
+    let col_siblings = col_res.siblings
+    for (let i = 0; i < col_siblings.length; i++)
+      col_siblings[i] = this.tree.F.toObject(col_siblings[i])
+    while (col_siblings.length < this.level_col) col_siblings.push(0)
+    col_siblings = col_siblings.map(s => s.toString())
+    const col_key = col_id
+    const col = await this.getColTree(col_id)
+    const col_inputs = await col.getInputs({ id, json, path, val, query })
+    return {
+      path: col_inputs.path,
+      val: col_inputs.val,
+      json: col_inputs.json,
+      root: col_inputs.root,
+      siblings: col_inputs.siblings,
+      key: toIndex(id),
+      col_key,
+      col_siblings,
+      col_root,
+    }
   }
 }
