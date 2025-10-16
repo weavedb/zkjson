@@ -6,16 +6,7 @@ import { resolve } from "path"
 
 describe("zkJSON", () => {
   it("should generate proofs", { timeout: Infinity }, async () => {
-    const db = new DB({
-      wasm: resolve(
-        import.meta.dirname,
-        "../circom/build/circuits/db/index_js/index.wasm",
-      ),
-      zkey: resolve(
-        import.meta.dirname,
-        "../circom/build/circuits/db/index_0001.zkey",
-      ),
-    })
+    const db = new DB({})
     await db.init()
     const col_id = await db.addCollection()
     await db.insert(col_id, "bob", { name: "Bob" })

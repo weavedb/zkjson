@@ -1,6 +1,6 @@
 {
   "name": "zkjson",
-  "version": "0.8.3",
+  "version": "0.8.4",
   "description": "Zero Knowledge Provable JSON",
   "type": "module",
   "scripts": {
@@ -15,6 +15,10 @@
     "./utint": {
       "require": "./cjs/uint.js",
       "import": "./esm/uint.js"
+    },
+    "./smt": {
+      "require": "./cjs/db_tree.js",
+      "import": "./esm/db_tree.js"
     }
   },
   "dependencies": {
