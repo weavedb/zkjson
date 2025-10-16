@@ -1,8 +1,8 @@
 import * as ffjavascript from "ffjavascript"
 import poseidonConstants$1 from "./poseidonConstants$1.js"
-import * as assert from "assert"
-const assert__default = assert
-
+const assert = (cond, msg = "Assertion failed") => {
+  if (!cond) throw new Error(msg)
+}
 function unsringifyConstants(Fr, o) {
   if (typeof o == "string" && /^[0-9]+$/.test(o)) {
     return Fr.e(o)
@@ -38,8 +38,11 @@ export default async function buildPoseidon() {
   const pow5 = a => F.mul(a, F.square(F.square(a, a)))
 
   function poseidon(inputs, initState, nOut) {
-    assert__default["default"](inputs.length > 0)
-    assert__default["default"](inputs.length <= N_ROUNDS_P.length)
+    assert(inputs.length > 0, "poseidon: inputs.length must be > 0")
+    assert(
+      inputs.length <= N_ROUNDS_P.length,
+      `poseidon: inputs.length must be <= ${N_ROUNDS_P.length}`,
+    )
 
     if (initState) {
       initState = F.e(initState)
