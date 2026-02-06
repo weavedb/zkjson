@@ -117,7 +117,7 @@ export default class DB {
   }
 
   async query(col_id, id, path, json) {
-    const val = tar[path]
+    const val = this.getVal(json, path)
     const inputs = await this.genProof({ col_id, id, json, path })
     const sigs = inputs.slice(8)
     const params = [[sigs[12], sigs[13], ...sigs.slice(1, 6)], inputs]
